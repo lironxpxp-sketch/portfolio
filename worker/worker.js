@@ -1,12 +1,17 @@
 /*
  * AI backend for lironsofer.online — a Cloudflare Worker.
- * The website sends a prompt here; this Worker adds your secret Anthropic
- * API key and asks Claude. The key never reaches visitors' browsers.
+ * The website sends a job here; this Worker picks the AI that suits it
+ * (Claude, GPT or Gemini), adds the secret key, and asks. Keys never reach
+ * visitors' browsers. Only connected models are used; others are skipped.
  *
  * Settings (Cloudflare dashboard → your Worker → Settings → Variables):
  *   ANTHROPIC_API_KEY  (Secret)  your key from console.anthropic.com
- *   OPENAI_API_KEY     (Secret, optional)  key from platform.openai.com, enables GPT
- *   OPENAI_MODEL       (Text, optional)    OpenAI model id, default gpt-5.5
+ *   ROUTES             (Text, optional)    JSON to change which AI handles which job, e.g. {"copy":["openai","claude"]}
+ *   OPENAI_API_KEY     (Secret, optional)  key from platform.openai.com: GPT writing and AI photos
+ *   OPENAI_MODEL       (Text, optional)    OpenAI text model, default gpt-5.5
+ *   OPENAI_IMAGE_MODEL (Text, optional)    OpenAI image model, default gpt-image-2.5-flare
+ *   GEMINI_API_KEY     (Secret, optional)  key from aistudio.google.com: Gemini, used first for web research
+ *   GEMINI_MODEL       (Text, optional)    Gemini model, default gemini-3.8-flash
  */
 
 const ALLOWED_ORIGINS = [
@@ -20,12 +25,21 @@ const MODELS = {
   complex: "claude-sonnet-5-5", // kept on Sonnet to control cost
 };
 
+// Which AI handles which job, best first. Override with a ROUTES variable (JSON) in Cloudflare.
+const ROUTES = {
+  research: ["gemini", "openai", "claude"],  // live web research and reading websites (Google Search first)
+  copy: ["claude", "openai", "gemini"],      // concepts, ad copy, briefs
+  art: ["claude", "openai", "gemini"],       // art-directed ad illustrations (SVG)
+};
+
 const MAX_BODY_BYTES = 60_000;   // largest prompt accepted
 const MAX_OUTPUT_TOKENS = 6000;  // longest answer
 const PER_IP_LIMIT = 40;         // AI calls per visitor...
 const PER_IP_WINDOW_MS = 10 * 60 * 1000; // ...per 10 minutes (best effort)
 
 const hits = new Map();
+const imageHits = new Map();
+const PER_IP_IMAGES = 6; // AI photos per visitor per 10 minutes
 
 function cors(origin) {
   return {
@@ -44,13 +58,13 @@ function reply(status, body, origin) {
   });
 }
 
-function overLimit(ip) {
+function overLimit(ip, map = hits, limit = PER_IP_LIMIT) {
   const now = Date.now();
-  const list = (hits.get(ip) || []).filter((t) => now - t < PER_IP_WINDOW_MS);
+  const list = (map.get(ip) || []).filter((t) => now - t < PER_IP_WINDOW_MS);
   list.push(now);
-  hits.set(ip, list);
-  if (hits.size > 5000) hits.clear();
-  return list.length > PER_IP_LIMIT;
+  map.set(ip, list);
+  if (map.size > 5000) map.clear();
+  return list.length > limit;
 }
 
 // Read a website's own page (title, description, headings, visible text) so new
@@ -106,6 +120,9 @@ export default {
       return new Response(null, { status: 204, headers: cors(origin) });
     }
     // Image pass-through so the site can draw a brand's own images into its ads
+    if (request.method === "GET" && new URL(request.url).searchParams.has("caps")) {
+      return reply(200, { images: !!env.OPENAI_API_KEY, models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
+    }
     if (request.method === "GET") {
       const target = new URL(request.url).searchParams.get("img") || "";
       if (!/^https:\/\//i.test(target)) return reply(400, { code: "invalid_request", message: "Missing image" }, origin);
@@ -135,6 +152,27 @@ export default {
     let body;
     try { body = JSON.parse(raw); } catch {
       return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin);
+    }
+
+    // AI photo for an ad (OpenAI image model)
+    if (body.image && typeof body.image === "object") {
+      if (!env.OPENAI_API_KEY) return reply(400, { code: "not_configured", message: "AI photos aren't connected yet" }, origin);
+      if (overLimit(ip, imageHits, PER_IP_IMAGES)) return reply(429, { code: "rate_limited", message: "Photo limit reached. Try again in a few minutes." }, origin);
+      const size = ["1024x1024", "1024x1536", "1536x1024"].includes(body.image.size) ? body.image.size : "1024x1024";
+      const prompt = String(body.image.prompt || "").slice(0, 3000);
+      if (!prompt.trim()) return reply(400, { code: "invalid_request", message: "Missing prompt" }, origin);
+      const res = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${env.OPENAI_API_KEY}` },
+        body: JSON.stringify({ model: env.OPENAI_IMAGE_MODEL || "gpt-image-2.5-flare", prompt, size, quality: "medium", output_format: "jpeg", n: 1 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      const b64 = data?.data?.[0]?.b64_json;
+      if (!res.ok || !b64) {
+        const busy = res.status === 429;
+        return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : (res.status === 400 ? "refused" : "upstream_error"), message: data?.error?.message || "Image error" }, origin);
+      }
+      return reply(200, { image: `data:image/jpeg;base64,${b64}` }, origin);
     }
 
     // Tool-using projects (Ad Performance Copilot) send a full Messages API request
@@ -230,9 +268,38 @@ export default {
       return { text, searched, truncated: data.stop_reason === "max_tokens" };
     }
 
-    // OpenAI (GPT) instead of Claude, when the page asks for it
-    if (body.provider === "openai") {
-      if (!env.OPENAI_API_KEY) return reply(400, { code: "not_configured", message: "GPT isn't connected yet" }, origin);
+    async function claude() {
+      if (!env.ANTHROPIC_API_KEY) return { error: 0 };
+      let out = await ask(false);
+      // A web-search request that came back without searching gets one forced retry
+      if (tools && !siteText && !out.error && out.searched === 0) {
+        const forced = await ask(true);
+        if (!forced.error && forced.text.trim()) out = forced;
+      }
+      return out;
+    }
+
+    async function gemini() {
+      if (!env.GEMINI_API_KEY) return { error: 0 };
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL || "gemini-3.8-flash"}:generateContent`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+          ...(body.webSearch ? { tools: [{ google_search: {} }] } : {}),
+          generationConfig: { maxOutputTokens: 16000 },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { error: res.status, message: data?.error?.message || "Gemini error" };
+      const cand = data?.candidates?.[0] || {};
+      return { text: (cand.content?.parts || []).map((x) => x.text || "").join(""), truncated: cand.finishReason === "MAX_TOKENS",
+        searched: (cand.groundingMetadata?.webSearchQueries || []).length };
+    }
+
+    async function openai() {
+      if (!env.OPENAI_API_KEY) return { error: 0 };
       const res = await fetch("https://api.openai.com/v1/responses", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${env.OPENAI_API_KEY}` },
@@ -245,26 +312,31 @@ export default {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const busy = res.status === 429;
-        return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : "upstream_error", message: data?.error?.message || "GPT error" }, origin);
-      }
+      if (!res.ok) return { error: res.status, message: data?.error?.message || "GPT error" };
       const items = Array.isArray(data.output) ? data.output : [];
       const text = data.output_text || items.filter((o) => o.type === "message")
         .flatMap((o) => o.content || []).filter((c) => c.type === "output_text").map((c) => c.text).join("");
-      return reply(200, { text, truncated: data.status === "incomplete", searched: items.filter((o) => o.type === "web_search_call").length, model: data.model }, origin);
+      return { text, truncated: data.status === "incomplete", searched: items.filter((o) => o.type === "web_search_call").length };
     }
 
-    let out = await ask(false);
-    // A web-search request that came back without searching gets one forced retry
-    if (tools && !siteText && !out.error && out.searched === 0) {
-      const forced = await ask(true);
-      if (!forced.error && forced.text.trim()) out = forced;
+    // Route each job to the AI that suits it best; fall back to the next one if it isn't connected or fails
+    const CALL = { claude, gemini, openai };
+    const task = ROUTES[body.task] ? body.task : (body.webSearch ? "research" : "copy");
+    let order = ROUTES[task];
+    try { const custom = env.ROUTES ? JSON.parse(env.ROUTES)[task] : null; if (Array.isArray(custom) && custom.length) order = custom; } catch {}
+    let out = { error: 0 }, used = "";
+    for (const name of order) {
+      if (!CALL[name]) continue;
+      out = await CALL[name]();
+      used = name;
+      if (!out.error && String(out.text || "").trim()) break;
+      if (out.error === 400 || out.error === 413) break; // the request itself was refused; another model won't fix it
     }
+    if (out.error === 0) return reply(400, { code: "not_configured", message: "No AI model is connected" }, origin);
     if (out.error) {
       const busy = out.error === 429 || out.error === 529;
       return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : "upstream_error", message: out.message }, origin);
     }
-    return reply(200, { text: out.text, truncated: out.truncated, searched: out.searched }, origin);
+    return reply(200, { text: out.text, truncated: out.truncated, searched: out.searched, model: used }, origin);
   },
 };

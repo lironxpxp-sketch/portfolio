@@ -43,14 +43,29 @@ Without this step the site still works; those two projects run in demo/template 
 
 Guardrails built in: only your domain can call the Worker, each visitor gets 40 AI calls per 10 minutes, and prompts and answers are size-capped. The spend limit from step a.2 caps your bill.
 
-### Optional: add GPT (OpenAI) as a second model
+### Which AI does what (automatic)
+
+The Worker picks the AI for each job and skips any that isn't connected:
+
+| Job | Order tried |
+|---|---|
+| Web research, reading websites | Gemini → GPT → Claude |
+| Concepts, ad copy, briefs | Claude → GPT → Gemini |
+| Ad artwork (illustrations) | Claude → GPT → Gemini |
+| AI photos | OpenAI image model |
+
+If one fails, the next one answers. To change the order, add a **Text** variable `ROUTES`, e.g. `{"copy":["openai","claude"]}`.
+
+### Optional: connect GPT (OpenAI) and AI photos
 
 1. At **platform.openai.com** sign in, add billing credit, and set a monthly limit under **Settings → Limits**.
 2. **API keys → Create new secret key**. Copy it (starts with `sk-`).
 3. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `OPENAI_API_KEY`, value = the key. Deploy.
-4. Optional: add a **Text** variable `OPENAI_MODEL` to choose the model (default `gpt-5.5`).
 
-Creative Studio then shows a model picker: Claude (Anthropic) or GPT (OpenAI).
+### Optional: connect Gemini (Google)
+
+1. At **aistudio.google.com** sign in and click **Get API key → Create API key**.
+2. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `GEMINI_API_KEY`, value = the key. Deploy.
 
 ## Updating projects
 

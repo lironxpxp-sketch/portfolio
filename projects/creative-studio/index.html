@@ -1,4 +1,4 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=5"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=6"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Creative Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=Caveat:wght@700&display=swap">
@@ -29,8 +29,7 @@ h3{font:600 15px var(--f-body);margin:0}
 .sub{color:var(--muted);font-size:13px}
 .mode{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .mode.on{background:var(--ok-bg);color:var(--ok);border-color:transparent}
-.modelbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.modelbox select{width:auto;font-size:12px;padding:5px 8px}
+
 
 .rail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding:0;list-style:none}
 .rail button{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 13px var(--f-body);padding:6px 12px 6px 6px;border-radius:999px;cursor:pointer}
@@ -141,7 +140,7 @@ canvas.adc{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow
       <h1>Creative Studio</h1>
       <div class="sub">From a website to ready-to-launch ad creatives for Meta, LinkedIn, Google and TikTok.</div>
     </div>
-    <div class="modelbox"><span class="mode" id="mode">Checking Claude…</span><select id="model" aria-label="AI model" hidden></select></div>
+    <span class="mode" id="mode">Checking AI…</span>
   </header>
   <ol class="rail" id="rail" aria-label="Steps"></ol>
   <main class="panel" id="view" aria-live="polite"></main>
@@ -190,9 +189,8 @@ const S={step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,b
   platforms:new Set(["meta","google_search"]),goal:"trial",concepts:[],picked:new Set(),creatives:[],tab:null,
   busy:null,ctl:null,notice:"",usedAI:false};
 let sample=null,downloads=null,aiChecked=false;
-const MODELS=[["claude","Claude (Anthropic)"],["openai","GPT (OpenAI)"]];
-let PROVIDER="claude";try{PROVIDER=localStorage.getItem("cs.provider")||"claude"}catch(e){}
-const modelName=()=>PROVIDER==="openai"?"GPT":"Claude";
+const ART={},PHOTO={};let CAPS={images:false};
+(window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};refreshArt()}).catch(()=>{});
 
 const STEPS=()=>S.mode==="company"
   ?[["type","Project type"],["site","Website & product"],["platforms","Platforms"],["create","Creatives"]]
@@ -202,30 +200,29 @@ function maxReached(){ // highest step the user may jump to
   if(!S.mode)return 0; if(!S.brief)return 1; if(stepId()==="create"||S.creatives.length)return STEPS().length-1;
   if(S.mode==="private"&&S.concepts.length)return 3; return 2;}
 
-/* ---------- Claude ---------- */
+/* ---------- AI ---------- */
 (async()=>{
   try{ if(window.claude&&window.claude.use){ [sample,downloads]=await Promise.all([window.claude.use("sample"),window.claude.use("downloads")]); } }catch(e){sample=null}
   aiChecked=true; paintMode(); render();
 })();
 function paintMode(){const m=$("mode");
-  if(!aiChecked){m.textContent="Checking Claude…";return}
-  const sel=$("model");if(sample&&window.__aiEndpoint){sel.hidden=false;sel.innerHTML=MODELS.map(([k,l])=>`<option value="${k}" ${k===PROVIDER?"selected":""}>${l}</option>`).join("")}else{PROVIDER="claude"}
-  m.className="mode"+(sample?" on":""); m.textContent=sample?modelName()+" connected":"Template mode";
-  m.title=sample?"Analysis and copy are written by Claude":"Claude isn't available in this view, so the studio uses built-in templates";}
+  if(!aiChecked){m.textContent="Checking AI…";return}
+  m.className="mode"+(sample?" on":""); m.textContent=sample?"AI connected":"Template mode";
+  m.title=sample?"Analysis, copy and artwork are written by AI":"AI isn't available in this view, so the studio uses built-in templates";}
 const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
 async function ask(prompt,label,web){
   S.ctl=new AbortController(); S.busy=label; render();
-  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,provider:PROVIDER}:{signal:S.ctl.signal,provider:PROVIDER}); }
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,task:"research"}:{signal:S.ctl.signal,task:"copy"}); }
   finally{ S.busy=null; S.ctl=null; }
 }
 function aiError(e){const c=e&&e.code;
   if(c==="cancelled")return "stop";
   if(FATAL.includes(c)){sample=null;paintMode();return "fallback"}
-  if(c==="not_configured"){S.notice=modelName()+" isn't connected yet. Switch the model back to Claude.";return "error"}
+  if(c==="not_configured"){S.notice="The AI isn't connected right now. Try again later.";return "error"}
   if(c==="rate_limited")S.notice="You've hit a usage limit for now. Wait a few minutes and try again.";
-  else if(c==="invalid_json")S.notice=modelName()+"'s answer came back in the wrong shape. Try again.";
-  else if(c==="refused")S.notice=modelName()+" couldn't help with this input. Check the website or details and try again.";
-  else S.notice="Couldn't reach "+modelName()+" just now. Try again.";
+  else if(c==="invalid_json")S.notice="The AI's answer came back in the wrong shape. Try again.";
+  else if(c==="refused")S.notice="The AI couldn't help with this input. Check the website or details and try again.";
+  else S.notice="Couldn't reach the AI just now. Try again.";
   return "error";}
 
 const briefText=b=>`Brand / product: ${b.name}${b.brand&&b.brand!==b.name?` (by ${b.brand})`:""}
@@ -301,7 +298,7 @@ Reply with only a JSON array of 6 objects: [{"angle":"one of the angles","title"
     try{const r=await ask(prompt,"Finding messaging concepts…");S.usedAI=true;
       const list=(Array.isArray(r)?r:r.concepts||[]).filter(c=>c&&c.hook).slice(0,6);
       if(list.length){S.concepts=list;S.picked=new Set([0,1,2].filter(i=>i<list.length));render();return}
-      S.notice="Claude didn't return any concepts. Try again.";render();return;
+      S.notice="The AI didn't return any concepts. Try again.";render();return;
     }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
   }
   S.concepts=templateConcepts(b,fresh?1:0);S.picked=new Set([0,1,2]);render();
@@ -351,8 +348,8 @@ Match the tone. Use the proof point only as given; never invent numbers, awards,
 Reply with only JSON: {"creatives":[{"platform":"meta","concept":"concept title","angle":"angle","fields":{...},"visual":{...}}]}`;
     try{const r=await ask(prompt,"Writing creatives for "+plats.map(p=>PLAT[p].name).join(", ")+"…");S.usedAI=true;
       const list=(r&&Array.isArray(r.creatives)?r.creatives:[]).filter(c=>c&&PLAT[c.platform]&&c.fields);
-      if(list.length){list.forEach(c=>{c._orig={quote:(c.visual||{}).quote};c.visual=fillVisual(c.visual||{headline:c.concept},b)});S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;render();return}
-      S.notice="Claude didn't return any creatives. Try again.";render();return;
+      if(list.length){list.forEach(c=>{c._orig={quote:(c.visual||{}).quote};c.visual=fillVisual({...(c.visual||{headline:c.concept}),_concept:c.concept},b)});S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;render();makeArt();return}
+      S.notice="The AI didn't return any creatives. Try again.";render();return;
     }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
   }
   const cs=concepts||templateConcepts(b,0).slice(0,3);
@@ -409,8 +406,8 @@ function vSite(n){const company=S.mode==="company",ex=EXAMPLES[S.mode];
     <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right"><button type="button" class="btn primary" data-act="next" ${S.brief?"":"disabled"}>Choose platforms</button></div></div>
   </div>`}
 function conf(c){
-  if(c==="none")return `<div class="notice">Claude isn't available here, so the studio couldn't read the site. Fill in the details below and the templates do the rest.</div>`;
-  if(c==="low")return `<div class="notice">Claude doesn't know this site well, so these details are a best guess. Check them, or paste text from your site above and analyze again.</div>`;
+  if(c==="none")return `<div class="notice">AI isn't available here, so the studio couldn't read the site. Fill in the details below and the templates do the rest.</div>`;
+  if(c==="low")return `<div class="notice">The AI doesn't know this site well, so these details are a best guess. Check them, or paste text from your site above and analyze again.</div>`;
   return `<div class="notice info">Filled in from ${esc(S.url)}. Edit anything that's off.</div>`}
 function briefForm(){const b=S.brief;
   return `<div class="stack" id="briefform">
@@ -472,14 +469,15 @@ function creativeCard(c,i){const P=PLAT[c.platform];
   return `<article class="creative" data-i="${i}">
     <div class="copy"><span class="tag">${esc(c.angle||"Concept")} · ${esc(c.concept||"")}</span>${fields}
       <div><button type="button" class="btn" data-act="copy" data-i="${i}">Copy text</button></div></div>
-    <div class="visuals">${P.sizes.length?`<div class="fmtrow" style="flex-basis:100%"><label for="fmt-${i}" style="margin:0">Image style</label><select id="fmt-${i}" data-fmt="${i}">${fmtOptions(c)}</select></div>`+P.sizes.map(s=>adHtml(c,s,i)).join(""):serpHtml(c)}</div>
+    <div class="visuals">${P.sizes.length?artBar(c)+`<div class="fmtrow" style="flex-basis:100%"><label for="fmt-${i}" style="margin:0">Image style</label><select id="fmt-${i}" data-fmt="${i}">${fmtOptions(c)}</select></div>`+P.sizes.map(s=>adHtml(c,s,i)).join(""):serpHtml(c)}</div>
   </article>`}
 function fieldHtml(i,k,j,label,max,text){return `<div class="field" data-max="${max}"><div class="k"><span>${esc(label)}</span><span class="cnt"></span></div><div contenteditable="true" role="textbox" aria-label="${esc(label)}" data-i="${i}" data-k="${k}" data-j="${j}">${esc(text||"")}</div></div>`}
 function count(f){const t=f.querySelector("[contenteditable]").textContent.trim(),max=+f.dataset.max,c=f.querySelector(".cnt");c.textContent=t.length+" / "+max;c.className="cnt "+(t.length<=max?"ok":"over")}
 
 function fillVisual(v,b){v={...v};const n=b.name||"it",pain=lc(b.pain)||"the old way",what=lc(b.what)||n;
   if(!FORMATS[v.format])v.format="bold";
-  if(v.format==="photo"&&!(b.upload||b.image))v.format="bold";
+  if(v.format==="photo"&&!(b.upload||b.image||(v._concept&&PHOTO[v._concept])))v.format="bold";
+  if(v.format==="art"&&!(v._concept&&ART[v._concept]&&ART[v._concept].svg))v.format="bold";
   if(v.format==="testimonial"&&!v.quote)v.format="bold";
   if(v.format==="stat"&&!v.stat){const m=String(b.proof||"").match(/[\d][\d.,]*\s*(%|x|×|\+|k|m)?/i);if(m){v.stat=m[0].trim();v.statLabel=v.statLabel||cap(b.proof.replace(m[0],"").trim())}else v.format="bold"}
   if(v.format==="phone")v.screen=v.screen||n;
@@ -490,7 +488,7 @@ function fillVisual(v,b){v={...v};const n=b.name||"it",pain=lc(b.pain)||"the old
   if(v.format==="compare"){v.them=v.them||"The old way";if(!(v.rows||[]).length)v.rows=[fit(cap(what),32),`No ${fit(pain,26)}`,"Ready in minutes"]}
   if(v.format==="ugc")v.note=v.note||fit(`honestly wish I'd found ${n} sooner`,60);
   return v}
-function fmtOptions(c){const b=S.brief,v=c.visual||{};return Object.entries(FORMATS).filter(([k])=>!(k==="photo"&&!(b.upload||b.image))&&!(k==="testimonial"&&!v.quote&&!(c._orig&&c._orig.quote))&&!(k==="stat"&&!v.stat&&!/\d/.test(b.proof||"")))
+function fmtOptions(c){const b=S.brief,v=c.visual||{},A=ART[c.concept];return Object.entries(FORMATS).filter(([k])=>!(k==="art"&&!(A&&A.svg))&&!(k==="photo"&&!(b.upload||b.image||PHOTO[c.concept]))&&!(k==="testimonial"&&!v.quote&&!(c._orig&&c._orig.quote))&&!(k==="stat"&&!v.stat&&!/\d/.test(b.proof||"")))
   .map(([k,l])=>`<option value="${k}" ${v.format===k?"selected":""}>${l}</option>`).join("")}
 function lum(h){const n=parseInt(h.slice(1),16),f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(n>>16&255)+.7152*f(n>>8&255)+.0722*f(n&255)}
 function adHtml(c,[name,w,h],i){const r=w/h,dw=r>3?Math.min(520,w):r<.6?(h>1000?190:130):Math.min(260*r,r>1.5?400:280,w);
@@ -510,7 +508,7 @@ function buildCsv(){const rows=[["Platform","Concept","Angle","Field","Text","Ch
 
 /* ---------- ad image engine: every creative is drawn on a canvas at its real platform size ---------- */
 const FORMATS={
-  photo:"Brand photo",phone:"Phone mockup",testimonial:"Customer quote",stat:"Big number",beforeafter:"Before / after",
+  art:"AI artwork",photo:"Photo",phone:"Phone mockup",testimonial:"Customer quote",stat:"Big number",beforeafter:"Before / after",
   checklist:"Checklist",notification:"Notifications",chat:"Chat",compare:"Them vs us",ugc:"Sticky note",bold:"Bold type"};
 const IMG={};
 function imgUrl(u){if(!u)return"";if(/^(data|blob):/.test(u))return u;if(!/^https?:\/\//i.test(u))return"";
@@ -555,6 +553,7 @@ function brandMark(ctx,x,y,s,B,color){if(B.logoImg){const h=s*1.5,w=Math.min(h*B
 // ---- visual blocks: each draws one format inside a rectangle ----
 const VIS={
   photo(ctx,x,y,w,h,v,B){photoOr(ctx,x,y,w,h,B,1)},
+  art(ctx,x,y,w,h,v,B){if(B.art)cover(ctx,B.art,x,y,w,h);else pattern(ctx,x,y,w,h,B,7)},
   bold(ctx,x,y,w,h,v,B){pattern(ctx,x,y,w,h,B,2)},
   phone(ctx,x,y,w,h,v,B){pattern(ctx,x,y,w,h,{...B,bg:mix(B.bg,"#000000",.2)},3);
     const ph=h*.86,pw=Math.min(w*.62,ph*.5),px=x+(w-pw)/2,py=y+(h-ph)/2,r=pw*.14;
@@ -613,7 +612,7 @@ function drawAd(ctx,W,H,c,B){const v=c.visual||{},fmt=FORMATS[v.format]?v.format
     VIS.bold(ctx,0,0,W,H,v,B);ctx.fillStyle="rgba(0,0,0,.35)";ctx.fillRect(0,0,W,H);
     brandMark(ctx,H*.25,H*.3,H*.28,B,"#fff");drawText(ctx,head,W*.25,H*.12,W*.5,H*.76,{max:H*.36,min:8,weight:800,fam:"d",color:"#fff",valign:"middle"});
     ctaPill(ctx,ct,W*.79,H*.26,W*.19,H*.2,B);return}
-  const fullBleed=["photo","bold","ugc","notification","stat"].includes(fmt);
+  const fullBleed=["photo","bold","ugc","notification","stat","art"].includes(fmt);
   if(fullBleed&&fmt!=="bold"&&fmt!=="photo"){ // visual fills most, text strip on top or bottom
     const th=r<.7?H*.3:r>1.3?H*.42:H*.38;VIS[fmt](ctx,0,0,W,H-th,v,B);ctx.fillStyle=B.bg;ctx.fillRect(0,H-th,W,th);textArea(ctx,0,H-th,W,th,head,sub,ct,B,fg,true);return}
   if(fmt==="photo"||fmt==="bold"){VIS[fmt](ctx,0,0,W,H,v,B);const g=ctx.createLinearGradient(0,H*.35,0,H);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.78)");
@@ -630,16 +629,55 @@ function textArea(ctx,x,y,w,h,head,sub,ct,B,col,logo,big){const u=AD_U,p=u*.055;
   if(sub){drawText(ctx,sub,x+p,yy+hh+u*.022,w-p*2,avail-hh-u*.022,{max:u*.05,min:Math.max(7,u*.022),weight:500,color:col})}
   ctaPill(ctx,ct,x+p,y+h-p-ctaH,w-p*2,cs,B)}
 let AD_U=1000;
-function brandFor(){const b=S.brief||{};return{bg:hex(b.bg,"#1f2a44"),accent:hex(b.accent,"#ffb547"),name:b.brand||b.name||"Brand",
-  photo:b.upload?getImg(b.upload,paintAll):getImg(b.image,paintAll),logoImg:getImg(b.logo,paintAll)}}
-function paintAll(){const B=brandFor();document.querySelectorAll("canvas.adc").forEach(cv=>{const c=S.creatives[+cv.dataset.i];if(!c)return;
+function svgUrl(svg){return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}
+function brandFor(c){const b=S.brief||{},k=c&&c.concept,A=k&&ART[k];return{bg:hex(b.bg,"#1f2a44"),accent:hex(b.accent,"#ffb547"),name:b.brand||b.name||"Brand",
+  photo:k&&PHOTO[k]?getImg(PHOTO[k],paintAll):b.upload?getImg(b.upload,paintAll):getImg(b.image,paintAll),logoImg:getImg(b.logo,paintAll),
+  art:A&&A.svg?getImg(svgUrl(A.svg),paintAll):null}}
+function paintAll(){document.querySelectorAll("canvas.adc").forEach(cv=>{const c=S.creatives[+cv.dataset.i];if(!c)return;const B=brandFor(c);
   const W=+cv.dataset.w,H=+cv.dataset.h,k=cv.width/W,ctx=cv.getContext("2d");ctx.setTransform(k,0,0,k,0,0);try{drawAd(ctx,W,H,c,B)}catch(e){console.error(e)}})}
-function adPng(c,w,h){const cv=document.createElement("canvas");cv.width=w;cv.height=h;drawAd(cv.getContext("2d"),w,h,c,brandFor());
+function adPng(c,w,h){const cv=document.createElement("canvas");cv.width=w;cv.height=h;drawAd(cv.getContext("2d"),w,h,c,brandFor(c));
   return new Promise(res=>cv.toBlob(b=>res(b),"image/png"))}
 function loadZip(){return window.JSZip?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)})}
 function fileSlug(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"ad"}
 async function saveBlob(name,blob){try{if(downloads){await downloads.save({filename:name,data:blob});return true}}catch(e){if(e&&e.code==="declined")return false}
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return true}
+
+/* ---------- AI artwork and photos, one per concept ---------- */
+function cleanSvg(t){let s=String(t||"");const a=s.indexOf("<svg"),b=s.lastIndexOf("</svg>");if(a<0||b<0)return"";s=s.slice(a,b+6);
+  s=s.replace(/<(script|foreignObject|image|iframe|style)[\s\S]*?<\/\1>/gi,"").replace(/<(script|foreignObject|image|iframe)[^>]*\/?>/gi,"")
+   .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi,"").replace(/(xlink:)?href\s*=\s*("(?!#)[^"]*"|'(?!#)[^']*')/gi,"").replace(/url\((?!\s*['"]?#)[^)]*\)/gi,"none");
+  s=s.replace(/<svg([^>]*)>/i,(m,at)=>{at=at.replace(/\s(width|height)\s*=\s*("[^"]*"|'[^']*')/gi,"");if(!/xmlns=/.test(at))at+=' xmlns="http://www.w3.org/2000/svg"';if(!/viewBox/i.test(at))at+=' viewBox="0 0 1000 1000"';return `<svg${at} width="1000" height="1000">`});
+  return s.length<60000?s:""}
+function artPrompt(c){const b=S.brief,con=(S.concepts||[]).find(x=>x.title===c.concept)||{};
+  return `You are an award-winning art director and illustrator. Design the artwork for one paid social ad.
+${briefText(b)}
+Brand colors: background ${b.bg}, accent ${b.accent}. You may add 2-3 colors that harmonize with them.
+Concept: "${c.concept}" (${c.angle||con.angle||""})${con.insight?`\nCustomer insight: ${con.insight}`:""}
+Message: ${con.message||(c.visual||{}).sub||""}
+Headline that will sit on the ad: "${(c.visual||{}).headline||""}"
+
+Create an ORIGINAL illustration that shows this specific idea visually: a scene, object, character or visual metaphor that only makes sense for this product and this audience. Not abstract decoration, not generic icons, not a phone mockup. Make it bold and readable at small sizes, with one clear focal point.
+Technical rules for the SVG: one <svg> element with viewBox="0 0 1000 1000"; flat vector style using shapes, paths and gradients; NO text, letters or numbers anywhere; no <image>, no external links, no scripts, no CSS <style>; under 14000 characters. Fill the whole square edge to edge (a background shape covering 0,0 to 1000,1000).
+Also write "photo": a vivid description of a realistic photo for the same concept (setting, people or product, moment, light, camera angle), with no text or logos in the scene.
+Reply with only JSON: {"svg":"<svg ...>...</svg>","alt":"one sentence describing the artwork","photo":"photo description"}`}
+async function makeArt(force){if(!sample)return;const keys=[...new Set(S.creatives.map(c=>c.concept))].filter(k=>force===k||!ART[k]);
+  await Promise.all(keys.map(async k=>{const c=S.creatives.find(x=>x.concept===k);ART[k]={busy:true};refreshArt();
+    try{const r=await sample.json(artPrompt(c),{task:"art",cache:false});const svg=cleanSvg(r&&r.svg);
+      ART[k]={svg,alt:String(r&&r.alt||""),photo:String(r&&r.photo||""),failed:!svg};
+      if(svg)S.creatives.filter(x=>x.concept===k&&!x._userFmt).forEach(x=>{x.visual=fillVisual({...x.visual,_concept:k,format:"art"},S.brief)});
+    }catch(e){ART[k]={failed:true}}refreshArt()}))}
+async function makePhoto(k){const c=S.creatives.find(x=>x.concept===k);if(!c||!window.__aiImage)return;const A=ART[k]||{};
+  PHOTO[k]={busy:true};refreshArt();const b=S.brief;
+  const prompt=(A.photo||`A realistic advertising photo for ${b.name}: ${b.what}. Audience: ${b.audience}. Concept: ${c.concept}.`)+` Style: authentic, high-end advertising photography, natural light, ${b.tone||"friendly"} mood, colors that work with ${b.bg} and ${b.accent}. No text, letters, logos or watermarks anywhere in the image. Keep the lower third calm and uncluttered.`;
+  try{PHOTO[k]=await window.__aiImage(prompt,"1024x1024");S.creatives.filter(x=>x.concept===k).forEach(x=>{x._userFmt=true;x.visual=fillVisual({...x.visual,_concept:k,format:"photo"},S.brief)})}
+  catch(e){PHOTO[k]=null;S.notice=e&&e.code==="rate_limited"?"Photo limit reached for now. Try again in a few minutes.":e&&e.code==="refused"?"The image model declined this prompt. Try another concept.":"Couldn't create the photo. Try again."}
+  render()}
+function refreshArt(){if(stepId()==="create")render()}
+function artBar(c){const k=c.concept,A=ART[k],P=PHOTO[k];if(!sample&&!window.__aiImage)return"";
+  const st=A&&A.busy?"Designing artwork…":A&&A.failed?"Artwork didn't come out.":A&&A.svg?"":"";
+  const photoBtn=window.__aiImage&&CAPS.images?(P&&P.busy?'<span class="note">Creating photo…</span>':`<button type="button" class="btn" data-act="photo" data-k="${esc(k)}">${P?"New AI photo":"Create AI photo"}</button>`):"";
+  const artBtn=sample&&!(A&&A.busy)?`<button type="button" class="btn link" data-act="redoart" data-k="${esc(k)}">${A&&A.svg?"Redo artwork":"Design artwork"}</button>`:"";
+  return `<div class="fmtrow" style="flex-basis:100%">${st?`<span class="note">${st}</span>`:""}${artBtn}${photoBtn}</div>`}
 
 /* ---------- events ---------- */
 document.addEventListener("click",async e=>{
@@ -657,7 +695,7 @@ document.addEventListener("click",async e=>{
   if(a==="example"){applyExample();return}
   if(a==="concepts"){S.step=3;if(!S.concepts.length){await suggestConcepts(false)}else render();return}
   if(a==="reconcepts"){await suggestConcepts(true);return}
-  if(a==="create"){S.step=STEPS().length-1;await create();return}
+  if(a==="create"){Object.keys(ART).forEach(k=>delete ART[k]);Object.keys(PHOTO).forEach(k=>delete PHOTO[k]);S.step=STEPS().length-1;await create();return}
   if(a==="restart"){Object.assign(S,{step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[],notice:"",usedAI:false});S.picked.clear();render();return}
   if(a==="copy"){const c=S.creatives[+t.dataset.i],txt=PLAT[c.platform].fields.map(f=>{const v=c.fields[f.k];return Array.isArray(v)?v.map((x,j)=>`${f.l} ${j+1}: ${x}`).join("\n"):`${f.l}: ${v||""}`}).join("\n");
     try{await navigator.clipboard.writeText(txt);t.textContent="Copied"}catch(err){t.textContent="Copy failed. Select the text instead."}setTimeout(()=>{t.textContent="Copy text"},1600);return}
@@ -669,11 +707,12 @@ document.addEventListener("click",async e=>{
       await saveBlob(`${fileSlug(S.brief.name)}-creatives.zip`,await z.generateAsync({type:"blob"}))}catch(err){S.notice="Couldn't build the ZIP. Try downloading images one by one.";render()}
     t.disabled=false;t.textContent="Download all (ZIP)";return}
   if(a==="noupload"){S.brief.upload="";render();return}
+  if(a==="redoart"){const k=t.dataset.k;S.creatives.filter(x=>x.concept===k).forEach(x=>x._userFmt=false);await makeArt(k);return}
+  if(a==="photo"){await makePhoto(t.dataset.k);return}
 });
 document.addEventListener("submit",e=>{if(e.target.id==="siteform"){e.preventDefault();analyze()}});
 document.addEventListener("change",e=>{const el=e.target;
-  if(el.id==="model"){PROVIDER=el.value;try{localStorage.setItem("cs.provider",PROVIDER)}catch(x){}paintMode();return}
-  if(el.dataset&&el.dataset.fmt!=null){const c=S.creatives[+el.dataset.fmt];c.visual=fillVisual({...c.visual,format:el.value},S.brief);paintAll();return}
+  if(el.dataset&&el.dataset.fmt!=null){const c=S.creatives[+el.dataset.fmt];c._userFmt=true;c.visual=fillVisual({...c.visual,_concept:c.concept,format:el.value},S.brief);paintAll();return}
   if(el.id==="f-upload"&&el.files&&el.files[0]){const f=el.files[0];if(!/^image\//.test(f.type)){S.notice="That file isn't an image.";render();return}
     const rd=new FileReader();rd.onload=()=>{S.brief.upload=rd.result;if(S.company&&S.product>=0)S.company.upload=rd.result;render()};rd.readAsDataURL(f)}});
 document.addEventListener("input",e=>{const el=e.target;
