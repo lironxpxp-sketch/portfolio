@@ -1,4 +1,4 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=3"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=4"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Creative Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
@@ -200,7 +200,7 @@ function paintMode(){const m=$("mode");
 const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
 async function ask(prompt,label,web){
   S.ctl=new AbortController(); S.busy=label; render();
-  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb}:{signal:S.ctl.signal}); }
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url}:{signal:S.ctl.signal}); }
   finally{ S.busy=null; S.ctl=null; }
 }
 function aiError(e){const c=e&&e.code;
@@ -237,7 +237,7 @@ async function analyze(){
     const prompt=`You are a senior performance marketer preparing an ad brief.
 The ${company?"company":"person or small business"} behind this website: ${host}
 ${S.paste.trim()?`Text copied from their website:\n"""\n${S.paste.slice(0,8000)}\n"""\n`:""}
-${window.__aiWeb?`Before answering, you must search the web for "${host}" and read what the site itself says about its offer, audience and proof. Base the brief only on what you find; the domain name and words in it (like "cafe" or "studio") are not evidence of what the business does. If the search finds nothing about the site, make sensible assumptions and set confidence to "low". `:`Use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". `}Never invent statistics or awards.
+${window.__aiWeb?`If the website's own page text is included below, base the brief on it first. Also search the web for "${host}" and read what the site itself says about its offer, audience and proof. Base the brief only on what you find; the domain name and words in it (like "cafe" or "studio") are not evidence of what the business does. If the search finds nothing about the site, make sensible assumptions and set confidence to "low". `:`Use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". `}Never invent statistics or awards.
 Reply with only JSON in this shape:
 ${shape}`;
     try{

@@ -1,4 +1,4 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=3"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=4"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Pre-Call Brief</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap">
@@ -275,7 +275,7 @@ async function generate(){
   if(!sample){setStatus("AI drafting is switched off right now. Pick a sample meeting on the left to see a finished brief.",true);return}
   busy=true;ctl=new AbortController();$("gen").disabled=true;$("stop").hidden=false;setStatus("Researching and drafting… this takes 20–60 seconds.");
   try{
-    const data=await sample.json(prompt(f),{signal:ctl.signal,cache:false,webSearch:!!window.__aiWeb});
+    const data=await sample.json(prompt(f),{signal:ctl.signal,cache:false,webSearch:!!window.__aiWeb,siteUrl:f.site||""});
     const m=normalize(data,f);mine.unshift(m);mine=mine.slice(0,20);save(KEY,mine);
     try{localStorage.removeItem(DRAFT)}catch(e){}
     cur=m.id;view="brief";onlyNew=false;agenda();brief();

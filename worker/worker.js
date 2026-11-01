@@ -51,6 +51,44 @@ function overLimit(ip) {
   return list.length > PER_IP_LIMIT;
 }
 
+// Read a website's own page (title, description, headings, visible text) so new
+// sites that search engines haven't indexed yet can still be understood.
+async function readSite(input) {
+  let url;
+  try { url = new URL(/^https?:\/\//i.test(input) ? input : "https://" + input); } catch { return ""; }
+  const host = url.hostname.toLowerCase();
+  if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(host) || /(^|\.)(localhost|local|internal)$/.test(host)) return "";
+  let res;
+  try {
+    res = await fetch(url.toString(), {
+      headers: { "user-agent": "Mozilla/5.0 (compatible; LironSoferPortfolio/1.0)", accept: "text/html" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch { return ""; }
+  if (!res.ok || !/html/i.test(res.headers.get("content-type") || "")) return "";
+  const html = (await res.text()).slice(0, 400000);
+  const dec = (t) => t.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ");
+  const meta = (re) => { const m = html.match(re); return m ? dec(m[1]).trim() : ""; };
+  const title = meta(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const desc = meta(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i) || meta(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i);
+  const ogt = meta(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']*)["']/i);
+  const ogd = meta(/<meta[^>]+property=["']og:description["'][^>]*content=["']([^"']*)["']/i);
+  const body = dec(html
+    .replace(/<(script|style|noscript|svg|template)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]+>/g, " "))
+    .replace(/\s+/g, " ").trim().slice(0, 6000);
+  const parts = [
+    `Address: ${res.url || url.toString()}`,
+    title && `Page title: ${title}`,
+    desc && `Meta description: ${desc}`,
+    ogt && ogt !== title && `Share title: ${ogt}`,
+    ogd && ogd !== desc && `Share description: ${ogd}`,
+    body && `Visible text: ${body}`,
+  ].filter(Boolean);
+  return parts.length > 1 ? parts.join("\n") : "";
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
@@ -117,6 +155,16 @@ export default {
       return reply(400, { code: "invalid_request", message: "Messages must start and end with a user turn" }, origin);
     }
 
+    // If the page asked about a specific website, read that site directly and add it to the question
+    let siteText = "";
+    if (typeof body.siteUrl === "string" && body.siteUrl.trim()) {
+      siteText = await readSite(body.siteUrl.trim());
+      if (siteText) {
+        const last = messages[messages.length - 1];
+        last.content += `\n\nThe website's own page, fetched just now (treat this as the main evidence about the business):\n"""\n${siteText}\n"""`;
+      }
+    }
+
     const system = body.json
       ? "Your reply will be parsed by a program. Reply with only the requested JSON value: no preamble, no explanation, no code fences."
       : "You are the AI inside a small web tool on a personal portfolio site. Follow the instructions in the user's message exactly.";
@@ -164,7 +212,7 @@ export default {
 
     let out = await ask(false);
     // A web-search request that came back without searching gets one forced retry
-    if (tools && !out.error && out.searched === 0) {
+    if (tools && !siteText && !out.error && out.searched === 0) {
       const forced = await ask(true);
       if (!forced.error && forced.text.trim()) out = forced;
     }
