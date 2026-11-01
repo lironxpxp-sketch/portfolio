@@ -13,7 +13,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Bump when assets/claude-shim.js changes, so browsers don't keep an old copy
-SHIM_VERSION = "4"
+SHIM_VERSION = "5"
 
 HEAD = ('<script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script>'
         '<script src="../../assets/claude-shim.js?v=' + SHIM_VERSION + '"></script>')

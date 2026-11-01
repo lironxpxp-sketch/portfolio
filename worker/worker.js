@@ -5,6 +5,8 @@
  *
  * Settings (Cloudflare dashboard → your Worker → Settings → Variables):
  *   ANTHROPIC_API_KEY  (Secret)  your key from console.anthropic.com
+ *   OPENAI_API_KEY     (Secret, optional)  key from platform.openai.com, enables GPT
+ *   OPENAI_MODEL       (Text, optional)    OpenAI model id, default gpt-5.5
  */
 
 const ALLOWED_ORIGINS = [
@@ -226,6 +228,31 @@ export default {
         convo = [...convo, { role: "assistant", content: blocks }];
       }
       return { text, searched, truncated: data.stop_reason === "max_tokens" };
+    }
+
+    // OpenAI (GPT) instead of Claude, when the page asks for it
+    if (body.provider === "openai") {
+      if (!env.OPENAI_API_KEY) return reply(400, { code: "not_configured", message: "GPT isn't connected yet" }, origin);
+      const res = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: env.OPENAI_MODEL || "gpt-5.5",
+          instructions: system + (body.webSearch ? " You can search the web; use it to check facts." : ""),
+          input: messages,
+          max_output_tokens: 16000,
+          ...(body.webSearch ? { tools: [{ type: "web_search" }] } : {}),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const busy = res.status === 429;
+        return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : "upstream_error", message: data?.error?.message || "GPT error" }, origin);
+      }
+      const items = Array.isArray(data.output) ? data.output : [];
+      const text = data.output_text || items.filter((o) => o.type === "message")
+        .flatMap((o) => o.content || []).filter((c) => c.type === "output_text").map((c) => c.text).join("");
+      return reply(200, { text, truncated: data.status === "incomplete", searched: items.filter((o) => o.type === "web_search_call").length, model: data.model }, origin);
     }
 
     let out = await ask(false);

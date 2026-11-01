@@ -1,4 +1,4 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=4"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=5"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Creative Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=Caveat:wght@700&display=swap">
@@ -29,6 +29,8 @@ h3{font:600 15px var(--f-body);margin:0}
 .sub{color:var(--muted);font-size:13px}
 .mode{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .mode.on{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.modelbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modelbox select{width:auto;font-size:12px;padding:5px 8px}
 
 .rail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding:0;list-style:none}
 .rail button{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 13px var(--f-body);padding:6px 12px 6px 6px;border-radius:999px;cursor:pointer}
@@ -139,7 +141,7 @@ canvas.adc{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow
       <h1>Creative Studio</h1>
       <div class="sub">From a website to ready-to-launch ad creatives for Meta, LinkedIn, Google and TikTok.</div>
     </div>
-    <span class="mode" id="mode">Checking Claude…</span>
+    <div class="modelbox"><span class="mode" id="mode">Checking Claude…</span><select id="model" aria-label="AI model" hidden></select></div>
   </header>
   <ol class="rail" id="rail" aria-label="Steps"></ol>
   <main class="panel" id="view" aria-live="polite"></main>
@@ -188,6 +190,9 @@ const S={step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,b
   platforms:new Set(["meta","google_search"]),goal:"trial",concepts:[],picked:new Set(),creatives:[],tab:null,
   busy:null,ctl:null,notice:"",usedAI:false};
 let sample=null,downloads=null,aiChecked=false;
+const MODELS=[["claude","Claude (Anthropic)"],["openai","GPT (OpenAI)"]];
+let PROVIDER="claude";try{PROVIDER=localStorage.getItem("cs.provider")||"claude"}catch(e){}
+const modelName=()=>PROVIDER==="openai"?"GPT":"Claude";
 
 const STEPS=()=>S.mode==="company"
   ?[["type","Project type"],["site","Website & product"],["platforms","Platforms"],["create","Creatives"]]
@@ -204,21 +209,23 @@ function maxReached(){ // highest step the user may jump to
 })();
 function paintMode(){const m=$("mode");
   if(!aiChecked){m.textContent="Checking Claude…";return}
-  m.className="mode"+(sample?" on":""); m.textContent=sample?"Claude connected":"Template mode";
+  const sel=$("model");if(sample&&window.__aiEndpoint){sel.hidden=false;sel.innerHTML=MODELS.map(([k,l])=>`<option value="${k}" ${k===PROVIDER?"selected":""}>${l}</option>`).join("")}else{PROVIDER="claude"}
+  m.className="mode"+(sample?" on":""); m.textContent=sample?modelName()+" connected":"Template mode";
   m.title=sample?"Analysis and copy are written by Claude":"Claude isn't available in this view, so the studio uses built-in templates";}
 const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
 async function ask(prompt,label,web){
   S.ctl=new AbortController(); S.busy=label; render();
-  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url}:{signal:S.ctl.signal}); }
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,provider:PROVIDER}:{signal:S.ctl.signal,provider:PROVIDER}); }
   finally{ S.busy=null; S.ctl=null; }
 }
 function aiError(e){const c=e&&e.code;
   if(c==="cancelled")return "stop";
   if(FATAL.includes(c)){sample=null;paintMode();return "fallback"}
+  if(c==="not_configured"){S.notice=modelName()+" isn't connected yet. Switch the model back to Claude.";return "error"}
   if(c==="rate_limited")S.notice="You've hit a usage limit for now. Wait a few minutes and try again.";
-  else if(c==="invalid_json")S.notice="Claude's answer came back in the wrong shape. Try again.";
-  else if(c==="refused")S.notice="Claude couldn't help with this input. Check the website or details and try again.";
-  else S.notice="Couldn't reach Claude just now. Try again.";
+  else if(c==="invalid_json")S.notice=modelName()+"'s answer came back in the wrong shape. Try again.";
+  else if(c==="refused")S.notice=modelName()+" couldn't help with this input. Check the website or details and try again.";
+  else S.notice="Couldn't reach "+modelName()+" just now. Try again.";
   return "error";}
 
 const briefText=b=>`Brand / product: ${b.name}${b.brand&&b.brand!==b.name?` (by ${b.brand})`:""}
@@ -665,6 +672,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("submit",e=>{if(e.target.id==="siteform"){e.preventDefault();analyze()}});
 document.addEventListener("change",e=>{const el=e.target;
+  if(el.id==="model"){PROVIDER=el.value;try{localStorage.setItem("cs.provider",PROVIDER)}catch(x){}paintMode();return}
   if(el.dataset&&el.dataset.fmt!=null){const c=S.creatives[+el.dataset.fmt];c.visual=fillVisual({...c.visual,format:el.value},S.brief);paintAll();return}
   if(el.id==="f-upload"&&el.files&&el.files[0]){const f=el.files[0];if(!/^image\//.test(f.type)){S.notice="That file isn't an image.";render();return}
     const rd=new FileReader();rd.onload=()=>{S.brief.upload=rd.result;if(S.company&&S.product>=0)S.company.upload=rd.result;render()};rd.readAsDataURL(f)}});

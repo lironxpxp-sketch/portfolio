@@ -43,6 +43,15 @@ Without this step the site still works; those two projects run in demo/template 
 
 Guardrails built in: only your domain can call the Worker, each visitor gets 40 AI calls per 10 minutes, and prompts and answers are size-capped. The spend limit from step a.2 caps your bill.
 
+### Optional: add GPT (OpenAI) as a second model
+
+1. At **platform.openai.com** sign in, add billing credit, and set a monthly limit under **Settings → Limits**.
+2. **API keys → Create new secret key**. Copy it (starts with `sk-`).
+3. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `OPENAI_API_KEY`, value = the key. Deploy.
+4. Optional: add a **Text** variable `OPENAI_MODEL` to choose the model (default `gpt-5.5`).
+
+Creative Studio then shows a model picker: Claude (Anthropic) or GPT (OpenAI).
+
 ## Updating projects
 
 Ad Performance Copilot's master copy is `sources/ad-copilot.html` (run its tests with `node sources/ad-copilot.test.js`). The other projects come from their Claude artifacts.
