@@ -1,0 +1,495 @@
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Creative Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: single-column guided flow (type → website → platforms → concepts → creatives) under a step rail; results widen to a tabbed board */
+:root{
+  --bg:#f6f4f9; --panel:#ffffff; --ink:#1d1a26; --muted:#6a6478; --line:#e3dfeb; --accent:#5b3fd1; --accent-ink:#ffffff; --accent-soft:#ece7fd;
+  --ok:#1f7a4d; --ok-bg:#e2f3e9; --over:#b3362c; --over-bg:#f9e3e0; --warn:#8a5a00; --warn-bg:#fbf0d9;
+  --serp-link:#1a0dab; --serp-url:#2a6a3a;
+  --f-display:"Bricolage Grotesque",Georgia,serif; --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13111a; --panel:#1c1925; --ink:#ece9f3; --muted:#a39db3; --line:#2e2a3a; --accent:#a893ff; --accent-ink:#15111f; --accent-soft:#2a2342;
+  --ok:#6fd39c; --ok-bg:#183a29; --over:#f08a80; --over-bg:#40201d; --warn:#f0c674; --warn-bg:#3a2e14;
+  --serp-link:#9db8ff; --serp-url:#7fcf95; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13111a; --panel:#1c1925; --ink:#ece9f3; --muted:#a39db3; --line:#2e2a3a; --accent:#a893ff; --accent-ink:#15111f; --accent-soft:#2a2342;
+  --ok:#6fd39c; --ok-bg:#183a29; --over:#f08a80; --over-bg:#40201d; --warn:#f0c674; --warn-bg:#3a2e14;
+  --serp-link:#9db8ff; --serp-url:#7fcf95; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-block:22px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:18px}
+h1{font:800 28px var(--f-display);margin:0;letter-spacing:-.02em}
+h2{font:700 20px var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h3{font:600 15px var(--f-body);margin:0}
+.sub{color:var(--muted);font-size:13px}
+.mode{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.mode.on{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+
+.rail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding:0;list-style:none}
+.rail button{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 13px var(--f-body);padding:6px 12px 6px 6px;border-radius:999px;cursor:pointer}
+.rail button[disabled]{cursor:default;opacity:.55}
+.rail .n{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bg);font-size:12px;font-variant-numeric:tabular-nums}
+.rail button.done .n{background:var(--accent-soft);color:var(--accent)}
+.rail button[aria-current="step"]{border-color:var(--ink);color:var(--ink)}
+.rail button[aria-current="step"] .n{background:var(--ink);color:var(--panel)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.lead{color:var(--muted);margin:4px 0 0;max-width:62ch}
+
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.choice{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:18px;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:6px}
+.choice:hover{border-color:var(--accent)}
+.choice[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.choice .t{font:700 18px var(--f-display)}
+.choice .d{color:var(--muted);font-size:13px}
+.choice .eg{font-size:12px;color:var(--accent);font-weight:600}
+
+label,.lbl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;font:14px var(--f-body);padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:64px}
+.urlrow{display:flex;gap:8px;flex-wrap:wrap}
+.urlrow input{flex:1 1 260px;min-width:0;font-size:15px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.swatches{display:flex;gap:8px;align-items:center}
+.swatches input[type=color]{width:40px;height:34px;padding:2px;flex:none}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600}
+details[open] summary{margin-bottom:8px}
+
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 13px var(--f-body);padding:9px 15px;border-radius:8px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.big{font-size:15px;padding:11px 20px}
+.btn.link{border:none;background:none;color:var(--accent);padding:4px 0;text-decoration:underline;text-underline-offset:2px}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.choice:focus-visible,.chip:focus-visible,.tab:focus-visible,.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.actions .right{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+
+.note{font-size:12px;color:var(--muted)}
+.notice{font-size:13px;padding:10px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn)}
+.notice.info{background:var(--accent-soft);color:var(--accent)}
+.busy{display:flex;align-items:center;gap:12px;padding:28px 4px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.chip{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:12px;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:3px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip .t{font-weight:700}
+.chip .d{font-size:12px;color:var(--muted)}
+.chip .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.chip .hook{font:700 16px/1.25 var(--f-display);margin-top:2px}
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:none;color:var(--muted);font:600 13px var(--f-body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+
+.creative{border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+.creative .copy{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:4px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field .k{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.field [contenteditable]{border-radius:6px;padding:4px 6px;margin:0 -6px;outline:none;overflow-wrap:anywhere}
+.field [contenteditable]:focus{background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
+.cnt{font-variant-numeric:tabular-nums;padding:0 6px;border-radius:999px;white-space:nowrap}
+.cnt.ok{background:var(--ok-bg);color:var(--ok)} .cnt.over{background:var(--over-bg);color:var(--over)}
+.visuals{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;min-width:0}
+.vis{display:flex;flex-direction:column;gap:5px;max-width:100%}
+.vis .cap{font-size:11px;color:var(--muted)}
+.ad{container-type:size;position:relative;overflow:hidden;border-radius:6px;max-width:100%;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ad .in{position:absolute;inset:0;padding:7cqmin;display:flex;flex-direction:column;justify-content:space-between;gap:3cqmin}
+.ad .logo{font:800 max(8px,6cqmin) var(--f-display);letter-spacing:-.02em;opacity:.9}
+.ad .hl{font:800 max(9px,10.5cqmin)/1.03 var(--f-display);letter-spacing:-.02em}
+.ad .sb{font:500 max(7px,4.8cqmin)/1.25 var(--f-body);opacity:.85}
+.ad .cta{align-self:flex-start;font:700 max(7px,4.4cqmin) var(--f-body);padding:2cqmin 4cqmin;border-radius:999px}
+.ad .shape{position:absolute;border-radius:50%;opacity:.2}
+.ad.wide .in{flex-direction:row;align-items:center}
+.ad.wide .hl{font-size:max(9px,26cqh)} .ad.wide .sb{display:none}
+.ad.wide .cta{align-self:center;font-size:max(7px,14cqh);padding:4cqh 8cqh}
+.ad.tall .hl{font-size:max(9px,15cqw)} .ad.tall .sb{font-size:max(7px,7.5cqw)} .ad.tall .cta{font-size:max(7px,7.5cqw)}
+.ad.story .in{justify-content:flex-end;padding-bottom:14cqh}
+.ad.story .logo{position:absolute;top:6cqw;left:7cqw}
+.serp{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg);max-width:560px;display:flex;flex-direction:column;gap:3px}
+.serp .spon{font-size:12px;font-weight:700}
+.serp .u{font-size:12px;color:var(--serp-url);overflow-wrap:anywhere}
+.serp .h{font-size:18px;color:var(--serp-link);line-height:1.3}
+.serp .d{font-size:13px;color:var(--muted)}
+.hidden{display:none}
+@media (max-width:760px){.creative{grid-template-columns:1fr}.panel{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Creative Studio</h1>
+      <div class="sub">From a website to ready-to-launch ad creatives for Meta, LinkedIn, Google and TikTok.</div>
+    </div>
+    <span class="mode" id="mode">Checking Claude…</span>
+  </header>
+  <ol class="rail" id="rail" aria-label="Steps"></ol>
+  <main class="panel" id="view" aria-live="polite"></main>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cap=s=>{s=String(s||"").trim();return s?s.charAt(0).toUpperCase()+s.slice(1):s};
+const lc=s=>{s=String(s||"").trim();return s?s.charAt(0).toLowerCase()+s.slice(1):s};
+
+/* ---------- platform specs (recommended lengths before truncation) ---------- */
+const PLAT={
+  meta:{name:"Meta",long:"Facebook & Instagram",fmt:"Feed, Stories, Reels",
+    fields:[{k:"primary",l:"Primary text",max:125},{k:"headline",l:"Headline",max:40},{k:"description",l:"Description",max:30}],
+    sizes:[["Feed 1:1",1080,1080],["Feed 4:5",1080,1350],["Stories 9:16",1080,1920]]},
+  linkedin:{name:"LinkedIn",long:"Sponsored content",fmt:"Single image",
+    fields:[{k:"intro",l:"Intro text",max:150},{k:"headline",l:"Headline",max:70}],
+    sizes:[["Single image 1.91:1",1200,627],["Square 1:1",1200,1200]]},
+  google_search:{name:"Google Search",long:"Responsive search ad",fmt:"Text ad",
+    fields:[{k:"headlines",l:"Headline",max:30,count:5},{k:"descriptions",l:"Description",max:90,count:2}],sizes:[]},
+  google_display:{name:"Google Display",long:"Responsive display ad",fmt:"Banners",
+    fields:[{k:"short_headline",l:"Short headline",max:30},{k:"long_headline",l:"Long headline",max:90},{k:"description",l:"Description",max:90}],
+    sizes:[["Medium rectangle",300,250],["Leaderboard",728,90],["Skyscraper",160,600]]},
+  tiktok:{name:"TikTok",long:"In-feed ad",fmt:"Vertical video cover",
+    fields:[{k:"ad_text",l:"Ad text",max:100},{k:"hook",l:"On-screen hook",max:40}],
+    sizes:[["In-feed 9:16",1080,1920]]}
+};
+const GOALS={trial:["Sign-ups or free trial","Start free trial","Try free"],call:["Book a call or demo","Book a call","Book now"],
+  buy:["Sales","Shop now","Shop now"],lead:["Leads (form fill)","Get a quote","Get a quote"],visit:["Website visits","Learn more","Learn more"]};
+const ANGLES=["Pain","Outcome","Social proof","Curiosity","Objection","Urgency","Identity"];
+
+/* ---------- worked examples (fictional brands) ---------- */
+const EXAMPLES={
+  private:{url:"pulsefit-coaching.com",profile:{name:"PulseFit Coaching",what:"Online personal training with weekly plans and video check-ins",audience:"busy professionals in their 30s and 40s",pain:"no time to get to the gym consistently",proof:"clients train 3x a week on average after the first month",tone:"Friendly",bg:"#14213d",accent:"#fca311",confidence:"high"}},
+  company:{url:"ledgerly.app",company:{company:"Ledgerly",bg:"#1d3b2f",accent:"#d8f26b",confidence:"high",products:[
+    {name:"Ledgerly Invoicing",what:"Automated invoicing and payment reminders",audience:"agency owners and finance leads",pain:"chasing late client payments",proof:"clients get paid 11 days faster on average"},
+    {name:"Ledgerly Expenses",what:"Receipt capture and expense approvals from your phone",audience:"teams of 10 to 200 people",pain:"month-end expense reports nobody wants to do",proof:"approvals in under a day"},
+    {name:"Ledgerly Payroll",what:"Payroll and contractor payments in one run",audience:"founders and operations managers",pain:"paying staff and contractors across three tools",proof:""}]}}
+};
+
+/* ---------- state ---------- */
+const S={step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,
+  platforms:new Set(["meta","google_search"]),goal:"trial",concepts:[],picked:new Set(),creatives:[],tab:null,
+  busy:null,ctl:null,notice:"",usedAI:false};
+let sample=null,downloads=null,aiChecked=false;
+
+const STEPS=()=>S.mode==="company"
+  ?[["type","Project type"],["site","Website & product"],["platforms","Platforms"],["create","Creatives"]]
+  :[["type","Project type"],["site","Website"],["platforms","Platforms"],["concepts","Concepts"],["create","Creatives"]];
+const stepId=()=>STEPS()[S.step][0];
+function maxReached(){ // highest step the user may jump to
+  if(!S.mode)return 0; if(!S.brief)return 1; if(stepId()==="create"||S.creatives.length)return STEPS().length-1;
+  if(S.mode==="private"&&S.concepts.length)return 3; return 2;}
+
+/* ---------- Claude ---------- */
+(async()=>{
+  try{ if(window.claude&&window.claude.use){ [sample,downloads]=await Promise.all([window.claude.use("sample"),window.claude.use("downloads")]); } }catch(e){sample=null}
+  aiChecked=true; paintMode(); render();
+})();
+function paintMode(){const m=$("mode");
+  if(!aiChecked){m.textContent="Checking Claude…";return}
+  m.className="mode"+(sample?" on":""); m.textContent=sample?"Claude connected":"Template mode";
+  m.title=sample?"Analysis and copy are written by Claude":"Claude isn't available in this view, so the studio uses built-in templates";}
+const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
+async function ask(prompt,label,web){
+  S.ctl=new AbortController(); S.busy=label; render();
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:true}:{signal:S.ctl.signal}); }
+  finally{ S.busy=null; S.ctl=null; }
+}
+function aiError(e){const c=e&&e.code;
+  if(c==="cancelled")return "stop";
+  if(FATAL.includes(c)){sample=null;paintMode();return "fallback"}
+  if(c==="rate_limited")S.notice="You've hit a usage limit for now. Wait a few minutes and try again.";
+  else if(c==="invalid_json")S.notice="Claude's answer came back in the wrong shape. Try again.";
+  else if(c==="refused")S.notice="Claude couldn't help with this input. Check the website or details and try again.";
+  else S.notice="Couldn't reach Claude just now. Try again.";
+  return "error";}
+
+const briefText=b=>`Brand / product: ${b.name}${b.brand&&b.brand!==b.name?` (by ${b.brand})`:""}
+What it does: ${b.what}
+Audience: ${b.audience}
+Main pain it solves: ${b.pain}
+Proof point: ${b.proof||"(none given; do not invent numbers)"}
+Tone: ${b.tone}
+Website: ${S.url}`;
+
+/* ---------- step: analyze website ---------- */
+function normUrl(u){u=u.trim();if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;try{return new URL(u).hostname.replace(/^www\./,"")}catch(e){return""}}
+function domainName(host){const base=host.split(".")[0]||host;return base.split(/[-_]/).filter(Boolean).map(cap).join(" ")}
+
+async function analyze(){
+  S.notice=""; const host=normUrl($("url").value); S.url=host; S.paste=($("paste")||{}).value||"";
+  if(!host){S.notice="Enter a website address, like mysite.com.";render();return}
+  S.profile=null;S.company=null;S.product=-1;S.brief=null;S.concepts=[];S.picked.clear();S.creatives=[];
+  const ex=EXAMPLES[S.mode]; if(ex&&host===ex.url){applyExample();return}
+  if(sample){
+    const company=S.mode==="company";
+    const shape=company
+      ?`{"company":"Company name","bg":"#hex dark brand color","accent":"#hex accent color","confidence":"high|medium|low","products":[{"name":"","what":"one sentence","audience":"","pain":"main pain, lowercase phrase","proof":"real proof point if you know one, else empty string"}]}  (2 to 6 products or services)`
+      :`{"name":"brand or person's business name","what":"what they offer, one sentence","audience":"who it's for","pain":"the main pain it solves, lowercase phrase","proof":"real proof point if you know one, else empty string","tone":"Direct|Friendly|Bold|Premium","bg":"#hex dark brand color","accent":"#hex accent color","confidence":"high|medium|low"}`;
+    const prompt=`You are a senior performance marketer preparing an ad brief.
+The ${company?"company":"person or small business"} behind this website: ${host}
+${S.paste.trim()?`Text copied from their website:\n"""\n${S.paste.slice(0,8000)}\n"""\n`:""}
+If you have a web search tool, search for this website and read what it says about its offer, audience and proof, and base the brief on that. Otherwise use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". Never invent statistics or awards.
+Reply with only JSON in this shape:
+${shape}`;
+    try{
+      const r=await ask(prompt,"Reading "+host+"…",true); S.usedAI=true;
+      if(company){const p=Array.isArray(r.products)?r.products.filter(x=>x&&x.name).slice(0,6):[];
+        S.company={company:r.company||domainName(host),bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),confidence:r.confidence||"medium",products:p.length?p:[{name:r.company||domainName(host),what:"",audience:"",pain:"",proof:""}]};
+        if(S.company.products.length===1)pickProduct(0);
+      }else{S.profile={name:r.name||domainName(host),what:r.what||"",audience:r.audience||"",pain:r.pain||"",proof:r.proof||"",tone:["Direct","Friendly","Bold","Premium"].includes(r.tone)?r.tone:"Friendly",bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),confidence:r.confidence||"medium"};S.brief={...S.profile}}
+      render();return;
+    }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
+  }
+  // template mode: name from the domain, the rest filled in by the user
+  const name=domainName(host);
+  if(S.mode==="company"){S.company={company:name,bg:"#1f2a44",accent:"#ffb547",confidence:"none",products:[{name:name,what:"",audience:"",pain:"",proof:""}]};pickProduct(0)}
+  else{S.profile={name,what:"",audience:"",pain:"",proof:"",tone:"Friendly",bg:"#1f2a44",accent:"#ffb547",confidence:"none"};S.brief={...S.profile}}
+  render();
+}
+function hex(v,d){return /^#[0-9a-f]{6}$/i.test(String(v||"").trim())?String(v).trim():d}
+function applyExample(){const ex=EXAMPLES[S.mode];S.url=ex.url;S.notice="";
+  if(S.mode==="company"){S.company=JSON.parse(JSON.stringify(ex.company));S.product=-1;S.brief=null}
+  else{S.profile={...ex.profile};S.brief={...S.profile}}
+  render();}
+function pickProduct(i){S.product=i;const c=S.company,p=c.products[i];
+  S.brief={name:p.name,brand:c.company,what:p.what||"",audience:p.audience||"",pain:p.pain||"",proof:p.proof||"",tone:(S.brief&&S.brief.tone)||"Direct",bg:c.bg,accent:c.accent};
+  S.concepts=[];S.picked.clear();S.creatives=[];}
+
+/* ---------- step: concepts ---------- */
+async function suggestConcepts(fresh){
+  S.notice="";const b=S.brief;
+  if(sample){
+    const plats=[...S.platforms].map(p=>PLAT[p].name).join(", ");
+    const prompt=`You are a creative strategist. Suggest 6 distinct messaging concepts for paid ads.
+${briefText(b)}
+Platforms: ${plats}
+Campaign goal: ${GOALS[S.goal][0]}
+${fresh&&S.concepts.length?`Avoid repeating these earlier concepts: ${S.concepts.map(c=>c.title).join("; ")}\n`:""}Each concept uses a different angle from: ${ANGLES.join(", ")}.
+Reply with only a JSON array of 6 objects: [{"angle":"one of the angles","title":"concept name, 2-5 words","message":"the core message, one sentence","hook":"ad hook, max 40 characters"}]`;
+    try{const r=await ask(prompt,"Finding messaging concepts…");S.usedAI=true;
+      const list=(Array.isArray(r)?r:r.concepts||[]).filter(c=>c&&c.hook).slice(0,6);
+      if(list.length){S.concepts=list;S.picked=new Set([0,1,2].filter(i=>i<list.length));render();return}
+      S.notice="Claude didn't return any concepts. Try again.";render();return;
+    }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
+  }
+  S.concepts=templateConcepts(b,fresh?1:0);S.picked=new Set([0,1,2]);render();
+}
+function templateConcepts(b,shift){
+  const n=b.name,pain=lc(b.pain)||"the usual hassle",aud=b.audience||"people like you",what=lc(b.what)||"what you need";
+  const sets=[
+    ["Pain","Name the problem",`${n} takes ${pain} off your plate.`,[`Still dealing with ${pain}?`,`Done with ${pain}?`]],
+    ["Outcome","Show the result",b.proof?`${cap(b.proof)}.`:`${cap(what)}, without the hassle.`,[b.proof?cap(b.proof):`Get results that last`,`See the difference in weeks`]],
+    ["Social proof","Peers already use it",`${cap(aud)} choose ${n} for ${what}.`,[`Why ${aud} choose ${n}`,`The pick for ${aud}`]],
+    ["Curiosity","The simple fix",`There is an easier way to handle ${pain}.`,[`The simple fix for ${pain}`,`What works when nothing else did`]],
+    ["Objection","Easier than you think",`Getting started with ${n} is quick and low-risk.`,[`Easier to start than you think`,`No big commitment to start`]],
+    ["Urgency","Start now",`Every week you wait, ${pain} costs you more.`,[`Start this week, not someday`,`Your best month starts now`]]];
+  return sets.map(([angle,title,message,hooks],i)=>({angle,title,message,hook:hooks[(shift+i)%2]}));
+}
+
+/* ---------- step: creatives ---------- */
+async function create(){
+  S.notice="";const b=S.brief,plats=[...S.platforms];
+  const concepts=S.mode==="private"?[...S.picked].sort().map(i=>S.concepts[i]):null;
+  if(sample){
+    const specs=plats.map(p=>{const P=PLAT[p];return `- "${p}" (${P.name} ${P.long}): fields {${P.fields.map(f=>f.count?`"${f.k}": array of ${f.count} strings, each max ${f.max} chars`:`"${f.k}": max ${f.max} chars`).join("; ")}}`}).join("\n");
+    const cTxt=concepts?`Write one creative per platform for EACH of these concepts:\n${concepts.map(c=>`- "${c.title}" (${c.angle}): ${c.message} Hook: ${c.hook}`).join("\n")}`
+      :`Choose the 3 strongest, clearly different messaging concepts for this product yourself (angles such as ${ANGLES.join(", ")}), and write one creative per platform for each.`;
+    const prompt=`You are a performance copywriter. Write platform-ready ad creatives.
+${briefText(b)}
+Campaign goal: ${GOALS[S.goal][0]} (default call to action: "${GOALS[S.goal][1]}")
+${cTxt}
+Platforms and their copy fields (stay within the character limits; count carefully):
+${specs}
+Every creative also needs a "visual" for the image: {"headline":"max 45 chars","sub":"max 80 chars","cta":"button text, max 16 chars"}.
+Match the tone. Use the proof point only as given; never invent numbers, awards or reviews.
+Reply with only JSON: {"creatives":[{"platform":"meta","concept":"concept title","angle":"angle","fields":{...},"visual":{...}}]}`;
+    try{const r=await ask(prompt,"Writing creatives for "+plats.map(p=>PLAT[p].name).join(", ")+"…");S.usedAI=true;
+      const list=(r&&Array.isArray(r.creatives)?r.creatives:[]).filter(c=>c&&PLAT[c.platform]&&c.fields);
+      if(list.length){S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;render();return}
+      S.notice="Claude didn't return any creatives. Try again.";render();return;
+    }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
+  }
+  const cs=concepts||templateConcepts(b,0).slice(0,3);
+  S.creatives=[];plats.forEach(p=>cs.forEach(c=>S.creatives.push(templateCreative(p,c,b))));
+  S.tab=plats[0];render();
+}
+function fit(s,max){s=String(s||"").trim();if(s.length<=max)return s;const cut=s.slice(0,max-1);const sp=cut.lastIndexOf(" ");return (sp>max*.6?cut.slice(0,sp):cut).replace(/[,.;:\s]+$/,"")+"…"}
+function templateCreative(p,c,b){
+  const cta=GOALS[S.goal][1],short=GOALS[S.goal][2],n=b.name,what=b.what||n,proof=b.proof?cap(b.proof)+".":"";
+  const F={
+    meta:{primary:`${c.hook} ${c.message} ${proof}`.trim(),headline:fit(c.hook,40),description:fit(cta,30)},
+    linkedin:{intro:`${c.hook} ${c.message} ${proof}`.trim(),headline:fit(`${n}: ${lc(what)}`,70)},
+    google_search:{headlines:[fit(n,30),fit(c.hook,30),fit(cta,30),fit(what,30),fit(c.title,30)],descriptions:[fit(`${cap(what)}. ${proof}`,90),fit(`${c.message} ${cta} today.`,90)]},
+    google_display:{short_headline:fit(c.hook,30),long_headline:fit(`${c.hook} ${n} helps ${b.audience||"you"}.`,90),description:fit(`${c.message} ${proof}`,90)},
+    tiktok:{ad_text:fit(`${c.message} ${cta}.`,100),hook:fit(c.hook,40)}
+  }[p];
+  return {platform:p,concept:c.title,angle:c.angle,fields:F,visual:{headline:c.hook,sub:b.proof?cap(b.proof):cap(what),cta:short}};
+}
+
+/* ---------- rendering ---------- */
+function rail(){const steps=STEPS(),mx=maxReached();
+  $("rail").innerHTML=steps.map(([id,l],i)=>`<li><button type="button" data-go="${i}" ${i>mx?"disabled":""} class="${i<S.step?"done":""}" ${i===S.step?'aria-current="step"':""}><span class="n">${i<S.step?"✓":i+1}</span>${esc(l)}</button></li>`).join("");}
+
+function render(){rail();const v=$("view");
+  if(S.busy){v.innerHTML=`<div class="busy"><span class="dot" aria-hidden="true"></span><span>${esc(S.busy)}</span><button type="button" class="btn" data-act="stop" style="margin-left:auto">Stop</button></div>`;return}
+  const notice=S.notice?`<div class="notice">${esc(S.notice)}</div>`:"";
+  v.innerHTML=({type:vType,site:vSite,platforms:vPlatforms,concepts:vConcepts,create:vCreate})[stepId()](notice);
+  if(stepId()==="create")document.querySelectorAll("#view .field").forEach(count);
+}
+
+function vType(n){return `<div class="stack">
+  <div><h2>What are you promoting?</h2><p class="lead">Pick the kind of project. You'll add your website next, and the studio fills in the brief for you.</p></div>
+  <div class="choices">
+    <button type="button" class="choice" data-mode="private" aria-pressed="${S.mode==="private"}"><span class="t">Private project</span><span class="d">One person or small business with one main offer.</span><span class="eg">e.g. a personal trainer, a coach, a local shop</span></button>
+    <button type="button" class="choice" data-mode="company" aria-pressed="${S.mode==="company"}"><span class="t">Company</span><span class="d">A company with several products or services. You'll choose which one to promote.</span><span class="eg">e.g. a software company, a brand with product lines</span></button>
+  </div>${n}</div>`}
+
+function vSite(n){const company=S.mode==="company",ex=EXAMPLES[S.mode];
+  let body="";
+  if(company&&S.company){const c=S.company;
+    body=`<div class="stack">${conf(c.confidence)}
+      <div><h3>Which product are you promoting?</h3><p class="note">Found at ${esc(c.company)}. Pick one to build the brief.</p></div>
+      <div class="products">${c.products.map((p,i)=>`<button type="button" class="chip" data-prod="${i}" aria-pressed="${S.product===i}"><span class="t">${esc(p.name)}</span><span class="d">${esc(p.what||"Add a description below")}</span></button>`).join("")}</div>
+      ${S.brief?briefForm():""}</div>`;
+  }else if(!company&&S.profile){body=`<div class="stack">${conf(S.profile.confidence)}${briefForm()}</div>`}
+  return `<div class="stack">
+    <div><h2>${company?"Your company website":"Your website"}</h2><p class="lead">${company?"Add the company's site. The studio lists its products so you can pick one.":"Add your site. The studio fills in what you do, who it's for and the main pain you solve."}</p></div>
+    <form class="stack" id="siteform">
+      <div class="urlrow"><input id="url" type="text" inputmode="url" autocomplete="url" placeholder="${company?"yourcompany.com":"yourwebsite.com"}" value="${esc(S.url)}" aria-label="Website address"><button class="btn primary" type="submit">${S.brief||S.company?"Analyze again":"Analyze"}</button></div>
+      <details ${S.paste?"open":""}><summary>Add text from your site for a more accurate brief (optional)</summary><textarea id="paste" rows="4" placeholder="Paste your homepage or About page text here">${esc(S.paste)}</textarea></details>
+      <div class="note">No site handy? <button type="button" class="btn link" data-act="example">Use the example: ${esc(ex.url)}</button></div>
+    </form>${n}${body}
+    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right"><button type="button" class="btn primary" data-act="next" ${S.brief?"":"disabled"}>Choose platforms</button></div></div>
+  </div>`}
+function conf(c){
+  if(c==="none")return `<div class="notice">Claude isn't available here, so the studio couldn't read the site. Fill in the details below and the templates do the rest.</div>`;
+  if(c==="low")return `<div class="notice">Claude doesn't know this site well, so these details are a best guess. Check them, or paste text from your site above and analyze again.</div>`;
+  return `<div class="notice info">Filled in from ${esc(S.url)}. Edit anything that's off.</div>`}
+function briefForm(){const b=S.brief;
+  return `<div class="stack" id="briefform">
+    <div class="grid2">
+      <div><label for="f-name">Name</label><input id="f-name" data-f="name" value="${esc(b.name)}"></div>
+      <div><label for="f-audience">Audience</label><input id="f-audience" data-f="audience" value="${esc(b.audience)}" placeholder="Who you want to reach"></div>
+    </div>
+    <div><label for="f-what">What it does</label><textarea id="f-what" data-f="what" rows="2" placeholder="One sentence about your offer">${esc(b.what)}</textarea></div>
+    <div class="grid2">
+      <div><label for="f-pain">Main pain it solves</label><input id="f-pain" data-f="pain" value="${esc(b.pain)}" placeholder="e.g. no time to get to the gym"></div>
+      <div><label for="f-proof">Proof point (optional)</label><input id="f-proof" data-f="proof" value="${esc(b.proof)}" placeholder="A real result, rating or number"></div>
+    </div>
+    <div class="grid2">
+      <div><label for="f-tone">Tone</label><select id="f-tone" data-f="tone">${["Direct","Friendly","Bold","Premium"].map(t=>`<option ${b.tone===t?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div><span class="lbl">Brand colors</span><div class="swatches"><input type="color" id="f-bg" data-f="bg" value="${esc(b.bg)}" aria-label="Background color"><input type="color" id="f-accent" data-f="accent" value="${esc(b.accent)}" aria-label="Accent color"><span class="note">background · accent</span></div></div>
+    </div></div>`}
+
+function vPlatforms(n){const company=S.mode==="company";
+  return `<div class="stack">
+    <div><h2>Where will the ads run?</h2><p class="lead">Pick one or more platforms. Copy follows each platform's character limits and the visuals come in its main sizes.</p></div>
+    <div class="chips">${Object.entries(PLAT).map(([k,P])=>`<button type="button" class="chip" data-plat="${k}" aria-pressed="${S.platforms.has(k)}"><span class="t">${P.name}</span><span class="d">${P.long} · ${P.fmt}</span></button>`).join("")}</div>
+    <div style="max-width:320px"><label for="goal">Campaign goal</label><select id="goal">${Object.entries(GOALS).map(([k,g])=>`<option value="${k}" ${S.goal===k?"selected":""}>${g[0]}</option>`).join("")}</select></div>
+    ${n}
+    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right">
+      <button type="button" class="btn primary big" data-act="${company?"create":"concepts"}" ${S.platforms.size?"":"disabled"}>${company?"Create creatives":"Suggest concepts"}</button></div></div>
+  </div>`}
+
+function vConcepts(n){
+  return `<div class="stack">
+    <div><h2>Pick your messages</h2><p class="lead">Concepts for ${esc(S.brief.name)}. Choose up to three. Each one becomes a creative on every platform you picked.</p></div>
+    <div class="chips">${S.concepts.map((c,i)=>`<button type="button" class="chip" data-con="${i}" aria-pressed="${S.picked.has(i)}"><span class="k">${esc(c.angle)} · ${esc(c.title)}</span><span class="hook">${esc(c.hook)}</span><span class="d">${esc(c.message)}</span></button>`).join("")}</div>
+    <p class="note">${S.picked.size} of 3 selected</p>${n}
+    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right">
+      <button type="button" class="btn" data-act="reconcepts">Suggest new concepts</button>
+      <button type="button" class="btn primary big" data-act="create" ${S.picked.size?"":"disabled"}>Create</button></div></div>
+  </div>`}
+
+function vCreate(n){
+  if(!S.creatives.length)return `<div class="stack">${n||'<p class="note">No creatives yet.</p>'}<div class="actions"><button type="button" class="btn" data-act="back">Back</button><button type="button" class="btn primary" data-act="create">Create</button></div></div>`;
+  const plats=[...S.platforms].filter(p=>S.creatives.some(c=>c.platform===p));if(!plats.includes(S.tab))S.tab=plats[0];
+  const list=S.creatives.map((c,i)=>[c,i]).filter(([c])=>c.platform===S.tab);
+  return `<div class="stack">
+    <div class="actions"><div><h2>Creatives for ${esc(S.brief.name)}</h2><p class="lead">${S.creatives.length} creatives across ${plats.length} platform${plats.length>1?"s":""}. Click any text to edit it.${S.usedAI?"":" Written from templates."}</p></div>
+      <div class="right"><button type="button" class="btn" data-act="create">Regenerate</button>${downloads?'<button type="button" class="btn" data-act="csv">Download CSV</button>':""}<button type="button" class="btn" data-act="restart">New project</button></div></div>
+    ${n}
+    <div class="tabs" role="tablist">${plats.map(p=>`<button type="button" class="tab" role="tab" data-tab="${p}" aria-selected="${p===S.tab}">${PLAT[p].name}</button>`).join("")}</div>
+    ${list.map(([c,i])=>creativeCard(c,i)).join("")}
+  </div>`}
+
+function creativeCard(c,i){const P=PLAT[c.platform];
+  const fields=P.fields.map(f=>{const v=c.fields[f.k];
+    if(f.count){const arr=(Array.isArray(v)?v:[v]).filter(x=>x!=null).slice(0,f.count);
+      return arr.map((t,j)=>fieldHtml(i,f.k,j,`${f.l} ${j+1}`,f.max,t)).join("")}
+    return fieldHtml(i,f.k,-1,f.l,f.max,v)}).join("");
+  return `<article class="creative" data-i="${i}">
+    <div class="copy"><span class="tag">${esc(c.angle||"Concept")} · ${esc(c.concept||"")}</span>${fields}
+      <div><button type="button" class="btn" data-act="copy" data-i="${i}">Copy text</button></div></div>
+    <div class="visuals">${P.sizes.length?P.sizes.map(s=>adHtml(c,s)).join(""):serpHtml(c)}</div>
+  </article>`}
+function fieldHtml(i,k,j,label,max,text){return `<div class="field" data-max="${max}"><div class="k"><span>${esc(label)}</span><span class="cnt"></span></div><div contenteditable="true" role="textbox" aria-label="${esc(label)}" data-i="${i}" data-k="${k}" data-j="${j}">${esc(text||"")}</div></div>`}
+function count(f){const t=f.querySelector("[contenteditable]").textContent.trim(),max=+f.dataset.max,c=f.querySelector(".cnt");c.textContent=t.length+" / "+max;c.className="cnt "+(t.length<=max?"ok":"over")}
+
+function lum(h){const n=parseInt(h.slice(1),16),f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(n>>16&255)+.7152*f(n>>8&255)+.0722*f(n&255)}
+function adHtml(c,[name,w,h]){const b=S.brief,bg=b.bg,ac=b.accent,fg=lum(bg)>.4?"#141414":"#ffffff",cf=lum(ac)>.4?"#141414":"#ffffff";
+  const r=w/h,cls=r>3?"wide":r<.6?(c.platform==="tiktok"||/Stories/.test(name)?"tall story":"tall"):"";
+  const dw=r>3?Math.min(520,w):r<.6?(h>1000?170:120):Math.min(260*r,r>1.5?380:260,w);
+  const v=c.visual||{};
+  return `<div class="vis"><div class="ad ${cls}" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h};background:${esc(bg)};color:${fg}">
+    <span class="shape" style="background:${esc(ac)};width:70cqmax;height:70cqmax;right:-25cqmax;top:-25cqmax"></span>
+    <div class="in"><div class="logo">${esc(b.brand||b.name)}</div><div class="hl">${esc(v.headline||"")}</div>${cls==="wide"?"":`<div class="sb">${esc(v.sub||"")}</div>`}<div class="cta" style="background:${esc(ac)};color:${cf}">${esc(v.cta||GOALS[S.goal][2])} →</div></div></div>
+    <div class="cap">${esc(name)} · ${w}×${h}</div></div>`}
+function serpHtml(c){const f=c.fields,hs=(Array.isArray(f.headlines)?f.headlines:[]).slice(0,3),ds=(Array.isArray(f.descriptions)?f.descriptions:[]);
+  return `<div class="vis" style="flex:1 1 280px"><div class="serp"><span class="spon">Sponsored</span><span class="u">${esc(S.url||"yourwebsite.com")}</span><span class="h">${esc(hs.join(" | "))}</span><span class="d">${esc(ds[0]||"")}</span></div>
+    <div class="cap">Search result preview · Google rotates up to 15 headlines and 4 descriptions</div></div>`}
+
+/* ---------- events ---------- */
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t||!t.closest(".wrap"))return;
+  if(t.dataset.go){S.step=+t.dataset.go;S.notice="";render();return}
+  if(t.dataset.mode){if(S.mode!==t.dataset.mode){Object.assign(S,{mode:t.dataset.mode,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[]});S.picked.clear()}S.step=1;S.notice="";render();return}
+  if(t.dataset.prod){pickProduct(+t.dataset.prod);render();return}
+  if(t.dataset.plat){const k=t.dataset.plat;S.platforms.has(k)?S.platforms.delete(k):S.platforms.add(k);S.creatives=[];render();return}
+  if(t.dataset.con){const i=+t.dataset.con;if(S.picked.has(i))S.picked.delete(i);else if(S.picked.size<3)S.picked.add(i);else{S.notice="You can pick up to three concepts. Deselect one first."}render();S.notice="";return}
+  if(t.dataset.tab){S.tab=t.dataset.tab;render();return}
+  const a=t.dataset.act;if(!a)return;
+  if(a==="stop"){S.ctl&&S.ctl.abort();return}
+  if(a==="back"){S.step=Math.max(0,S.step-1);S.notice="";render();return}
+  if(a==="next"){S.step++;S.notice="";render();return}
+  if(a==="example"){applyExample();return}
+  if(a==="concepts"){S.step=3;if(!S.concepts.length){await suggestConcepts(false)}else render();return}
+  if(a==="reconcepts"){await suggestConcepts(true);return}
+  if(a==="create"){S.step=STEPS().length-1;await create();return}
+  if(a==="restart"){Object.assign(S,{step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[],notice:"",usedAI:false});S.picked.clear();render();return}
+  if(a==="copy"){const c=S.creatives[+t.dataset.i],txt=PLAT[c.platform].fields.map(f=>{const v=c.fields[f.k];return Array.isArray(v)?v.map((x,j)=>`${f.l} ${j+1}: ${x}`).join("\n"):`${f.l}: ${v||""}`}).join("\n");
+    try{await navigator.clipboard.writeText(txt);t.textContent="Copied"}catch(err){t.textContent="Copy failed. Select the text instead."}setTimeout(()=>{t.textContent="Copy text"},1600);return}
+  if(a==="csv"){const rows=[["Platform","Concept","Angle","Field","Text","Characters","Limit"]];
+    S.creatives.forEach(c=>{const P=PLAT[c.platform];P.fields.forEach(f=>{const v=c.fields[f.k];(Array.isArray(v)?v:[v]).forEach((x,j)=>{x=String(x||"");rows.push([P.name,c.concept||"",c.angle||"",f.count?`${f.l} ${j+1}`:f.l,x,x.length,f.max])})});
+      const v=c.visual||{};rows.push([P.name,c.concept||"",c.angle||"","Image headline",v.headline||"",(v.headline||"").length,""]);rows.push([P.name,c.concept||"",c.angle||"","Image button",v.cta||"",(v.cta||"").length,""])});
+    const csv=rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+    const fn=(S.brief.name||"creatives").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-creatives.csv";
+    try{await downloads.save({filename:fn,data:"﻿"+csv})}catch(err){}
+    return}
+});
+document.addEventListener("submit",e=>{if(e.target.id==="siteform"){e.preventDefault();analyze()}});
+document.addEventListener("input",e=>{const el=e.target;
+  if(el.dataset&&el.dataset.f&&S.brief){S.brief[el.dataset.f]=el.value;S.concepts=[];S.creatives=[];
+    if(S.mode==="company"&&S.company&&S.product>=0){const p=S.company.products[S.product];if(["name","what","audience","pain","proof"].includes(el.dataset.f))p[el.dataset.f]=el.value;if(el.dataset.f==="bg"||el.dataset.f==="accent")S.company[el.dataset.f]=el.value}
+    rail();return}
+  if(el.id==="goal"){S.goal=el.value;S.creatives=[];return}
+  if(el.id==="paste"){S.paste=el.value;return}
+  if(el.isContentEditable){const c=S.creatives[+el.dataset.i],k=el.dataset.k,j=+el.dataset.j,t=el.textContent;
+    if(j>=0){if(!Array.isArray(c.fields[k]))c.fields[k]=[];c.fields[k][j]=t}else c.fields[k]=t;count(el.closest(".field"))}
+});
+render();
+})();
+</script>
+
+<a href="../../index.html" class="pf-back" aria-label="Back to portfolio">&larr; Portfolio</a>
+<style>.pf-back{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 13px/1 ui-monospace,Menlo,monospace;color:#0b0d12;background:#c6f432;padding:9px 13px;border-radius:999px;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.pf-back:hover{filter:brightness(1.08)}</style>
+</body></html>

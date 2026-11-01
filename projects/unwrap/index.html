@@ -1,0 +1,1106 @@
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Unwrap Gift Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Figtree:wght@400;500;600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* Layout: a centered one-question-per-screen wizard on a soft studio ground; the gift itself is a full-screen dark "wrapping paper" world that stays the same in both themes */
+:root{
+  --bg:#F3F1FA; --surface:#FFFFFF; --ink:#1D1838; --muted:#686384; --line:#E1DCF0; --soft:#ECE8F8;
+  --ribbon:#E0345A; --ribbon-dk:#B92446; --gold:#F1B43C; --teal:#16808F; --on-accent:#FFFFFF; --ok:#1E8E5A;
+  --g-bg:#1E1840; --g-surface:#2A2357; --g-ink:#FFF7EC; --g-muted:#C2B9EA; --g-line:#40387A;
+  --board:#3936A6; --hole:#140F35;
+  --display:'Shrikhand','Cooper Black',Georgia,serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#13112A; --surface:#1D1A3A; --ink:#F1EEFF; --muted:#A7A1C8; --line:#312D57; --soft:#26224A;
+  --ribbon:#FF5A7D; --ribbon-dk:#E0345A; --gold:#F5C35A; --teal:#46B8C6; --on-accent:#1A0F22; --ok:#4CC98A; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#13112A; --surface:#1D1A3A; --ink:#F1EEFF; --muted:#A7A1C8; --line:#312D57; --soft:#26224A;
+  --ribbon:#FF5A7D; --ribbon-dk:#E0345A; --gold:#F5C35A; --teal:#46B8C6; --on-accent:#1A0F22; --ok:#4CC98A; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 64px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:4px 14px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:26px;color:var(--ink);background:none;border:0;padding:0}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--ribbon);flex:none;
+  background-image:linear-gradient(90deg,transparent 42%,var(--gold) 42% 58%,transparent 58%),linear-gradient(0deg,transparent 42%,var(--gold) 42% 58%,transparent 58%)}
+.stepcount{font-size:13px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:26px}
+.bar i{display:block;height:100%;background:var(--ribbon);border-radius:99px;transition:width .35s}
+
+/* landing */
+.land{display:grid;gap:28px;justify-items:center;text-align:center;padding-block:24px 8px}
+.land h1{font-family:var(--display);font-weight:400;font-size:clamp(36px,7.5vw,64px);line-height:1.05;margin:0;text-wrap:balance}
+.land h1 em{font-style:normal;color:var(--ribbon)}
+.land p{margin:0;color:var(--muted);font-size:17px;max-width:46ch}
+.showcase{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding-block:6px}
+.sc{width:120px;height:132px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;align-content:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--muted);box-shadow:0 10px 24px rgba(29,24,56,.08)}
+.sc:nth-child(1){transform:rotate(-6deg)}.sc:nth-child(2){transform:translateY(-8px)}.sc:nth-child(3){transform:rotate(5deg)}.sc:nth-child(4){transform:rotate(-3deg) translateY(4px)}
+.howto{display:flex;gap:10px 22px;flex-wrap:wrap;justify-content:center;list-style:none;padding:0;margin:0;color:var(--muted);font-size:14px;font-weight:600;counter-reset:s}
+.howto li{counter-increment:s;display:flex;align-items:center;gap:8px}
+.howto li::before{content:counter(s);width:22px;height:22px;border-radius:50%;background:var(--soft);color:var(--ink);display:grid;place-items:center;font-size:12px;font-weight:800}
+
+/* mini illustrations */
+.mini-mem{display:grid;grid-template-columns:repeat(3,18px);gap:4px}
+.mini-mem i{width:18px;height:18px;border-radius:4px;background:var(--ribbon)}
+.mini-mem i:nth-child(2),.mini-mem i:nth-child(6){background:var(--gold)}
+.mini-puz{display:grid;grid-template-columns:repeat(3,17px);gap:2px}
+.mini-puz i{width:17px;height:17px;border-radius:2px;background:var(--teal);opacity:.45}
+.mini-puz i:nth-child(odd){opacity:.9}
+.mini-quiz{display:grid;gap:4px;width:62px}
+.mini-quiz i{height:10px;border-radius:4px;background:var(--line)}
+.mini-quiz i:nth-child(1){background:var(--ink);opacity:.7;width:80%}
+.mini-quiz i:nth-child(3){background:var(--ok)}
+.mini-c4{display:grid;grid-template-columns:repeat(5,11px);gap:3px;background:var(--board);padding:5px;border-radius:6px}
+.mini-c4 i{width:11px;height:11px;border-radius:50%;background:var(--hole)}
+.mini-c4 i.r{background:var(--ribbon)}.mini-c4 i.g{background:var(--gold)}
+
+/* wizard */
+.step{display:grid;gap:20px;animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.step h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+.lead{margin:-10px 0 0;color:var(--muted);font-size:16px}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:800;font-size:15px;background:var(--soft);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,filter .2s;text-decoration:none}
+.btn:hover{filter:brightness(1.05)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--ribbon);color:var(--on-accent)}
+.btn.big{padding:16px 34px;font-size:17px;border-radius:14px}
+.btn.ghost{background:none;color:var(--muted);padding-inline:6px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.err{color:var(--ribbon);font-weight:700;font-size:13.5px;margin:0}
+
+.occs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:600px){.occs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.occ{border:1.5px solid var(--line);background:var(--surface);border-radius:16px;padding:18px 10px;display:grid;justify-items:center;gap:8px;font-weight:700;transition:border-color .15s,transform .15s}
+.occ:hover{border-color:var(--ribbon);transform:translateY(-2px)}
+.occ.on{border-color:var(--ribbon);box-shadow:0 0 0 3px color-mix(in srgb,var(--ribbon) 22%,transparent)}
+.occ .em{font-size:34px;line-height:1}
+.custom{display:flex;gap:10px;flex-wrap:wrap}
+.custom .field{flex:1;min-width:200px}
+
+.field{display:grid;gap:6px;min-width:0}
+.field label,.lbl{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ribbon)}
+.field textarea{min-height:130px;resize:vertical;line-height:1.55}
+.field.big input{font-size:22px;font-weight:700;padding:14px 16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.row2{grid-template-columns:1fr}}
+
+.urlprev{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:2px}
+.urlprev b{font-size:20px;overflow-wrap:anywhere}
+.urlprev b span{color:var(--ribbon)}
+.urlprev small{color:var(--muted)}
+
+.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.games.one{grid-template-columns:minmax(0,1fr)}
+.games.one .game:hover{border-color:var(--ribbon);transform:translateY(-2px)}
+.game{cursor:pointer}
+.notes-ed{display:grid;gap:10px}
+.note-row{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:10px;align-items:center}
+.note-row label{font-size:13px;font-weight:700;color:var(--muted)}
+.note-row input{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;outline:none}
+.note-row input:focus{border-color:var(--ribbon)}
+@media (max-width:520px){.note-row{grid-template-columns:minmax(0,1fr) auto}.note-row label{grid-column:1/-1;margin-bottom:-6px}}
+.notes-ed .tpl{justify-self:start}
+@media (max-width:560px){.games{grid-template-columns:minmax(0,1fr)}}
+.game{border:1.5px solid var(--line);border-radius:16px;padding:14px;display:grid;grid-template-columns:76px 1fr auto;gap:14px;align-items:center;background:var(--surface);text-align:left;transition:border-color .15s}
+.game.on{border-color:var(--ribbon)}
+.game .mini{width:76px;height:70px;border-radius:12px;background:var(--soft);display:grid;place-items:center}
+.game strong{display:block;font-size:16px}
+.game small{color:var(--muted);font-size:13px;display:block}
+.check{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--on-accent);font-size:14px}
+.game.on .check{background:var(--ribbon);border-color:var(--ribbon)}
+
+.qlist{display:grid;gap:14px}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:grid;gap:10px}
+.qcard .qtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.qcard input{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;outline:none}
+.qcard input:focus{border-color:var(--ribbon)}
+.qcard input.q{font-weight:700}
+.qcard input.right{border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:560px){.answers{grid-template-columns:1fr}}
+.x{border:0;background:none;color:var(--muted);font-weight:700;font-size:13px}
+.x:hover{color:var(--ribbon)}
+.tpls{display:flex;flex-wrap:wrap;gap:8px}
+.tpl{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:600}
+.tpl:hover{border-color:var(--ribbon);color:var(--ribbon)}
+
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.ph{position:relative;aspect-ratio:1;border-radius:14px;background-size:cover;background-position:center;border:1px solid var(--line);max-width:100%}
+.ph .x{position:absolute;top:5px;right:5px;width:26px;height:26px;border-radius:50%;background:var(--surface);color:var(--ink);font-weight:800;display:grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.ph .cover{position:absolute;left:5px;bottom:5px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:var(--gold);color:#2A1A00;border-radius:6px;padding:2px 6px}
+.add{aspect-ratio:1;border-radius:14px;border:2px dashed var(--line);display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;padding:6px}
+.add:hover{border-color:var(--ribbon);color:var(--ribbon)}
+.add span{font-size:28px;line-height:1;display:block}
+.note-box{font-size:13.5px;color:var(--muted);background:var(--soft);border-radius:12px;padding:10px 14px;margin:0}
+
+.styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sty{border:1.5px solid var(--line);border-radius:14px;padding:8px;background:var(--surface);display:grid;gap:6px;font-weight:700;font-size:13px}
+.sty.on{border-color:var(--ribbon);box-shadow:0 0 0 3px color-mix(in srgb,var(--ribbon) 22%,transparent)}
+.sty i{height:54px;border-radius:8px;display:block}
+.sty i.ribbon{background:linear-gradient(#FFF7EC,#FFF7EC) padding-box;border-top:8px solid #E0345A;box-shadow:inset 0 0 0 1px #eee}
+.sty i.sky{background:#E6F1FF;border-top:8px solid #2E6BD8}
+.sty i.night{background:#1B1640;border-top:8px solid #F1B43C}
+
+/* send */
+.sendgrid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start}
+@media (max-width:600px){.sendgrid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:grid;gap:12px;min-width:0}
+.panel h3{margin:0;font-size:16px}
+.link-row{display:flex;gap:8px;align-items:stretch}
+.link-row code{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;font-weight:700;overflow-x:auto;white-space:nowrap;user-select:all;font-family:var(--body)}
+.share-btns{display:flex;flex-wrap:wrap;gap:8px}
+.qr{background:#fff;padding:12px;border-radius:14px;border:1px solid var(--line);justify-self:center;display:grid;gap:6px;justify-items:center;color:#1D1838;font-size:12px;font-weight:700}
+.qr img,.qr canvas{display:block;width:148px;height:148px}
+.sched{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+.sched .field{flex:1;min-width:140px}
+.okmsg{color:var(--ok);font-weight:700;margin:0;font-size:14px}
+.hint{color:var(--muted);font-size:13px;margin:0}
+
+/* ================= GIFT WORLD ================= */
+.gift{position:fixed;inset:0;z-index:50;overflow-y:auto;color:var(--g-ink);background-color:var(--g-bg);
+  background-image:radial-gradient(circle at 12px 12px,rgba(241,180,60,.16) 2.5px,transparent 3px),radial-gradient(circle at 36px 36px,rgba(224,52,90,.18) 2.5px,transparent 3px);
+  background-size:48px 48px;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.gift-in{max-width:780px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-block:10px 40px}
+.gbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:6px 14px;flex-wrap:wrap}
+.gbar .tagp{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.gbtn{background:var(--g-surface);border:1px solid var(--g-line);color:var(--g-ink);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13.5px}
+.gbtn:hover{border-color:var(--gold)}
+.gbtn.hot{background:var(--ribbon);border-color:var(--ribbon);color:#fff}
+.view{flex:1;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+.view h2{font-family:var(--display);font-weight:400;font-size:clamp(26px,5vw,38px);line-height:1.15;margin:0;text-wrap:balance}
+.view .sub{color:var(--g-muted);margin:0;max-width:48ch}
+@media (max-width:560px){.gift-in{padding-block:4px 16px}.gbar{padding-block:4px 8px}.playhead h2{display:none}.playhead{justify-content:flex-start}.view{gap:12px}}
+.notecard{background:#FFF7EC;color:#2B2140;border-radius:4px;padding:14px 16px;text-align:left;transform:rotate(-1.5deg);box-shadow:0 8px 18px rgba(0,0,0,.35);display:grid;gap:4px}
+.notecard p{margin:0;color:#2B2140;font-size:17px;font-weight:600;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.nfrom{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ribbon-dk)}
+.mcardx .notecard{margin:4px 6px}
+.seen{display:grid;gap:12px;width:min(100%,540px);text-align:left}
+.seen > .nfrom{color:var(--gold)}
+.notecard.sm{transform:none}
+.notecard.sm:nth-child(odd){transform:rotate(.8deg)}
+.notecard.sm p{font-size:15px}
+.gcta{border:0;border-radius:14px;padding:14px 26px;font-weight:800;font-size:16px;background:var(--gold);color:#2A1A00;box-shadow:0 6px 0 #B9841D;transition:transform .1s,box-shadow .1s}
+.gcta:active{transform:translateY(4px);box-shadow:0 2px 0 #B9841D}
+.gcta.alt{background:var(--g-surface);color:var(--g-ink);box-shadow:0 6px 0 #120E2C;border:1px solid var(--g-line)}
+.gcta.sm{padding:10px 18px;font-size:14.5px;box-shadow:0 4px 0 #B9841D}
+
+.box{position:relative;width:210px;height:190px;margin:30px auto 6px;cursor:pointer;animation:wiggle 2.6s ease-in-out infinite}
+.box .body{position:absolute;bottom:0;left:14px;right:14px;height:124px;border-radius:10px;background:var(--ribbon);
+  background-image:linear-gradient(90deg,transparent 43%,var(--gold) 43% 57%,transparent 57%);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12)}
+.box .lid{position:absolute;top:44px;left:0;right:0;height:42px;border-radius:10px;background:var(--ribbon-dk);
+  background-image:linear-gradient(90deg,transparent 43%,var(--gold) 43% 57%,transparent 57%);transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .6s .35s}
+.bow{position:absolute;top:-30px;left:50%;width:0;height:0}
+.bow::before,.bow::after{content:"";position:absolute;top:0;width:46px;height:32px;border:9px solid var(--gold);border-radius:50%}
+.bow::before{right:-4px;transform:rotate(-22deg)}
+.bow::after{left:-4px;transform:rotate(22deg)}
+.box.open{animation:none}
+.box.open .lid{transform:translate(90px,-170px) rotate(38deg);opacity:0}
+.box.open .body{animation:pop .5s .2s both}
+@keyframes wiggle{0%,80%,100%{transform:rotate(0)}84%{transform:rotate(-4deg)}88%{transform:rotate(4deg)}92%{transform:rotate(-2deg)}}
+@keyframes pop{to{transform:scale(1.08);opacity:0}}
+
+/* hub */
+.hub{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+@media (max-width:560px){.hub{grid-template-columns:minmax(0,1fr)}}
+.tile{background:var(--g-surface);border:1px solid var(--g-line);border-radius:18px;padding:16px;display:grid;gap:10px;text-align:left;color:var(--g-ink)}
+.tile .th{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.tile strong{font-size:17px}
+.tile .lvl{font-size:13px;font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+.tile small{color:var(--g-muted);font-size:13px}
+.dots{display:flex;gap:5px;align-items:center}
+.dots i{width:22px;height:6px;border-radius:99px;background:var(--g-line)}
+.dots i.on{background:var(--gold)}
+.dots span{font-size:12px;color:var(--g-muted);margin-left:4px}
+.cardtile{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:linear-gradient(120deg,var(--g-surface),#35295F)}
+@media (max-width:560px){.cardtile{grid-template-columns:1fr;justify-items:start}}
+.env{width:64px;height:46px;border-radius:6px;background:var(--g-ink);position:relative;overflow:hidden;flex:none}
+.env::before{content:"";position:absolute;inset:0;background:linear-gradient(155deg,transparent 49%,#E6DCCB 50%) left/50% 100% no-repeat,linear-gradient(-155deg,transparent 49%,#E6DCCB 50%) right/50% 100% no-repeat}
+.env::after{content:"";position:absolute;left:50%;top:45%;width:14px;height:14px;border-radius:50%;background:var(--ribbon);transform:translate(-50%,-50%)}
+.cardtile.locked .env{filter:grayscale(1) brightness(.7)}
+
+/* play */
+.playhead{width:100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.playhead h2{font-size:clamp(22px,4vw,30px)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--g-surface);border:1px solid var(--g-line);border-radius:10px;padding:5px 11px;font-size:13px;font-variant-numeric:tabular-nums}
+.chip b{color:var(--gold);margin-left:4px}
+.chip.warn b{color:#FF7D95}
+.area{width:100%;display:grid;justify-items:center;gap:14px}
+.note{color:var(--g-muted);font-size:14px;margin:0;min-height:1.5em}
+.twist{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#2A1A00;background:var(--gold);border-radius:999px;padding:4px 12px}
+
+.mgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--gap,10px);max-width:100%;margin-inline:auto}
+.mcard{width:var(--cw,80px);height:var(--ch,104px);perspective:1000px;border:0;padding:0;background:none;flex:none}
+.mcard .in{position:relative;width:100%;height:100%;transition:transform .5s cubic-bezier(.3,1.3,.5,1);transform-style:preserve-3d}
+.mcard.up .in{transform:rotateY(180deg)}
+.mcard:active:not(.up) .in{transform:scale(.96)}
+.face{position:absolute;inset:0;border-radius:clamp(8px,calc(var(--cw,80px) * .1),16px);backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.mback{background-color:var(--ribbon);
+  background-image:linear-gradient(90deg,transparent 43%,var(--gold) 43% 57%,transparent 57%),linear-gradient(0deg,transparent 43%,var(--gold) 43% 57%,transparent 57%),repeating-linear-gradient(45deg,rgba(255,255,255,.07) 0 8px,transparent 8px 16px),linear-gradient(160deg,#F04A6E,#B92446);
+  box-shadow:inset 0 0 0 3px rgba(255,247,236,.25),0 6px 14px rgba(8,5,25,.45)}
+.mbow{position:absolute;left:50%;top:50%;width:26%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFE3A3,var(--gold) 60%,#C98F1E);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.mcard:hover:not(.up) .mback{filter:brightness(1.08)}
+.mfront{transform:rotateY(180deg);background-size:cover;background-position:center;box-shadow:inset 0 0 0 4px var(--g-ink),0 6px 14px rgba(8,5,25,.45)}
+.mcard.got .mfront{box-shadow:inset 0 0 0 4px var(--gold),0 0 22px rgba(241,180,60,.55)}
+.mcard.got .mfront::after{content:"✓";position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:var(--gold);color:#2A1A00;font-weight:900;font-size:13px;display:grid;place-items:center}
+.mcard.got .in{animation:matched .5s ease}
+.mcard.miss .in{animation:shake .4s ease .25s}
+@keyframes matched{50%{transform:rotateY(180deg) scale(1.08)}}
+@keyframes shake{25%{transform:rotateY(180deg) translateX(-5px)}75%{transform:rotateY(180deg) translateX(5px)}}
+
+.pz{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:3px;width:min(100%,470px);aspect-ratio:1;background:var(--g-line);padding:3px;border-radius:14px;position:relative;max-width:100%}
+.ptile{border:0;padding:0;background-repeat:no-repeat;border-radius:4px;transition:transform .18s,box-shadow .15s;min-width:0;transform:rotate(calc(var(--r,0) * 90deg)) scale(var(--s,1))}
+.ptile.sel{--s:.88;box-shadow:0 0 0 3px var(--gold);position:relative;z-index:1}
+.pz.solved{gap:0;padding:0;background:none}
+.pz.solved .ptile{border-radius:0}
+.ghost{position:absolute;inset:3px;border-radius:12px;background-size:cover;opacity:0;pointer-events:none;transition:opacity .3s}
+.ghost.show{opacity:.55}
+
+.quiz{width:min(100%,560px);display:grid;gap:14px}
+.qq{font-size:clamp(20px,4vw,26px);font-weight:800;margin:0;text-wrap:balance}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{background:var(--g-surface);border:2px solid var(--g-line);color:var(--g-ink);border-radius:14px;padding:14px;font-weight:700;font-size:15.5px;text-align:left;min-height:56px}
+.opt:hover:not([disabled]){border-color:var(--gold)}
+.opt.right{border-color:#4CC98A;background:#1F4A3E}
+.opt.wrong{border-color:#FF7D95;background:#4A1F35}
+.opt[disabled]{cursor:default}
+.reveal{display:grid;justify-items:center;gap:8px}
+.reveal div{width:150px;aspect-ratio:1;border-radius:12px;background-size:cover;border:4px solid var(--g-ink);animation:rise .4s}
+
+.picker{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:520px}
+.pick{width:68px;height:68px;border-radius:50%;border:0;background-size:cover;background-position:center;box-shadow:0 0 0 3px var(--g-line);transition:transform .15s}
+.pick:hover{transform:scale(1.08);box-shadow:0 0 0 3px var(--ribbon)}
+.levels{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:560px}
+.lv{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;border:1px solid var(--g-line);color:var(--g-muted);background:var(--g-surface)}
+.lv.now{border-color:var(--gold);color:var(--gold)}
+.lv.done{background:var(--gold);color:#2A1A00;border-color:var(--gold)}
+.foe{display:flex;align-items:center;gap:12px;background:var(--g-surface);border:1px solid var(--g-line);border-radius:14px;padding:10px 14px;text-align:left;width:min(100%,520px)}
+.foe .av{width:44px;height:44px;border-radius:50%;flex:none;background-size:cover;background-position:center;box-shadow:0 0 0 3px var(--gold)}
+.foe b{display:block}
+.foe small{color:var(--g-muted)}
+.meter{display:flex;gap:3px;margin-left:auto;flex:none}
+.meter i{width:6px;height:18px;border-radius:2px;background:var(--g-line)}
+.meter i.on{background:var(--ribbon)}
+.c4{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:9px;background:var(--board);border-radius:18px;overflow:hidden;width:min(100%,520px);box-shadow:0 10px 0 #24227A}
+.slot{position:relative;aspect-ratio:1;border-radius:50%;background:var(--hole);border:0;padding:0;min-width:0;box-shadow:inset 0 3px 6px rgba(0,0,0,.5)}
+.c4.busy .slot{cursor:wait}
+.slot.hot{background:#2A2266}
+.disc{position:absolute;inset:0;border-radius:50%;background-size:cover;background-position:center}
+.disc.p{box-shadow:inset 0 0 0 3px var(--ribbon),0 0 0 3px var(--ribbon)}
+.disc.a{box-shadow:inset 0 0 0 3px var(--gold),0 0 0 3px var(--gold)}
+.disc.drop{animation:drop .38s cubic-bezier(.5,0,.75,1.2)}
+@keyframes drop{from{transform:translateY(calc(var(--fall) * -118%))}}
+.disc.win{animation:glow .8s ease-in-out infinite alternate}
+@keyframes glow{to{transform:scale(.8);filter:brightness(1.3)}}
+.legend{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--g-muted)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:18px;height:18px;border-radius:50%;display:inline-block;background-size:cover;background-position:center}
+
+.modal{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(10,7,30,.72);padding:16px}
+.mcardx{background:var(--g-surface);color:var(--g-ink);border:1px solid var(--g-line);border-radius:20px;padding:26px 22px;max-width:410px;width:100%;display:grid;gap:12px;text-align:center;animation:rise .35s cubic-bezier(.2,.9,.3,1.2)}
+.mcardx h3{font-family:var(--display);font-weight:400;font-size:28px;margin:0;color:var(--gold);text-wrap:balance}
+.mcardx p{margin:0;color:var(--g-muted)}
+.mcardx .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+@keyframes rise{from{transform:translateY(20px) scale(.96);opacity:0}}
+
+.letter{border-radius:6px;padding:28px 24px;max-width:540px;width:100%;text-align:left;box-shadow:0 14px 30px rgba(0,0,0,.35);position:relative}
+.letter::before{content:"";position:absolute;top:-12px;left:50%;width:90px;height:24px;transform:translateX(-50%) rotate(-3deg);background:rgba(241,180,60,.75)}
+.letter p{margin:0 0 14px;white-space:pre-wrap;font-size:17px;line-height:1.6;overflow-wrap:anywhere}
+.letter .sig{font-family:var(--display);font-size:24px;margin:0}
+.letter.ribbon{background:#FFF7EC;color:#2B2140;border-top:10px solid #E0345A}.letter.ribbon .sig{color:#B92446}
+.letter.sky{background:#E6F1FF;color:#16264A;border-top:10px solid #2E6BD8}.letter.sky .sig{color:#2E6BD8}
+.letter.night{background:#141033;color:#F3EEFF;border:1px solid #3B3475;border-top:10px solid #F1B43C}.letter.night .sig{color:#F1B43C}
+.polas{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;padding-inline:10px}
+.pola{width:min(118px,26vw);background:var(--g-ink);padding:7px 7px 22px;border-radius:3px;box-shadow:0 8px 18px rgba(0,0,0,.4)}
+.pola div{aspect-ratio:1;background-size:cover;background-position:center}
+.acts-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70;width:100%;height:100%}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <button class="brand" id="home" aria-label="Unwrap home"><span class="brand-mark" aria-hidden="true"></span>unwrap</button>
+    <span class="stepcount" id="stepcount"></span>
+  </div>
+  <div class="bar" id="bar" hidden><i id="barfill"></i></div>
+  <main id="screen"></main>
+</div>
+
+<section class="gift" id="gift" hidden>
+  <div class="gift-in">
+    <div class="gbar">
+      <button class="gbtn" id="exitPreview">← Edit gift</button>
+      <span class="tagp">Preview · what <span id="pvName"></span> sees</span>
+      <button class="gbtn hot" id="sendFromPreview">Looks good, send it</button>
+    </div>
+    <div class="view" id="vUnwrap"></div>
+    <div class="view" id="vPlay" hidden></div>
+    <div class="view" id="vCard" hidden></div>
+  </div>
+</section>
+<div class="modal" id="modal" hidden></div>
+<canvas id="confetti" hidden></canvas>
+<input type="file" id="file" accept="image/*" multiple hidden>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+function h(t, a = {}, ...kids){
+  const e = document.createElement(t);
+  for (const [k, v] of Object.entries(a)){
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'style') e.style.cssText = v;
+    else if (k === 'value') e.value = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()){ if (k == null || k === false) continue; e.append(k.nodeType ? k : document.createTextNode(k)); }
+  return e;
+}
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const bg = src => `url("${src}")`;
+const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const mini = k => ({
+  memory: h('div', { class: 'mini-mem' }, Array.from({ length: 6 }, () => h('i'))),
+  puzzle: h('div', { class: 'mini-puz' }, Array.from({ length: 9 }, () => h('i'))),
+  quiz: h('div', { class: 'mini-quiz' }, h('i'), h('i'), h('i'), h('i')),
+  c4: h('div', { class: 'mini-c4' }, ['', '', '', '', '', '', 'g', '', '', '', 'r', 'r', 'g', 'r', ''].map(c => h('i', { class: c || null })))
+})[k];
+
+/* ================= DATA ================= */
+const GENERIC = ['🎁', '✨', '🌈', '🦋', '🍀', '☀️', '🎶', '🌻', '🍦', '🐳', '🌙', '🪁'];
+const OCC = {
+  birthday:   { label: 'Birthday', em: '🎂', head: n => `Happy birthday, ${n}!`, emo: ['🎂', '🎈', '🎁', '🥳', '🧁', '🎉', '🍰', '🕯️', '🎊', '🍭', '🎀', '🌟'],
+    pal: [['#FF7A59', '#FFC75F'], ['#F15BB5', '#7B3FE4'], ['#00BBF9', '#00D4B4'], ['#FFD23F', '#F15BB5']],
+    msg: "Happy birthday! I made you a little game, because a card felt too easy.\nHere's to another year of laughing at the same jokes." },
+  anniversary:{ label: 'Anniversary', em: '💍', head: n => `Happy anniversary, ${n}!`, emo: ['💍', '❤️', '🥂', '🌹', '💑', '🍷', '🌙', '💌', '🗼', '🌅', '💐', '🕯️'],
+    pal: [['#B5179E', '#F72585'], ['#7209B7', '#3A0CA3'], ['#FF8FA3', '#C9184A'], ['#F9C74F', '#F94144']],
+    msg: "Another year with you, and I'd still choose you every single day.\nThank you for all the adventures. Here's to the next ones." },
+  valentine:  { label: "Valentine's", em: '💘', head: n => `Be mine, ${n}?`, emo: ['💘', '💕', '🌹', '🍫', '💌', '🧸', '💝', '🌷', '🍓', '😘', '🫶', '✨'],
+    pal: [['#FF4D6D', '#FF8FA3'], ['#C9184A', '#FF758F'], ['#FFB3C1', '#FF4D6D'], ['#9D4EDD', '#FF4D6D']],
+    msg: "You make ordinary days feel like the best ones.\nThis little game is my way of saying I'm still crazy about you." },
+  thanks:     { label: 'Thank you', em: '🙏', head: n => `Thank you, ${n}.`, emo: ['🙏', '💐', '☕', '🌻', '🍪', '🤗', '⭐', '📬', '🌈', '🍀', '💛', '🏅'],
+    pal: [['#43AA8B', '#90BE6D'], ['#F9C74F', '#F8961E'], ['#277DA1', '#4D908E'], ['#F3722C', '#F9C74F']],
+    msg: "I wanted to say thank you in a way you'd actually remember.\nYou showed up when it mattered, and I won't forget it." },
+  graduation: { label: 'Graduation', em: '🎓', head: n => `Congratulations, ${n}!`, emo: ['🎓', '📚', '🏆', '✏️', '🚀', '📜', '🧠', '🎯', '🥇', '🎉', '💡', '🌟'],
+    pal: [['#1D3557', '#457B9D'], ['#F4A261', '#E76F51'], ['#2A9D8F', '#264653'], ['#E9C46A', '#F4A261']],
+    msg: "You did it! All those late nights paid off.\nI'm so proud of you. The world isn't ready." },
+  wedding:    { label: 'Wedding', em: '💒', head: n => `Mazal tov, ${n}!`, emo: ['💒', '💍', '🥂', '💐', '🕊️', '🎂', '💃', '🎶', '🌸', '🤍', '🥳', '✨'],
+    pal: [['#CDB4DB', '#FFC8DD'], ['#A2D2FF', '#BDE0FE'], ['#FFAFCC', '#CDB4DB'], ['#E9C46A', '#FFC8DD']],
+    msg: "Wishing you a lifetime of love, laughter and very good food.\nSo happy to celebrate this day with you." },
+  baby:       { label: 'New baby', em: '👶', head: n => `Mazal tov, ${n}!`, emo: ['👶', '🍼', '🧸', '🎀', '🌙', '⭐', '🐣', '🦆', '🎈', '🌈', '👣', '💛'],
+    pal: [['#A0C4FF', '#BDB2FF'], ['#FFD6A5', '#FDFFB6'], ['#CAFFBF', '#9BF6FF'], ['#FFC6FF', '#BDB2FF']],
+    msg: "Welcome to the world, little one!\nWishing your family joy, cuddles and (eventually) some sleep." },
+  custom:     { label: 'Something different', em: '✨', head: n => `This one's for you, ${n}.`, emo: GENERIC,
+    pal: [['#7B2CBF', '#C77DFF'], ['#00B4D8', '#0077B6'], ['#FF9E00', '#FF5400'], ['#38B000', '#9EF01A']],
+    msg: "I made this just for you.\nThanks for being exactly who you are." }
+};
+const GAMES = {
+  memory: { name: 'Memory', about: '6 cards, then 8, 10, 12… endless' },
+  puzzle: { name: 'Photo puzzle', about: '3×3 up to 6×6, then spinning tiles' },
+  c4:     { name: 'Four in a row', about: '8 opponents, from sleepy to grandmaster' }
+};
+const DEFAULT_NOTES = [
+  "Level 1 done! I knew you'd get that one.",
+  "Still going? I'm impressed.",
+  "Okay, now you're just showing off.",
+  "Remember when we stayed up all night talking? Me neither, I fell asleep first.",
+  "If you made it this far, you deserve a coffee. On me."
+];
+
+/* ================= IMAGE ART ================= */
+const artCache = {};
+function art(emo, pal){
+  const key = emo + pal.join();
+  if (artCache[key]) return artCache[key];
+  const c = document.createElement('canvas'); c.width = c.height = 420;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 420, 420); g.addColorStop(0, pal[0]); g.addColorStop(1, pal[1]);
+  x.fillStyle = g; x.fillRect(0, 0, 420, 420);
+  x.globalAlpha = .17; x.fillStyle = '#fff';
+  const seed = [...key].reduce((s, ch) => s + ch.codePointAt(0), 0);
+  for (let k = 0; k < 6; k++){ x.beginPath(); x.arc((seed * (k + 3) * 37) % 420, (seed * (k + 7) * 53) % 420, 30 + (seed * (k + 1)) % 70, 0, 7); x.fill(); }
+  x.globalAlpha = 1; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = '200px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  x.fillText(emo, 210, 222);
+  return artCache[key] = c.toDataURL('image/jpeg', .85);
+}
+const gallery = occ => {
+  const o = OCC[occ];
+  const list = [...o.emo, ...GENERIC.filter(e => !o.emo.includes(e))];
+  return list.map((e, i) => art(e, o.pal[i % o.pal.length]));
+};
+
+/* ================= STATE ================= */
+const S = {
+  occasion: null, customOcc: '', to: '', from: '',
+  game: null, notes: [...DEFAULT_NOTES],
+  photos: [], userPhotos: false, message: '', msgEdited: false, cardStyle: 'ribbon'
+};
+const first = () => (S.to.trim().split(/\s+/)[0] || 'you');
+const fromName = () => S.from.trim() || 'Someone';
+const slug = () => {
+  const s = S.to.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+  return s || 'yourgift';
+};
+const pool = () => S.photos.length ? S.photos : gallery(S.occasion || 'custom').slice(0, 8);
+function setOccasion(k){
+  S.occasion = k;
+  if (!S.userPhotos) S.photos = gallery(k).slice(0, 8);
+  if (!S.msgEdited) S.message = OCC[k].msg;
+}
+
+/* ================= WIZARD ================= */
+let stepIdx = -1;
+const steps = () => ['occasion', 'name', 'game', 'photos', 'card', 'send'];
+
+function go(i){
+  stepIdx = i;
+  const list = steps();
+  const scr = $('#screen'); scr.replaceChildren();
+  if (i < 0){
+    $('#bar').hidden = true; $('#stepcount').textContent = '';
+    scr.append(landing());
+  } else {
+    $('#bar').hidden = false;
+    $('#barfill').style.width = `${(i + 1) / list.length * 100}%`;
+    $('#stepcount').textContent = `Step ${i + 1} of ${list.length}`;
+    scr.append(STEP[list[i]]());
+  }
+  window.scrollTo({ top: 0 });
+  const f = scr.querySelector('[data-focus]'); if (f) f.focus();
+}
+const next = () => go(stepIdx + 1);
+const back = () => go(stepIdx - 1);
+function nav(onNext, label = 'Continue', err){
+  return h('div', {}, err || null, h('div', { class: 'nav' },
+    h('button', { class: 'btn ghost', text: '← Back', onclick: back }),
+    onNext ? h('button', { class: 'btn primary', text: label, onclick: onNext }) : h('span')));
+}
+function errEl(){ return h('p', { class: 'err', hidden: true, role: 'alert' }); }
+function showErr(el, msg){ el.textContent = msg; el.hidden = false; }
+
+function landing(){
+  return h('section', { class: 'land' },
+    h('div', { class: 'showcase', 'aria-hidden': 'true' },
+      ['memory', 'puzzle', 'c4'].map(k => h('div', { class: 'sc' }, mini(k), GAMES[k].name))),
+    h('h1', {}, 'Create Your ', h('em', { text: 'Gaming Gift' })),
+    h('p', { text: 'Turn your photos into a game they can play, with a card and a little note after every level. Takes about three minutes, and they get it as a link.' }),
+    h('button', { class: 'btn primary big', text: 'Start', onclick: () => go(0) }),
+    h('ol', { class: 'howto' }, h('li', { text: 'Pick the occasion' }), h('li', { text: 'Choose a game' }), h('li', { text: 'Send a link' }))
+  );
+}
+
+const STEP = {
+  occasion(){
+    const custom = h('div', { class: 'custom', hidden: S.occasion !== 'custom' });
+    const inp = h('input', { id: 'customOcc', placeholder: 'e.g. Bar mitzvah, retirement, new job', maxlength: '40', value: S.customOcc,
+      oninput: e => S.customOcc = e.target.value });
+    const err = errEl();
+    custom.append(h('div', { class: 'field' }, h('label', { for: 'customOcc', text: 'Name the occasion' }), inp),
+      h('button', { class: 'btn primary', style: 'align-self:end', text: 'Continue', onclick: () => {
+        if (!S.customOcc.trim()) return showErr(err, 'Write what the occasion is, or pick one above.');
+        next();
+      } }));
+    return h('section', { class: 'step' },
+      h('h2', { text: "What's the occasion?" }),
+      h('div', { class: 'occs' }, Object.entries(OCC).map(([k, o]) =>
+        h('button', { class: 'occ' + (S.occasion === k ? ' on' : ''), onclick: () => {
+          setOccasion(k);
+          if (k === 'custom'){ document.querySelectorAll('.occ').forEach(b => b.classList.toggle('on', b.dataset.k === k)); custom.hidden = false; inp.focus(); }
+          else next();
+        }, 'data-k': k }, h('span', { class: 'em', text: o.em }), o.label))),
+      custom, err, nav(null));
+  },
+
+  name(){
+    const err = errEl();
+    const prev = h('b');
+    const upd = () => { prev.replaceChildren(h('span', { text: slug() }), '.unwrap.cafe'); };
+    upd();
+    return h('section', { class: 'step' },
+      h('h2', { text: 'Who is the gift for?' }),
+      h('div', { class: 'field big' }, h('label', { for: 'to', text: 'Their name' }),
+        h('input', { id: 'to', 'data-focus': true, maxlength: '40', placeholder: 'e.g. Noa Levi', value: S.to, oninput: e => { S.to = e.target.value; upd(); } })),
+      h('div', { class: 'field' }, h('label', { for: 'from', text: 'Your name, as it appears on the card' }),
+        h('input', { id: 'from', maxlength: '40', placeholder: 'e.g. Amit', value: S.from, oninput: e => S.from = e.target.value })),
+      h('div', { class: 'urlprev' }, h('small', { text: 'Their gift link will be' }), prev,
+        h('small', { text: 'If the name is taken, we add a number. Names in other alphabets get a Latin version.' })),
+      err,
+      nav(() => {
+        if (!S.to.trim()) return showErr(err, "Add the recipient's name.");
+        if (!S.from.trim()) return showErr(err, 'Add your name so they know who it\'s from.');
+        next();
+      }));
+  },
+
+  game(){
+    return h('section', { class: 'step' },
+      h('h2', { text: `Choose ${first()}'s game` }),
+      h('p', { class: 'lead', text: 'Pick one. It has endless levels, and your notes pop up as they go.' }),
+      h('div', { class: 'games one' }, Object.entries(GAMES).map(([k, g]) =>
+        h('button', { class: 'game' + (S.game === k ? ' on' : ''), onclick: () => { S.game = k; next(); } },
+          h('span', { class: 'mini' }, mini(k)),
+          h('span', {}, h('strong', { text: g.name }), h('small', { text: g.about })),
+          h('span', { class: 'check', text: S.game === k ? '✓' : '' })))),
+      nav(null));
+  },
+
+  photos(){
+    const grid = h('div', { class: 'photos' });
+    const note = h('p', { class: 'note-box' });
+    const draw = () => {
+      grid.replaceChildren(...S.photos.map((p, i) => h('div', { class: 'ph', style: `background-image:${bg(p)}` },
+        i === 0 ? h('span', { class: 'cover', text: 'Cover' }) : null,
+        h('button', { class: 'x', 'aria-label': 'Remove photo', text: '×', onclick: () => { S.photos.splice(i, 1); S.userPhotos = true; draw(); } }))));
+      if (S.photos.length < 24) grid.append(h('label', { class: 'add', for: 'file', tabindex: '0',
+        onkeydown: e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('#file').click(); } } },
+        h('div', {}, h('span', { text: '+' }), 'Add photos')));
+      note.textContent = S.userPhotos
+        ? `${S.photos.length} photo${S.photos.length === 1 ? '' : 's'}. When the games need more, they fill in with ${OCC[S.occasion].label.toLowerCase()}-themed pictures.`
+        : `These are ${OCC[S.occasion].label.toLowerCase()} sample pictures. Add your own and they replace them.`;
+    };
+    $('#file').onchange = async e => {
+      const files = [...e.target.files].filter(f => f.type.startsWith('image/'));
+      e.target.value = '';
+      if (!files.length) return;
+      if (!S.userPhotos){ S.photos = []; S.userPhotos = true; }
+      for (const f of files){ if (S.photos.length >= 24) break; const d = await cropFile(f); if (d) S.photos.push(d); }
+      draw();
+    };
+    draw();
+    return h('section', { class: 'step' },
+      h('h2', { text: `Photos for ${first()}` }),
+      h('p', { class: 'lead', text: 'Use photos of you two, trips, pets, inside jokes. Up to 24. The first one is the cover.' }),
+      note, grid, nav(next));
+  },
+
+  card(){
+    const err = errEl();
+    const ta = h('textarea', { id: 'msg', maxlength: '700', oninput: e => { S.message = e.target.value; S.msgEdited = true; } });
+    ta.value = S.message;
+    const styles = h('div', { class: 'styles' });
+    const drawStyles = () => styles.replaceChildren(...[['ribbon', 'Ribbon'], ['sky', 'Sky'], ['night', 'Midnight']].map(([k, l]) =>
+      h('button', { class: 'sty' + (S.cardStyle === k ? ' on' : ''), onclick: () => { S.cardStyle = k; drawStyles(); } }, h('i', { class: k }), l)));
+    drawStyles();
+    const notes = h('div', { class: 'notes-ed' });
+    const drawNotes = () => {
+      notes.replaceChildren(...S.notes.map((n, i) => h('div', { class: 'note-row' },
+        h('label', { for: `note${i}`, text: `After level ${i + 1}` }),
+        h('input', { id: `note${i}`, maxlength: '160', placeholder: 'A short note', value: n, oninput: e => S.notes[i] = e.target.value }),
+        h('button', { class: 'x', 'aria-label': `Remove note ${i + 1}`, text: 'Remove', onclick: () => { S.notes.splice(i, 1); drawNotes(); } }))),
+        S.notes.length < 30 ? h('button', { class: 'tpl', text: `+ Add a note for level ${S.notes.length + 1}`, onclick: () => {
+          S.notes.push(''); drawNotes(); notes.querySelector(`#note${S.notes.length - 1}`).focus(); } }) : null);
+    };
+    drawNotes();
+    return h('section', { class: 'step' },
+      h('h2', { text: `Write ${first()}'s card` }),
+      h('p', { class: 'lead', text: `${first()} opens the card first. Then, after each level, one of your notes pops up.` }),
+      h('div', { class: 'field' }, h('label', { for: 'msg', text: 'Card message' }), ta),
+      h('div', { class: 'lbl', text: 'Card style' }), styles,
+      h('div', { class: 'lbl', text: 'Notes after each level' }),
+      h('p', { class: 'hint', style: 'margin-top:-12px', text: 'Optional. After the last note, the levels keep going without one.' }),
+      notes,
+      err,
+      nav(() => {
+        if (!S.message.trim()) return showErr(err, 'Write a short message for the card.');
+        S.notes = S.notes.map(n => n.trim()).filter(Boolean);
+        openGift();
+      }, 'Create & preview gift'));
+  },
+
+  send(){
+    const url = `${slug()}.unwrap.cafe`;
+    const copyBtn = h('button', { class: 'btn', text: 'Copy' });
+    const code = h('code', { text: url });
+    copyBtn.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText('https://' + url); copyBtn.textContent = 'Copied'; }
+      catch { const r = document.createRange(); r.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(r); copyBtn.textContent = 'Selected'; }
+      setTimeout(() => copyBtn.textContent = 'Copy', 1600);
+    });
+    const text = `${fromName()} made you a gift 🎁 Open it here: https://${url}`;
+    const qr = h('div', { class: 'qr' });
+    if (window.QRCode){ try { new QRCode(qr, { text: 'https://' + url, width: 148, height: 148, colorDark: '#1D1838', colorLight: '#ffffff' }); qr.append('Scan to open'); } catch { qr.hidden = true; } }
+    else qr.hidden = true;
+    const d = new Date(Date.now() + 86400000);
+    const dateIn = h('input', { type: 'date', id: 'sdate', value: d.toISOString().slice(0, 10) });
+    const timeIn = h('input', { type: 'time', id: 'stime', value: '08:00' });
+    const ok = h('p', { class: 'okmsg', hidden: true });
+    return h('section', { class: 'step' },
+      h('h2', { text: `${first()}'s gift is ready` }),
+      h('p', { class: 'lead', text: 'Share the link now, or schedule it for the big day.' }),
+      h('div', { class: 'sendgrid' },
+        h('div', { class: 'panel' },
+          h('h3', { text: 'Gift link' }),
+          h('div', { class: 'link-row' }, code, copyBtn),
+          h('div', { class: 'share-btns' },
+            h('a', { class: 'btn primary', href: `https://wa.me/?text=${encodeURIComponent(text)}`, target: '_blank', rel: 'noopener', text: 'Send on WhatsApp' }),
+            h('a', { class: 'btn', href: `mailto:?subject=${encodeURIComponent('A gift for you')}&body=${encodeURIComponent(text)}`, text: 'Email' }),
+            h('button', { class: 'btn', text: 'Open the gift', onclick: openGift }))),
+        qr),
+      h('div', { class: 'panel' },
+        h('h3', { text: 'Schedule delivery' }),
+        h('div', { class: 'sched' },
+          h('div', { class: 'field' }, h('label', { for: 'sdate', text: 'Date' }), dateIn),
+          h('div', { class: 'field' }, h('label', { for: 'stime', text: 'Time' }), timeIn),
+          h('button', { class: 'btn primary', text: 'Schedule', onclick: () => {
+            const dt = new Date(`${dateIn.value}T${timeIn.value || '08:00'}`);
+            if (isNaN(dt)) { ok.textContent = 'Pick a date and time.'; ok.hidden = false; return; }
+            ok.textContent = `Scheduled for ${dt.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })} at ${timeIn.value}. You'll get a note when ${first()} opens it.`;
+            ok.hidden = false;
+          } })),
+        ok),
+      h('p', { class: 'hint', text: 'Demo: the link shows the real format, but it opens for other people only once the platform has a backend that stores the gift.' }),
+      h('div', { class: 'nav' },
+        h('button', { class: 'btn ghost', text: '← Back to the card', onclick: back }),
+        h('button', { class: 'btn', text: 'Make another gift', onclick: restart })));
+  }
+};
+
+function restart(){
+  Object.assign(S, { occasion: null, customOcc: '', to: '', from: '', photos: [], userPhotos: false, message: '', msgEdited: false, cardStyle: 'ribbon',
+    game: null, notes: [...DEFAULT_NOTES] });
+  go(-1);
+}
+$('#home').addEventListener('click', () => go(-1));
+
+function cropFile(file){
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const s = Math.min(img.width, img.height), size = Math.min(720, s);
+        const c = document.createElement('canvas'); c.width = c.height = size;
+        c.getContext('2d').drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+        res(c.toDataURL('image/jpeg', .85));
+      };
+      img.onerror = () => res(null);
+      img.src = r.result;
+    };
+    r.onerror = () => res(null);
+    r.readAsDataURL(file);
+  });
+}
+
+/* ================= GIFT ================= */
+const G = { lv: {}, piece: null, timers: [], seenNotes: [], c4losses: 0, fit: null };
+function clearTimers(){ G.timers.forEach(t => clearInterval(t)); G.timers = []; G.fit = null; }
+addEventListener('resize', () => G.fit && G.fit());
+function show(v){ ['vUnwrap', 'vPlay', 'vCard'].forEach(x => $('#' + x).hidden = x !== v); $('#gift').scrollTop = 0; }
+
+$('#exitPreview').addEventListener('click', () => { closeGift(); go(steps().indexOf('card')); });
+$('#sendFromPreview').addEventListener('click', () => { closeGift(); go(steps().indexOf('send')); });
+function closeGift(){ clearTimers(); closeModal(); $('#gift').hidden = true; document.body.style.overflow = ''; }
+
+function openGift(){
+  Object.assign(G, { lv: { memory: 1, puzzle: 1, c4: 1 }, piece: null, seenNotes: [], c4losses: 0 });
+  $('#pvName').textContent = first();
+  $('#gift').hidden = false; document.body.style.overflow = 'hidden';
+  const v = $('#vUnwrap'); v.replaceChildren();
+  const box = h('div', { class: 'box', role: 'button', tabindex: '0', 'aria-label': 'Open your gift' },
+    h('div', { class: 'body' }), h('div', { class: 'lid' }, h('span', { class: 'bow' })));
+  const open = () => { if (box.classList.contains('open')) return; box.classList.add('open'); burst(90); setTimeout(() => showCard(true), 950); };
+  box.addEventListener('click', open);
+  box.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  const occName = S.occasion === 'custom' && S.customOcc.trim() ? S.customOcc.trim() : OCC[S.occasion].label;
+  v.append(box,
+    h('h2', { text: `${first()}, ${fromName()} made something for you.` }),
+    h('p', { class: 'sub', text: `A ${occName.toLowerCase()} card and a game of ${GAMES[S.game].name}${S.notes.length ? `, with a note from ${fromName()} hidden after each level` : ''}.` }),
+    h('button', { class: 'gcta', text: 'Open your gift', onclick: open }));
+  show('vUnwrap');
+}
+
+function playShell(title){
+  clearTimers();
+  const v = $('#vPlay'); v.replaceChildren();
+  const chips = h('div', { class: 'chips' });
+  const area = h('div', { class: 'area' });
+  v.append(h('div', { class: 'playhead' }, h('button', { class: 'gbtn', text: '← Card', onclick: () => showCard(false) }), h('h2', { text: title }), chips), area);
+  show('vPlay');
+  return { area, setChips: list => chips.replaceChildren(...list.map(([k, val, warn]) => h('span', { class: 'chip' + (warn ? ' warn' : '') }, k, h('b', { text: val })))) };
+}
+function startGame(){ ({ memory: playMemory, puzzle: playPuzzle, c4: playC4 })[S.game](); }
+
+function levelDone(g, title, text){
+  clearTimers();
+  const L = G.lv[g];
+  G.lv[g]++;
+  burst(110);
+  const note = S.notes[L - 1];
+  if (note && !G.seenNotes.some(n => n.lvl === L)) G.seenNotes.push({ lvl: L, text: note });
+  modal(title, text, [{ label: `Play level ${G.lv[g]}`, primary: true, fn: startGame }, { label: 'Read the card', fn: () => showCard(false) }], note);
+}
+function levelFail(g, title, text, extra = []){
+  clearTimers();
+  modal(title, text, [{ label: 'Try again', primary: true, fn: startGame }, ...extra, { label: 'Read the card', fn: () => showCard(false) }]);
+}
+
+function modal(title, text, acts, note){
+  const m = $('#modal');
+  m.replaceChildren(h('div', { class: 'mcardx', role: 'dialog', 'aria-modal': 'true' },
+    h('h3', { text: title }),
+    note ? h('div', { class: 'notecard' }, h('span', { class: 'nfrom', text: `A note from ${fromName()}` }), h('p', { text: note })) : null,
+    h('p', { text }),
+    h('div', { class: 'acts' }, acts.map(a => h('button', { class: a.primary ? 'gcta' : 'gcta alt', text: a.label, onclick: () => { closeModal(); a.fn(); } })))));
+  m.hidden = false;
+  m.querySelector('button').focus();
+}
+function closeModal(){ $('#modal').hidden = true; $('#modal').replaceChildren(); }
+
+/* ---------------- MEMORY (endless, fills the screen) ---------------- */
+function memoryCfg(L){
+  const cards = Math.min(6 + 2 * (L - 1), 24);
+  const limit = L >= 10 ? Math.max(45, 110 - (L - 10) * 7) : 0;
+  return { cards, pairs: cards / 2, limit };
+}
+function playMemory(){
+  const L = G.lv.memory, cfg = memoryCfg(L);
+  const { area, setChips } = playShell('Memory');
+  const own = shuffle([...S.photos]);
+  const fill = gallery(S.occasion).filter(x => !own.includes(x));
+  const imgs = [...own, ...fill].slice(0, cfg.pairs);
+  const deck = shuffle([...imgs.keys(), ...imgs.keys()]);
+  let firstCard = null, lock = false, moves = 0, found = 0, secs = 0, started = false, left = cfg.limit;
+  const upd = () => setChips([['Level', L], ['Pairs', `${found}/${cfg.pairs}`], ['Moves', moves], cfg.limit ? ['Time', fmt(left), left <= 10] : ['Time', fmt(secs)]]);
+  upd();
+  const grid = h('div', { class: 'mgrid' });
+  deck.forEach(id => {
+    const card = h('button', { class: 'mcard', 'aria-label': 'Hidden card' },
+      h('div', { class: 'in' }, h('div', { class: 'face mback' }, h('span', { class: 'mbow' })), h('div', { class: 'face mfront', style: `background-image:${bg(imgs[id])}` })));
+    card.addEventListener('click', () => {
+      if (lock || card.classList.contains('up')) return;
+      if (!started){
+        started = true;
+        G.timers.push(setInterval(() => {
+          secs++; if (cfg.limit) left--;
+          upd();
+          if (cfg.limit && left <= 0){ lock = true; levelFail('memory', "Time's up", `${found} of ${cfg.pairs} pairs found. You can do this one.`); }
+        }, 1000));
+      }
+      card.classList.add('up'); card.setAttribute('aria-label', 'Photo ' + (id + 1));
+      if (!firstCard){ firstCard = { el: card, id }; return; }
+      moves++;
+      if (firstCard.id === id){
+        firstCard.el.classList.add('got'); card.classList.add('got'); firstCard = null; found++; upd();
+        if (found === cfg.pairs){ lock = true; clearTimers(); setTimeout(() => levelDone('memory', `Level ${L} done!`, `${moves} moves in ${fmt(secs)}. Next: ${memoryCfg(L + 1).cards} cards${memoryCfg(L + 1).limit ? ' against the clock' : ''}.`), 650); }
+      } else {
+        lock = true; upd();
+        const a = firstCard.el; firstCard = null;
+        a.classList.add('miss'); card.classList.add('miss');
+        setTimeout(() => { a.classList.remove('up', 'miss'); card.classList.remove('up', 'miss'); a.setAttribute('aria-label', 'Hidden card'); card.setAttribute('aria-label', 'Hidden card'); lock = false; }, 850);
+      }
+    });
+    grid.append(card);
+  });
+  if (cfg.limit) area.append(h('span', { class: 'twist', text: `Beat the clock: ${fmt(cfg.limit)}` }));
+  area.append(grid);
+  // size the cards to fill the space left on screen
+  const RATIO = 1.3, n = deck.length;
+  G.fit = () => {
+    const W = area.clientWidth;
+    const top = grid.getBoundingClientRect().top;
+    const H = Math.max(240, innerHeight - top - 14);
+    const gap = n > 16 ? 6 : n > 10 ? 8 : 10;
+    let best = { cw: 0, cols: 2 };
+    for (let cols = 2; cols <= 8; cols++){
+      const rows = Math.ceil(n / cols);
+      const cw = Math.min((W - gap * (cols - 1)) / cols, (H - gap * (rows - 1)) / rows / RATIO);
+      if (cw > best.cw) best = { cw, cols };
+    }
+    const cw = Math.floor(Math.min(best.cw, 190));
+    grid.style.cssText = `--cw:${cw}px;--ch:${Math.floor(cw * RATIO)}px;--gap:${gap}px;width:${best.cols * cw + (best.cols - 1) * gap}px`;
+  };
+  requestAnimationFrame(() => G.fit && G.fit());
+}
+
+/* ---------------- PUZZLE (endless) ---------------- */
+function puzzleCfg(L){
+  const T = [{ n: 3 }, { n: 3 }, { n: 4 }, { n: 4 }, { n: 5 }, { n: 5 }, { n: 6 }, { n: 3, rot: 1 }, { n: 4, rot: 1 }, { n: 4, rot: 1, nopeek: 1 }, { n: 5, rot: 1, nopeek: 1 }];
+  return T[L - 1] || { n: L % 2 ? 5 : 6, rot: 1, nopeek: 1 };
+}
+function playPuzzle(){
+  const L = G.lv.puzzle, cfg = puzzleCfg(L), n = cfg.n, N = n * n;
+  const { area, setChips } = playShell('Photo puzzle');
+  const pics = [...S.photos, ...gallery(S.occasion).filter(x => !S.photos.includes(x))];
+  const photo = pics[(L - 1) % pics.length];
+  let tiles;
+  do {
+    tiles = shuffle([...Array(N).keys()]).map(p => ({ p, r: cfg.rot ? Math.random() * 4 | 0 : 0 }));
+  } while (tiles.filter((t, i) => t.p === i && t.r === 0).length > Math.floor(N / 4));
+  let sel = null, moves = 0;
+  const upd = () => setChips([['Level', L], ['Grid', `${n}×${n}`], ['Moves', moves]]);
+  upd();
+  const board = h('div', { class: 'pz', style: `--n:${n}` });
+  const ghost = h('div', { class: 'ghost', style: `background-image:${bg(photo)}` });
+  const draw = () => {
+    board.replaceChildren();
+    tiles.forEach((t, pos) => {
+      const r = Math.floor(t.p / n), c = t.p % n;
+      const el = h('button', { class: 'ptile' + (sel === pos ? ' sel' : ''), 'aria-label': `Tile ${pos + 1}`,
+        style: `--r:${t.r};background-image:${bg(photo)};background-size:${n * 100}% ${n * 100}%;background-position:${c / (n - 1) * 100}% ${r / (n - 1) * 100}%` });
+      el.addEventListener('click', () => tap(pos));
+      board.append(el);
+    });
+    board.append(ghost);
+  };
+  function tap(pos){
+    if (sel === null) sel = pos;
+    else if (sel === pos){
+      if (cfg.rot){ tiles[pos].r = (tiles[pos].r + 1) % 4; moves++; } else sel = null;
+    } else { [tiles[sel], tiles[pos]] = [tiles[pos], tiles[sel]]; sel = null; moves++; }
+    upd(); draw();
+    if (tiles.every((t, i) => t.p === i && t.r === 0)){
+      board.classList.add('solved');
+      board.querySelectorAll('.ptile').forEach(t => t.disabled = true);
+      const nx = puzzleCfg(L + 1);
+      setTimeout(() => levelDone('puzzle', `Level ${L} done!`, `Solved in ${moves} moves. Next: ${nx.n}×${nx.n}${nx.rot ? ' with spinning tiles' : ''}${nx.nopeek ? ', no peeking' : ''}.`), 750);
+    }
+  }
+  draw();
+  area.append(
+    cfg.rot ? h('span', { class: 'twist', text: cfg.nopeek ? 'Spinning tiles · no peeking' : 'Spinning tiles' }) : null,
+    h('p', { class: 'note', text: cfg.rot ? 'Tap a tile, then another to swap. Tap the same tile again to turn it.' : 'Tap a tile, then tap another to swap them.' }),
+    board,
+    cfg.nopeek ? null : h('button', { class: 'gbtn', text: 'Peek at the photo', onclick: () => { ghost.classList.add('show'); setTimeout(() => ghost.classList.remove('show'), 1400); } }));
+}
+
+/* ---------------- FOUR IN A ROW ---------------- */
+const R = 6, C = 7, ORDER = [3, 2, 4, 1, 5, 0, 6];
+const C4L = [
+  { name: 'Sleepy',      blurb: 'Drops pieces wherever. A gentle start.', mode: 'random', stars: 1 },
+  { name: 'Rookie',      blurb: 'Sometimes notices a win.', mode: 'rookie', stars: 2 },
+  { name: 'The Blocker', blurb: 'Takes every win it sees and blocks yours.', mode: 'blocker', stars: 3 },
+  { name: 'Thinker',     blurb: 'Plans 2 moves ahead.', mode: 'search', depth: 2, stars: 4 },
+  { name: 'Tactician',   blurb: 'Plans 4 moves ahead.', mode: 'search', depth: 4, stars: 5 },
+  { name: 'Strategist',  blurb: 'Plans 6 moves ahead and sets traps.', mode: 'search', depth: 6, stars: 6 },
+  { name: 'Master',      blurb: 'Plans 7 moves ahead and goes first.', mode: 'search', depth: 7, aiFirst: true, stars: 7 },
+  { name: 'Grandmaster', blurb: 'Plans 8 moves ahead and goes first. Good luck.', mode: 'search', depth: 8, aiFirst: true, stars: 8 }
+];
+const c4cfg = L => C4L[L - 1] || { name: `Champion round ${L - 8}`, blurb: 'Grandmaster strength. Who starts alternates each round.', mode: 'search', depth: 8, aiFirst: L % 2 === 1, stars: 8 };
+const WINDOWS = [];
+for (let r = 0; r < R; r++) for (let c = 0; c < C; c++)
+  for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]){
+    const er = r + dr * 3, ec = c + dc * 3;
+    if (er >= 0 && er < R && ec >= 0 && ec < C) WINDOWS.push([0, 1, 2, 3].map(k => (r + dr * k) * C + (c + dc * k)));
+  }
+const dropRow = (b, c) => { for (let r = R - 1; r >= 0; r--) if (!b[r * C + c]) return r; return -1; };
+function winsAt(b, r, c, p){
+  for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]){
+    let n = 1;
+    for (const s of [1, -1]) for (let k = 1; k < 4; k++){
+      const rr = r + dr * k * s, cc = c + dc * k * s;
+      if (rr < 0 || rr >= R || cc < 0 || cc >= C || b[rr * C + cc] !== p) break; n++;
+    }
+    if (n >= 4) return true;
+  }
+  return false;
+}
+const winLine = (b, p) => WINDOWS.find(w => w.every(i => b[i] === p)) || null;
+function evaluate(b){
+  let s = 0;
+  for (let r = 0; r < R; r++){ const v = b[r * C + 3]; if (v === 2) s += 3; else if (v === 1) s -= 3; }
+  for (const w of WINDOWS){
+    let a = 0, o = 0;
+    for (const i of w){ const v = b[i]; if (v === 2) a++; else if (v === 1) o++; }
+    if (a && o) continue;
+    if (a === 3) s += 5; else if (a === 2) s += 2;
+    else if (o === 3) s -= 6; else if (o === 2) s -= 2;
+  }
+  return s;
+}
+function mm(b, depth, alpha, beta, maxing, ply){
+  if (depth === 0) return evaluate(b);
+  const p = maxing ? 2 : 1;
+  let best = maxing ? -Infinity : Infinity, any = false;
+  for (const c of ORDER){
+    const r = dropRow(b, c); if (r < 0) continue; any = true;
+    b[r * C + c] = p;
+    const v = winsAt(b, r, c, p) ? (maxing ? 100000 - ply : -100000 + ply) : mm(b, depth - 1, alpha, beta, !maxing, ply + 1);
+    b[r * C + c] = 0;
+    if (maxing){ if (v > best) best = v; if (best > alpha) alpha = best; }
+    else { if (v < best) best = v; if (best < beta) beta = best; }
+    if (alpha >= beta) break;
+  }
+  return any ? best : 0;
+}
+function weightedRandom(b){
+  const w = [1, 2, 3, 4, 3, 2, 1], opts = [];
+  for (let c = 0; c < C; c++) if (dropRow(b, c) >= 0) for (let k = 0; k < w[c]; k++) opts.push(c);
+  return opts[Math.random() * opts.length | 0];
+}
+function immediate(b, p){
+  for (const c of ORDER){ const r = dropRow(b, c); if (r < 0) continue; b[r * C + c] = p; const w = winsAt(b, r, c, p); b[r * C + c] = 0; if (w) return c; }
+  return -1;
+}
+function aiMove(b, cfg){
+  if (cfg.mode === 'random') return weightedRandom(b);
+  if (cfg.mode === 'rookie'){ const w = immediate(b, 2); return w >= 0 && Math.random() < .5 ? w : weightedRandom(b); }
+  if (cfg.mode === 'blocker'){ const w = immediate(b, 2); if (w >= 0) return w; const k = immediate(b, 1); if (k >= 0) return k; return weightedRandom(b); }
+  let best = -Infinity, picks = [];
+  for (const c of ORDER){
+    const r = dropRow(b, c); if (r < 0) continue;
+    b[r * C + c] = 2;
+    const v = winsAt(b, r, c, 2) ? 100000 : mm(b, cfg.depth - 1, best - 1, Infinity, false, 1);
+    b[r * C + c] = 0;
+    if (v > best){ best = v; picks = [c]; } else if (v === best) picks.push(c);
+  }
+  return picks[Math.random() * picks.length | 0];
+}
+
+function c4Pieces(){
+  const pics = S.photos.length >= 2 ? S.photos : [...S.photos, ...gallery(S.occasion)].slice(0, 8);
+  return pics.slice(0, 12);
+}
+function playC4(){
+  const pics = c4Pieces();
+  if (G.piece == null || !pics[G.piece]){
+    const { area, setChips } = playShell('Four in a row');
+    setChips([['Level', G.lv.c4]]);
+    area.append(h('p', { class: 'qq', text: 'Pick your piece' }),
+      h('p', { class: 'note', text: 'Each player drops photos instead of colors. Your opponent gets a different one.' }),
+      h('div', { class: 'picker' }, pics.map((p, i) => h('button', { class: 'pick', 'aria-label': `Photo ${i + 1}`, style: `background-image:${bg(p)}`, onclick: () => { G.piece = i; playC4(); } }))));
+    return;
+  }
+  const L = G.lv.c4, cfg = c4cfg(L);
+  const mine = pics[G.piece];
+  let ti = (G.piece + L) % pics.length;
+  if (ti === G.piece) ti = (ti + 1) % pics.length;
+  const theirs = pics[ti];
+  const { area, setChips } = playShell('Four in a row');
+  const b = new Array(R * C).fill(0);
+  let busy = false, over = false, moves = 0;
+  G.c4losses = G.c4losses || 0;
+  const upd = () => setChips([['Level', L], ['Moves', moves]]);
+  upd();
+  const strip = h('div', { class: 'levels' }, C4L.map((x, i) =>
+    h('span', { class: 'lv' + (i + 1 < L ? ' done' : i + 1 === L ? ' now' : ''), text: x.name })),
+    L > 8 ? h('span', { class: 'lv now', text: cfg.name }) : null);
+  const note = h('p', { class: 'note' });
+  const board = h('div', { class: 'c4', 'aria-label': 'Four in a row board' });
+  const slots = [];
+  for (let r = 0; r < R; r++) for (let c = 0; c < C; c++){
+    const s = h('button', { class: 'slot', 'aria-label': `Column ${c + 1}` });
+    s.addEventListener('click', () => human(c));
+    s.addEventListener('mouseenter', () => hover(c));
+    s.addEventListener('mouseleave', () => hover(-1));
+    slots.push(s); board.append(s);
+  }
+  function hover(c){ slots.forEach((s, i) => s.classList.toggle('hot', !busy && !over && i % C === c && !b[i])); }
+  function place(c, p){
+    const r = dropRow(b, c); b[r * C + c] = p;
+    slots[r * C + c].append(h('span', { class: 'disc drop ' + (p === 1 ? 'p' : 'a'), style: `--fall:${r + 1};background-image:${bg(p === 1 ? mine : theirs)}` }));
+    return r;
+  }
+  function turn(ai){ busy = ai; board.classList.toggle('busy', ai); note.textContent = ai ? `${cfg.name} is thinking…` : 'Your move. Tap a column.'; }
+  function end(p, line){
+    over = true; busy = true; hover(-1);
+    if (line) line.forEach(i => slots[i].firstChild && slots[i].firstChild.classList.add('win'));
+    setTimeout(() => {
+      if (p === 1){
+        G.c4losses = 0;
+        const nx = c4cfg(L + 1);
+        levelDone('c4', `You beat ${cfg.name}!`, `Next up: ${nx.name}. ${nx.blurb}`);
+      } else {
+        if (p === 2) G.c4losses++;
+        const extra = G.c4losses >= 2 ? [{ label: 'Skip this level', fn: () => { G.c4losses = 0; levelDone('c4', 'Skipped ahead', `On to ${c4cfg(L + 1).name}.`); } }] : [];
+        levelFail('c4', p === 2 ? `${cfg.name} wins this one` : "It's a draw", p === 2 ? (G.c4losses >= 2 ? 'Another go, or skip ahead?' : 'Shake it off and try again.') : 'The board filled up. Go again?', extra);
+      }
+    }, 1100);
+  }
+  function human(c){
+    if (busy || over || dropRow(b, c) < 0) return;
+    const r = place(c, 1); moves++; upd(); hover(-1);
+    if (winsAt(b, r, c, 1)) return end(1, winLine(b, 1));
+    if (b.every(v => v)) return end(0);
+    ai();
+  }
+  function ai(){
+    turn(true);
+    setTimeout(() => {
+      const c = aiMove(b, cfg);
+      const r = place(c, 2);
+      if (winsAt(b, r, c, 2)) return end(2, winLine(b, 2));
+      if (b.every(v => v)) return end(0);
+      turn(false);
+    }, cfg.mode === 'search' && cfg.depth >= 6 ? 120 : 450);
+  }
+  area.append(strip,
+    h('div', { class: 'foe' }, h('span', { class: 'av', style: `background-image:${bg(theirs)}` }),
+      h('div', {}, h('b', { text: `Level ${L}: ${cfg.name}` }), h('small', { text: cfg.blurb })),
+      h('span', { class: 'meter', 'aria-label': `Difficulty ${cfg.stars} of 8` }, Array.from({ length: 8 }, (_, i) => h('i', { class: i < cfg.stars ? 'on' : null })))),
+    board,
+    h('div', { class: 'legend' },
+      h('span', {}, h('i', { style: `background-image:${bg(mine)};box-shadow:0 0 0 2px var(--ribbon)` }), 'You'),
+      h('span', {}, h('i', { style: `background-image:${bg(theirs)};box-shadow:0 0 0 2px var(--gold)` }), cfg.name),
+      h('button', { class: 'gbtn', text: 'Change my piece', onclick: () => { G.piece = null; playC4(); } })),
+    note);
+  if (cfg.aiFirst) ai(); else turn(false);
+}
+
+/* ---------------- CARD ---------------- */
+function showCard(initial){
+  clearTimers();
+  const v = $('#vCard'); v.replaceChildren();
+  const pics = pool().slice(0, 5);
+  const hidden = S.notes.length - G.seenNotes.length;
+  v.append(
+    h('h2', { text: OCC[S.occasion].head(first()) }),
+    h('div', { class: 'polas' }, pics.map((p, i) => h('div', { class: 'pola', style: `transform:rotate(${[-7, 4, -2, 6, -5][i]}deg)` }, h('div', { style: `background-image:${bg(p)}` })))),
+    h('div', { class: 'letter ' + S.cardStyle }, h('p', { text: S.message }), h('p', { class: 'sig', text: '— ' + fromName() })),
+    G.seenNotes.length ? h('div', { class: 'seen' }, h('span', { class: 'nfrom', text: 'Notes you found' }),
+      G.seenNotes.map(n => h('div', { class: 'notecard sm' }, h('span', { class: 'nfrom', text: `After level ${n.lvl}` }), h('p', { text: n.text })))) : null,
+    hidden > 0 ? h('p', { class: 'sub', text: `${hidden} more note${hidden > 1 ? 's' : ''} from ${fromName()} ${hidden > 1 ? 'are' : 'is'} hidden in the levels.` }) : null,
+    h('div', { class: 'acts-row' }, h('button', { class: 'gcta', text: initial ? `Start playing ${GAMES[S.game].name}` : `Back to level ${G.lv[S.game]}`, onclick: startGame })));
+  show('vCard');
+  if (initial) burst(160);
+}
+
+/* ---------------- confetti ---------------- */
+const cv = $('#confetti'), cx = cv.getContext('2d');
+let parts = [], raf = 0;
+function burst(n){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  cv.hidden = false; cv.width = innerWidth * devicePixelRatio; cv.height = innerHeight * devicePixelRatio;
+  const cols = ['#E0345A', '#F1B43C', '#46B8C6', '#FFF7EC', '#9B5DE5'];
+  for (let i = 0; i < n; i++) parts.push({ x: innerWidth / 2 + (Math.random() - .5) * 120, y: innerHeight * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 4,
+    r: Math.random() * 6 + 4, a: Math.random() * 6, va: (Math.random() - .5) * .4, c: cols[i % cols.length], life: 0 });
+  if (!raf) raf = requestAnimationFrame(tick);
+}
+function tick(){
+  cx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  cx.clearRect(0, 0, innerWidth, innerHeight);
+  parts = parts.filter(p => p.y < innerHeight + 30 && p.life < 260);
+  for (const p of parts){
+    p.vy += .32; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va; p.life++;
+    cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a); cx.fillStyle = p.c; cx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); cx.restore();
+  }
+  if (parts.length) raf = requestAnimationFrame(tick); else { raf = 0; cv.hidden = true; }
+}
+
+go(-1);
+})();
+</script>
+
+<a href="../../index.html" class="pf-back" aria-label="Back to portfolio">&larr; Portfolio</a>
+<style>.pf-back{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 13px/1 ui-monospace,Menlo,monospace;color:#0b0d12;background:#c6f432;padding:9px 13px;border-radius:999px;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.pf-back:hover{filter:brightness(1.08)}</style>
+</body></html>

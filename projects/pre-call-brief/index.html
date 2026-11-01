@@ -1,0 +1,322 @@
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Pre-Call Brief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: agenda rail (this week's external meetings + your own briefs) + one-page brief that reads like a printed dossier */
+:root{
+  --bg:#f2f4f3; --paper:#ffffff; --ink:#18201d; --muted:#5f6b66; --line:#dbe1de; --accent:#0e6b5c; --accent-soft:#dff0ec; --on-accent:#ffffff;
+  --new:#9a5b00; --new-bg:#fbefd9; --risk:#b3362c; --risk-bg:#f9e3e0;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101614; --paper:#17201d; --ink:#e5ece9; --muted:#9aa8a2; --line:#28342f; --accent:#5fcab4; --accent-soft:#183a33; --on-accent:#0b1412;
+  --new:#f0bf5c; --new-bg:#3a2e14; --risk:#f08a80; --risk-bg:#40201d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101614; --paper:#17201d; --ink:#e5ece9; --muted:#9aa8a2; --line:#28342f; --accent:#5fcab4; --accent-soft:#183a33; --on-accent:#0b1412;
+  --new:#f0bf5c; --new-bg:#3a2e14; --risk:#f08a80; --risk-bg:#40201d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:16px}
+h1{font:700 26px var(--f-display);margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px}
+.demo{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;background:var(--new-bg);color:var(--new);padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.settings{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;color:var(--muted)}
+select,input[type=text],textarea{font:14px var(--f-body);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);width:100%}
+.settings select{width:auto;font-size:13px;padding:6px 8px}
+textarea{resize:vertical;min-height:84px;line-height:1.45}
+.layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;align-items:start}
+.agenda{display:flex;flex-direction:column;gap:6px}
+.newbtn{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-weight:600;cursor:pointer;margin-bottom:6px}
+.newbtn[aria-current="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.day{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 2px}
+.mtg{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);cursor:pointer}
+.mtg[aria-current="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.mtg:focus-visible,.newbtn:focus-visible,.btn:focus-visible,.toggle input:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mtg .t{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mtg .c{font-weight:600}
+.mtg .s{font-size:12px;color:var(--muted)}
+.mtg .ready{font-size:11px;color:var(--accent);font-weight:600}
+.mtg .ready.draft{color:var(--new)}
+.brief{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:24px 28px;min-width:0;display:flex;flex-direction:column;gap:22px}
+.bhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.bhead h2{font:700 28px var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.bhead-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.meta{color:var(--muted);font-size:13px}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer}
+.toggle input{width:16px;height:16px;accent-color:var(--accent)}
+section h3{font:600 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+/* 30-second version */
+.tldr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--line);gap:1px}
+.tldr div{background:var(--accent-soft);padding:12px 14px;min-width:0}
+.tldr div.r{background:var(--risk-bg)}
+.tldr .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.tldr div.r .k{color:var(--risk)}
+.tldr p{margin:0;font-size:14px;font-weight:500}
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.person{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;gap:10px}
+.av{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:grid;place-items:center;flex:none}
+.person .n{font-weight:700}
+.person .r{font-size:13px;color:var(--muted)}
+.person p{margin:6px 0 0;font-size:13px}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.fact{background:var(--paper);padding:10px 12px}
+.fact .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fact .v{font-weight:600;font-variant-numeric:tabular-nums}
+.about{margin:10px 0 0;max-width:68ch}
+ul.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+ul.items li{display:grid;grid-template-columns:78px minmax(0,1fr);gap:10px;align-items:baseline}
+.date{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.tag.new{background:var(--new-bg);color:var(--new)}
+.tag.risk{background:var(--risk-bg);color:var(--risk)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+ol.q{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.obj{display:flex;flex-direction:column;gap:8px}
+.obj div{border-left:3px solid var(--line);padding-left:10px;font-size:13px}
+.obj b{display:block;font-size:14px}
+.empty{color:var(--muted);font-size:13px;margin:0}
+.note{font-size:12px;color:var(--muted)}
+.hidden-old [data-old]{display:none}
+.draftnote{font-size:12px;background:var(--new-bg);color:var(--new);padding:8px 12px;border-radius:6px}
+/* form */
+.form{display:flex;flex-direction:column;gap:16px;max-width:720px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:600}
+.field .hint{font-size:12px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.btn{all:unset;box-sizing:border-box;padding:9px 16px;border-radius:6px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.danger{color:var(--risk);border-color:var(--risk)}
+.btn[disabled]{opacity:.5;cursor:default}
+.status{font-size:13px;color:var(--muted)}
+.status.err{color:var(--risk)}
+@media (max-width:860px){.layout{grid-template-columns:1fr}.cols,.row{grid-template-columns:1fr}.brief{padding:18px 16px}.bhead-side{align-items:flex-start}}
+@media (max-width:620px){.tldr{grid-template-columns:1fr}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Pre-Call Brief <span class="demo">Demo data</span></h1>
+      <div class="sub">External meetings from your calendar, each with a brief built an hour before it starts.</div>
+    </div>
+    <div class="settings">
+      <label for="deliver">Deliver</label>
+      <select id="deliver"><option>Email, 60 min before</option><option>Slack DM, 60 min before</option><option>Email, morning of</option></select>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="agenda" id="agenda" aria-label="Upcoming meetings"></nav>
+    <article class="brief" id="brief"></article>
+  </div>
+  <p class="note" style="margin-top:14px">The calendar meetings are fictional sample data. Briefs you create are drafted by AI from your notes plus a live web search of the company, and are saved in this browser only.</p>
+</div>
+
+<script>
+(function(){
+const M=[
+ {id:"m1",day:"Mon 2 Nov",time:"10:00–10:30",co:"Northwind Health",type:"Discovery call",last:"First meeting",
+  tldr:{why:"Dana asked for a demo: cross-channel reporting eats a full day of her team's week.",goal:"Agree on a 2-week pilot with Meta, Google and TikTok connected.",risk:"HIPAA worries could stall it. Explain early that no patient data is touched."},
+  people:[{n:"Dana Levi",r:"VP Marketing · 1 yr 4 mo in role",p:"Posted last week about cutting CAC across paid social; spoke at a healthtech growth meetup in October."},{n:"Omer Katz",r:"Growth Lead · 8 mo",p:"Previously ran UA at a consumer fintech app. Hiring two performance marketers."}],
+  facts:[["Industry","Digital health clinics"],["Employees","~420 (+18% YoY)"],["HQ","Tel Aviv · NYC"],["Funding","Series B · $38M (Sep 2026)"],["Ad channels","Meta, Google, TikTok"],["CRM stage","Lead · inbound form"]],
+  about:"Runs a network of virtual clinics for chronic care. Expanding to three new US states in Q1, which means new patient acquisition campaigns.",
+  news:[["Oct 28","Opened hiring for 2 performance marketers and a marketing analyst",1],["Oct 14","Announced expansion to Texas, Ohio and Georgia in Q1 2027",1],["Sep 30","Closed $38M Series B led by a healthcare-focused fund",1]],
+  history:[["Oct 30","Dana filled the demo form: 'reporting across channels takes our team a full day every week'",1]],
+  points:["Their Q1 expansion means new campaigns in 3 states, so reporting load will grow fast.","Dana's own words: reporting takes a full day a week. Lead with time saved.","They are hiring analysts; position the tool as making a small team look bigger."],
+  qs:["How do you report on Meta, Google and TikTok today, and who owns it?","What does a good CPA look like per state, and does it differ?","What would you do with the day a week you get back?","Who else signs off on new marketing tools?"],
+  obj:[["\"We're about to hire an analyst for this.\"","The analyst then spends time on decisions, not on merging CSVs. Show the daily digest."],["\"HIPAA and patient data.\"","The tool only reads ad platform metrics. No patient data leaves their systems."]]},
+ {id:"m2",day:"Mon 2 Nov",time:"15:00–15:45",co:"Lumen Commerce",type:"Follow-up · proposal review",last:"Last call 19 Oct",
+  tldr:{why:"Review the $48K proposal sent on 19 Oct.",goal:"Get a meeting with the new CFO before the consolidation review decides.",risk:"A new CFO is running a vendor consolidation review. Expect a push to cut, not add."},
+  people:[{n:"Yael Ben-Ami",r:"Head of Partnerships · 3 yrs",p:"Shared a post on Oct 26 about consolidating their martech stack before 2027 budgets."},{n:"Marcus Hale",r:"CFO · joined Oct 2026",p:"New since your last call. Ex-CFO at a retail marketplace; known for cost-cutting reviews."}],
+  facts:[["Industry","E-commerce platform"],["Employees","~1,100"],["HQ","London"],["Funding","Series D · $120M (2025)"],["Deal size","$48K ARR (proposed)"],["CRM stage","Proposal sent · 19 Oct"]],
+  about:"Builds storefront software for mid-size retailers. Evaluating your platform against two competitors for their partnerships team.",
+  news:[["Oct 27","Announced a vendor consolidation review ahead of FY27 budgets",1,1],["Oct 23","Appointed Marcus Hale as CFO",1],["Aug 05","Launched marketplace integrations with three payment providers",0]],
+  history:[["Oct 21","Yael: 'Pricing works for us, need to align with finance'",1],["Oct 19","Demo call · 6 attendees · strong interest in reporting module",0],["Oct 02","Intro via mutual partner",0]],
+  points:["New CFO plus a vendor consolidation review: expect a cost-focused conversation.","Bring a one-slide ROI case: hours saved × team size vs the $48K price.","Yael already said pricing works. Ask her to bring Marcus in early."],
+  qs:["What does the consolidation review look for, and when does it decide?","Which tools would ours replace, and what do those cost today?","What does Marcus need to see to approve a new vendor?","Is the 19 Oct proposal still the right scope?"],
+  obj:[["\"We're cutting tools, not adding.\"","Position as a replacement for 2 existing tools; show the net saving."],["\"Can we do this quarterly instead of annual?\"","Offer quarterly billing at a 10% premium, or annual with a 60-day exit."]]},
+ {id:"m3",day:"Tue 3 Nov",time:"11:30–12:00",co:"Brightpath Learning",type:"Partnership intro",last:"First meeting",
+  tldr:{why:"Their new agency partner program needs tools that agencies will value.",goal:"Agree on a co-marketing pilot with 5 of their agencies.",risk:"They may be too focused on their own launch to take on a partner."},
+  people:[{n:"Noa Shamir",r:"BD Director · 2 yrs",p:"Runs reseller and referral partnerships. Recently announced a partner program for agencies."}],
+  facts:[["Industry","EdTech · corporate training"],["Employees","~260"],["HQ","Haifa · Berlin"],["Funding","Series A · $14M (2024)"],["Partner program","Launched Oct 2026"],["CRM stage","Partner prospect"]],
+  about:"Sells training programs to HR teams. Their new agency partner program could resell or bundle complementary tools.",
+  news:[["Oct 20","Launched an agency partner program with revenue share",1],["Jul 11","Opened a Berlin office for DACH expansion",0]],
+  history:[],
+  points:["Their new partner program is the hook: they need tools their agencies will value.","Propose a co-marketing pilot with 5 of their agencies, not a full integration.","DACH expansion: ask if German-language support matters."],
+  qs:["What makes an agency partner successful in your program?","How do partners get paid, and what share do tools usually get?","Which of your agencies would pilot first?"],
+  obj:[["\"We're focused on our own product right now.\"","Keep the ask small: one webinar and a shared landing page."]]},
+ {id:"m4",day:"Wed 4 Nov",time:"09:30–10:00",co:"Cobalt Fintech",type:"Renewal check-in",last:"Last call 8 Sep",
+  tldr:{why:"$36K contract renews on 1 Dec, and there is a new Director of Growth.",goal:"Secure the renewal and scope creative-level reporting as the upsell.",risk:"An open TikTok data ticket, and a new decision-maker who didn't choose you."},
+  people:[{n:"Itai Rosen",r:"Marketing Ops Manager · 2 yrs",p:"Main user of your platform. Asked support twice in October about TikTok data delays."},{n:"Shira Golan",r:"Director of Growth · 3 wk",p:"New decision-maker since your last call. Previously at a payments startup."}],
+  facts:[["Industry","Consumer fintech app"],["Employees","~640"],["HQ","Tel Aviv"],["Funding","Series C · $75M (2025)"],["Contract","$36K ARR · renews 1 Dec"],["Health","2 support tickets · 1 open"]],
+  about:"Mobile banking app for freelancers. Existing customer since Dec 2025; renewal decision due this month.",
+  news:[["Oct 25","Reported 1M app installs; doubling paid UA budget for Q1",1],["Oct 12","Shira Golan joined as Director of Growth",1]],
+  history:[["Oct 22","Support ticket: TikTok data delayed 24h (resolved Oct 23)",1],["Oct 09","Support ticket: TikTok spend mismatch (open)",1,1],["Sep 08","QBR: high usage, asked for creative-level reporting",0]],
+  points:["Open the call by addressing the TikTok tickets before they raise them.","They're doubling UA budget: the upsell is creative-level reporting they asked for in Sep.","Shira is new: re-establish value with her, not just Itai."],
+  qs:["Shira, what does growth need from reporting as budget doubles?","Is the TikTok issue resolved on your side?","Would creative-level reporting change how you brief your designers?"],
+  obj:[["\"The TikTok data issues worry us.\"","Share the root cause and the fix date; offer a credit for October."],["\"We may build this in-house.\"","Compare: 1 engineer for 3 months vs $36K a year, plus maintenance."]]}
+];
+
+const KEY="precall.mine.v1", DRAFT="precall.form.v1";
+const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let mine=load(KEY,[]); if(!Array.isArray(mine))mine=[];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ini=n=>String(n||"?").split(/\s+/).filter(Boolean).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const all=()=>[...mine,...M];
+let cur="m1", onlyNew=false, view="brief", sample=null, ctl=null, busy=false, confirmDel=false;
+
+function agenda(){
+  let h=`<button class="newbtn" id="newbtn" aria-current="${view==="form"}">+ Brief a new meeting</button>`;
+  const item=(m,gen)=>`<button class="mtg" data-id="${esc(m.id)}" aria-current="${view==="brief"&&m.id===cur}"><span class="t">${esc(m.time||"Time not set")}</span><span class="c">${esc(m.co)}</span><span class="s">${esc(m.type)} · ${m.people.length} attendee${m.people.length===1?"":"s"}</span><span class="ready${gen?" draft":""}">${gen?"Draft · check facts":"Brief ready"}</span></button>`;
+  if(mine.length){h+=`<div class="day">Your briefs</div>`;mine.forEach(m=>h+=item(m,true))}
+  let d="";M.forEach(m=>{if(m.day!==d){d=m.day;h+=`<div class="day">${esc(d)}</div>`}h+=item(m,false)});
+  $("agenda").innerHTML=h;
+}
+
+function brief(){
+  const m=all().find(x=>x.id===cur)||M[0];cur=m.id;
+  const first=/first meeting/i.test(m.last||""), gen=!!m.gen;
+  const li=(arr,empty)=>arr.length?`<ul class="items">${arr.map(([d,t,isNew,isRisk])=>`<li ${isNew?"":"data-old"}><span class="date">${esc(d)}</span><span>${isRisk?'<span class="tag risk">Risk</span>':""}${isNew&&!first?'<span class="tag new">New</span>':""}${esc(t)}</span></li>`).join("")}</ul>`:`<p class="empty">${empty}</p>`;
+  const t=m.tldr||{};
+  $("brief").className="brief"+(onlyNew?" hidden-old":"");
+  $("brief").innerHTML=`
+  <div class="bhead"><div><div class="meta">${esc([m.day,m.time,m.type].filter(Boolean).join(" · "))}</div><h2>${esc(m.co)}</h2><div class="meta">${esc(m.last)}${first?"":" · items marked New happened since then"}</div></div>
+   <div class="bhead-side">${first?"":`<label class="toggle"><input type="checkbox" id="onlynew" ${onlyNew?"checked":""}> Only what's new since last call</label>`}
+   ${gen?`<button class="btn danger" id="delbtn">${confirmDel?"Click again to remove":"Remove brief"}</button>`:""}</div></div>
+  ${gen?`<div class="draftnote">Drafted by Claude from your notes and its general knowledge, not live web research. Check company facts and news before the call.</div>`:""}
+  <section aria-label="30-second version"><h3>30-second version</h3><div class="tldr">
+    <div><div class="k">Why this meeting</div><p>${esc(t.why||"—")}</p></div>
+    <div><div class="k">Get from the call</div><p>${esc(t.goal||"—")}</p></div>
+    <div class="r"><div class="k">Watch out</div><p>${esc(t.risk||"—")}</p></div></div></section>
+  <section><h3>Who you're meeting</h3><div class="people">${m.people.map(p=>`<div class="person"><div class="av">${esc(ini(p.n))}</div><div><div class="n">${esc(p.n)}</div><div class="r">${esc(p.r)}</div>${p.p?`<p>${esc(p.p)}</p>`:""}</div></div>`).join("")||'<p class="empty">No attendees listed.</p>'}</div></section>
+  <section><h3>Company snapshot</h3>${m.facts.length?`<div class="facts">${m.facts.map(([k,v])=>`<div class="fact"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`:""}<p class="about">${esc(m.about)}</p></section>
+  <div class="cols"><section><h3>${gen?"Recent news":"Last 30 days"}</h3>${li(m.news,gen?"No reliable recent news. Search the company before the call.":"Nothing new.")}</section><section><h3>Your history</h3>${li(m.history,"No previous contact.")}</section></div>
+  <section><h3>Talking points</h3><ul class="items">${m.points.map((p,i)=>`<li><span class="date">${i+1}</span><span>${esc(p)}</span></li>`).join("")}</ul></section>
+  <div class="cols"><section><h3>Questions to ask</h3><ol class="q">${m.qs.map(q=>`<li>${esc(q)}</li>`).join("")}</ol></section>
+  <section><h3>Likely objections</h3><div class="obj">${m.obj.map(([o,a])=>`<div><b>${esc(o)}</b>${esc(a)}</div>`).join("")}</div></section></div>`;
+}
+
+const TYPES=["Discovery call","Follow-up","Proposal review","Partnership intro","Renewal check-in","Other"];
+function form(){
+  const f=load(DRAFT,{});
+  $("brief").className="brief";
+  $("brief").innerHTML=`
+  <div class="bhead"><div><div class="meta">New brief</div><h2>Brief a new meeting</h2><div class="meta">Tell Claude who you're meeting. It drafts the same one-page brief, ready in under a minute.</div></div></div>
+  <form class="form" id="f" novalidate>
+    <div class="row">
+      <div class="field"><label for="f-co">Company *</label><input type="text" id="f-co" required placeholder="e.g. Monday.com" value="${esc(f.co||"")}"></div>
+      <div class="field"><label for="f-type">Meeting type</label><select id="f-type">${TYPES.map(t=>`<option ${f.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="f-when">When</label><input type="text" id="f-when" placeholder="e.g. Thu 5 Nov · 14:00–14:30" value="${esc(f.when||"")}"></div>
+      <div class="field"><label for="f-site">Website</label><input type="text" id="f-site" placeholder="e.g. monday.com" value="${esc(f.site||"")}"></div>
+    </div>
+    <div class="field"><label for="f-people">Who you're meeting</label><textarea id="f-people" placeholder="One per line: name, title&#10;Dana Levi, VP Marketing">${esc(f.people||"")}</textarea></div>
+    <div class="field"><label for="f-sell">What you're selling</label><input type="text" id="f-sell" value="${esc(f.sell||"Ad reporting platform that merges Meta, Google and TikTok data into one daily view")}"></div>
+    <div class="field"><label for="f-notes">What you already know</label><textarea id="f-notes" placeholder="Past calls, emails, CRM stage, deal size, what they said. Dates help Claude mark what's new.">${esc(f.notes||"")}</textarea><span class="hint">The more specific this is, the sharper the talking points.</span></div>
+    <div class="actions"><button type="submit" class="btn primary" id="gen">Draft the brief</button><button type="button" class="btn" id="stop" hidden>Stop</button><span class="status" id="status" role="status"></span></div>
+  </form>`;
+  if(sample===null)setStatus("Checking Claude is available…");
+}
+function readForm(){return{co:$("f-co").value.trim(),type:$("f-type").value,when:$("f-when").value.trim(),site:$("f-site").value.trim(),people:$("f-people").value.trim(),sell:$("f-sell").value.trim(),notes:$("f-notes").value.trim()}}
+function setStatus(t,err){const s=$("status");if(!s)return;s.textContent=t;s.className="status"+(err?" err":"")}
+
+function prompt(f){return `You are a sales-prep analyst. Write a one-page pre-call brief for a salesperson.
+
+Today is ${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}.
+Company: ${f.co}${f.site?` (${f.site})`:""}
+Meeting type: ${f.type}
+When: ${f.when||"not given"}
+Attendees (one per line):
+${f.people||"not given"}
+What the salesperson sells: ${f.sell||"not given"}
+What the salesperson already knows:
+${f.notes||"nothing yet"}
+
+Rules:
+- Use the salesperson's notes as the primary source. If you have a web search tool, search for the company (and its website if given) to fill the company snapshot and recent news with current, real facts, and look up attendees' public roles. Without search, use your general knowledge only where you are confident. Never invent news, quotes, numbers or dates.
+- If a fact is unknown, write "Unknown · check" as its value.
+- "news" holds only events you are confident happened, with the month and year as the date (e.g. "Mar 2025"). An empty array is fine.
+- "history" is built only from the salesperson's notes, newest first. Empty array if none.
+- In news and history, the third value is 1 if the item happened after the last call, else 0. The fourth value is 1 if it is a risk to the deal, else 0.
+- "last" is "First meeting" unless the notes mention an earlier call, then "Last call <date>".
+- For attendees with no known background, "p" says what to find out about them.
+- Write short, plain sentences. 3 talking points, 3-4 questions, 2 objections with responses. Tie each to what they sell.
+
+Reply with only this JSON:
+{"type":"${f.type}","last":"First meeting","tldr":{"why":"one sentence","goal":"one sentence: the single outcome to get","risk":"one sentence"},"people":[{"n":"Name","r":"Title","p":"one sentence"}],"facts":[["Industry","..."],["Employees","..."],["HQ","..."],["Funding","..."],["Stage","..."],["Fit","..."]],"about":"two sentences","news":[["Mar 2025","event",0,0]],"history":[["Oct 30","event",1,0]],"points":["..."],"qs":["..."],"obj":[["\\"objection\\"","response"]]}`}
+
+const str=v=>typeof v==="string"?v:(v==null?"":String(v));
+const arr=v=>Array.isArray(v)?v:[];
+function normalize(d,f){
+  d=d&&typeof d==="object"?d:{};const t=d.tldr||{};
+  const items=a=>arr(a).filter(Array.isArray).map(x=>[str(x[0]),str(x[1]),x[2]?1:0,x[3]?1:0]).filter(x=>x[1]).slice(0,6);
+  let people=arr(d.people).map(p=>({n:str(p&&p.n)||"Unknown",r:str(p&&p.r),p:str(p&&p.p)})).slice(0,6);
+  if(!people.length&&f.people)people=f.people.split("\n").filter(Boolean).map(l=>{const[n,...r]=l.split(",");return{n:n.trim(),r:r.join(",").trim(),p:""}});
+  return{id:"u"+Date.now().toString(36),gen:1,day:"",time:f.when,co:f.co,type:str(d.type)||f.type,last:str(d.last)||"First meeting",
+    tldr:{why:str(t.why),goal:str(t.goal),risk:str(t.risk)},people,
+    facts:arr(d.facts).filter(Array.isArray).map(x=>[str(x[0]),str(x[1])]).filter(x=>x[0]).slice(0,6),
+    about:str(d.about),news:items(d.news),history:items(d.history),
+    points:arr(d.points).map(str).filter(Boolean).slice(0,5),qs:arr(d.qs).map(str).filter(Boolean).slice(0,5),
+    obj:arr(d.obj).filter(Array.isArray).map(x=>[str(x[0]),str(x[1])]).filter(x=>x[0]).slice(0,3)};
+}
+const ERR={not_granted:"Claude isn't allowed on this page. Allow it from the artifact's permissions to draft briefs.",sampling_disabled:"Claude isn't available for this account.",rate_limited:"Too many requests right now. Try again in a minute.",session_expired:"Your session expired. Sign in again, then retry.",refused:"Claude couldn't draft this one. Rephrase your notes and try again.",invalid_json:"The draft came back in the wrong shape. Try again.",empty_completion:"Claude returned nothing. Add a few more details and try again.",prompt_too_large:"Your notes are too long. Shorten them and try again."};
+
+async function generate(){
+  if(busy)return;const f=readForm();save(DRAFT,f);
+  if(!f.co){setStatus("Add the company name to draft a brief.",true);$("f-co").focus();return}
+  if(!sample){setStatus("AI drafting is switched off right now. Pick a sample meeting on the left to see a finished brief.",true);return}
+  busy=true;ctl=new AbortController();$("gen").disabled=true;$("stop").hidden=false;setStatus("Researching and drafting… this takes 20–60 seconds.");
+  try{
+    const data=await sample.json(prompt(f),{signal:ctl.signal,cache:false,webSearch:true});
+    const m=normalize(data,f);mine.unshift(m);mine=mine.slice(0,20);save(KEY,mine);
+    try{localStorage.removeItem(DRAFT)}catch(e){}
+    cur=m.id;view="brief";onlyNew=false;agenda();brief();
+  }catch(e){
+    if(e&&e.code==="cancelled")setStatus("Stopped.");
+    else{setStatus(ERR[e&&e.code]||"Something went wrong reaching Claude. Try again.",true);if(e&&(e.code==="not_granted"||e.code==="sampling_disabled"))$("gen").hidden=true}
+  }finally{busy=false;const g=$("gen"),s=$("stop");if(g)g.disabled=false;if(s)s.hidden=true}
+}
+
+function show(){agenda();view==="form"?form():brief()}
+$("agenda").addEventListener("click",e=>{
+  if(e.target.closest("#newbtn")){view="form";show();$("f-co")&&$("f-co").focus();return}
+  const b=e.target.closest(".mtg");if(!b)return;if(busy&&ctl)ctl.abort();
+  cur=b.dataset.id;view="brief";onlyNew=false;confirmDel=false;show();
+  if(innerWidth<860)$("brief").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+});
+$("agenda").addEventListener("keydown",e=>{
+  if(e.key!=="ArrowDown"&&e.key!=="ArrowUp")return;const bs=[...$("agenda").querySelectorAll("button")];
+  const i=bs.indexOf(document.activeElement);if(i<0)return;e.preventDefault();
+  const n=bs[Math.max(0,Math.min(bs.length-1,i+(e.key==="ArrowDown"?1:-1)))];n.focus();
+});
+$("brief").addEventListener("change",e=>{if(e.target.id==="onlynew"){onlyNew=e.target.checked;$("brief").classList.toggle("hidden-old",onlyNew)}});
+$("brief").addEventListener("submit",e=>{e.preventDefault();generate()});
+$("brief").addEventListener("input",e=>{if(view==="form"&&e.target.closest("#f"))save(DRAFT,readForm())});
+$("brief").addEventListener("click",e=>{
+  if(e.target.id==="stop"&&ctl){ctl.abort();return}
+  if(e.target.id==="delbtn"){
+    if(!confirmDel){confirmDel=true;e.target.textContent="Click again to remove";return}
+    mine=mine.filter(m=>m.id!==cur);save(KEY,mine);cur="m1";confirmDel=false;show();
+  }
+});
+
+show();
+(async()=>{
+  try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}
+  if(view==="form"){if(sample)setStatus("");else setStatus("AI drafting is switched off right now. Pick a sample meeting on the left to see a finished brief.",true)}
+  if(!sample)sample=false;
+})();
+})();
+</script>
+
+<a href="../../index.html" class="pf-back" aria-label="Back to portfolio">&larr; Portfolio</a>
+<style>.pf-back{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 13px/1 ui-monospace,Menlo,monospace;color:#0b0d12;background:#c6f432;padding:9px 13px;border-radius:999px;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.pf-back:hover{filter:brightness(1.08)}</style>
+</body></html>

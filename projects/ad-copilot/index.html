@@ -1,0 +1,289 @@
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ad Performance Copilot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: operator console — summary strip, then chart + AI digest side by side, then campaign table, then ask box */
+:root{
+  --bg:#f3f5f7; --panel:#ffffff; --ink:#14212b; --muted:#5d6b77; --line:#dde3e8; --accent:#1f5f8b; --accent-soft:#e3eef6;
+  --g:#2f7d4f; --m:#3b5bd6; --t:#c2417a;
+  --good:#1f7a4d; --good-bg:#e2f3e9; --warn:#9a6400; --warn-bg:#fbf0d9; --bad:#b3362c; --bad-bg:#f9e3e0;
+  --f-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-num:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f161c; --panel:#16212a; --ink:#e4ebf0; --muted:#93a3b0; --line:#26343f; --accent:#6fb0de; --accent-soft:#1b3344;
+  --g:#5cc488; --m:#8ea2ff; --t:#ef7fae;
+  --good:#6fd39c; --good-bg:#183a29; --warn:#f0bf5c; --warn-bg:#3a2e14; --bad:#f08a80; --bad-bg:#40201d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161c; --panel:#16212a; --ink:#e4ebf0; --muted:#93a3b0; --line:#26343f; --accent:#6fb0de; --accent-soft:#1b3344;
+  --g:#5cc488; --m:#8ea2ff; --t:#ef7fae;
+  --good:#6fd39c; --good-bg:#183a29; --warn:#f0bf5c; --warn-bg:#3a2e14; --bad:#f08a80; --bad-bg:#40201d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px}
+.demo{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--warn-bg);color:var(--warn);padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;color:var(--muted);font:500 13px var(--f-ui);padding:7px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.seg button:focus-visible,.btn:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 13px var(--f-ui);padding:7px 12px;border-radius:8px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;font:500 13px var(--f-ui);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="false"]{opacity:.45}
+.dot{width:8px;height:8px;border-radius:50%}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.kpi .v{font:500 24px var(--f-num);margin-top:4px;font-variant-numeric:tabular-nums}
+.delta{font:500 12px var(--f-num)}
+.delta.good{color:var(--good)} .delta.bad{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel h2{font-size:14px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.panel h2 small{font-weight:400;color:var(--muted);font-size:12px}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+svg text{font-family:var(--f-num);font-size:10px;fill:var(--muted)}
+.summary p{margin:0 0 10px;max-width:65ch}
+.alerts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.alert{border-left:3px solid var(--line);background:var(--bg);border-radius:0 6px 6px 0;padding:8px 10px;font-size:13px}
+.alert.bad{border-color:var(--bad)} .alert.warn{border-color:var(--warn)} .alert.good{border-color:var(--good)}
+.alert b{display:block;font-weight:600}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);cursor:pointer;user-select:none}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font:600 11px var(--f-ui);padding:2px 8px;border-radius:999px}
+.pill.scale{background:var(--good-bg);color:var(--good)} .pill.hold{background:var(--accent-soft);color:var(--accent)} .pill.fix{background:var(--bad-bg);color:var(--bad)}
+.cpi-good{color:var(--good)} .cpi-bad{color:var(--bad)}
+.target{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.target input{width:72px;font:500 13px var(--f-num);padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask input{flex:1 1 260px;min-width:0;font:14px var(--f-ui);padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.suggest{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.suggest button{border:1px dashed var(--line);background:none;color:var(--accent);font:13px var(--f-ui);padding:5px 10px;border-radius:999px;cursor:pointer}
+.answer{margin-top:12px;font-size:14px}
+.answer table{min-width:0;margin-top:8px}
+.note{font-size:12px;color:var(--muted)}
+.upload{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+code{font-family:var(--f-num);font-size:12px;background:var(--bg);padding:1px 5px;border-radius:4px;word-break:break-all}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ad Performance Copilot <span class="demo">Demo data</span></h1>
+      <div class="sub" id="acct">Sample account: Fitly fitness app · Google Ads, Meta, TikTok · install campaigns</div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Date range">
+        <button data-range="7" aria-pressed="true">Last 7 days</button>
+        <button data-range="14" aria-pressed="false">14 days</button>
+        <button data-range="28" aria-pressed="false">28 days</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <section class="panel">
+      <h2>Cost per install by channel <span class="legend" id="legend"></span></h2>
+      <div id="chart"></div>
+    </section>
+    <section class="panel summary">
+      <h2>Today's digest <small id="asof"></small></h2>
+      <div id="summary"></div>
+      <div class="alerts" id="alerts"></div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Campaigns
+      <span class="target"><label for="tgt">Target CPI $</label><input id="tgt" type="number" step="0.1" min="0.1" value="3.00"></span>
+    </h2>
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <p class="note">Scale = CPI at least 15% under target and ROAS ≥ 1.0. Fix = CPI more than 20% over target. Click a column to sort.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Ask your data</h2>
+    <form class="ask" id="askform">
+      <input id="q" type="text" placeholder="e.g. What should I scale this week?" autocomplete="off">
+      <button class="btn primary" type="submit">Ask</button>
+    </form>
+    <div class="suggest" id="suggest"></div>
+    <div class="answer" id="answer"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Load your own export</h2>
+    <div class="upload">
+      <input type="file" id="file" accept=".csv">
+      <button class="btn" id="reset" type="button">Back to demo data</button>
+    </div>
+    <p class="note">CSV with columns <code>date,channel,campaign,spend,impressions,clicks,installs,revenue,frequency</code> (frequency optional). Merge your Google Ads, Meta and TikTok exports into these columns. Files stay in your browser.</p>
+    <p class="note" id="uploadmsg"></p>
+  </section>
+</div>
+
+<script>
+(function(){
+const CH={Google:"--g",Meta:"--m",TikTok:"--t"};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+function demoData(){
+  const r=rng(42), rows=[], days=42, end=new Date(2026,9,31);
+  const camps=[
+    ["Google","UAC – Installs US",2.45,900,.021,null,3.0],
+    ["Google","UAC – tROAS DE",3.15,520,.017,null,4.1],
+    ["Google","Search – Brand",1.25,180,.064,null,3.6],
+    ["Meta","Prospecting – LAL 3%",2.7,1100,.014,1.9,2.9,"fatigue"],
+    ["Meta","Advantage+ App – US",2.25,1300,.016,1.7,3.1],
+    ["Meta","Retargeting – 30d",1.95,260,.022,3.1,3.8],
+    ["TikTok","Spark Ads – Creators",2.3,480,.019,1.6,2.6,"improve"],
+    ["TikTok","In-Feed – Broad",3.55,400,.011,1.5,2.2]
+  ];
+  for(let d=0;d<days;d++){
+    const dt=new Date(end);dt.setDate(end.getDate()-(days-1-d));
+    const ds=dt.toISOString().slice(0,10), wk=[0,6].includes(dt.getDay())?1.08:1;
+    camps.forEach(([ch,name,cpi,spend,ctr,freq,arpu,mode])=>{
+      let c=cpi*(1+(r()-.5)*.14)*wk, sp=spend*(1+(r()-.5)*.18), ct=ctr*(1+(r()-.5)*.1), fr=freq;
+      if(mode==="fatigue"&&d>=days-5){const k=d-(days-6);c*=1+.14*k;ct*=1-.06*k;fr=freq+.55*k}
+      else if(fr) fr=freq*(1+(r()-.5)*.08)+d*.004;
+      if(mode==="improve"){c*=1-.012*d}
+      const inst=Math.max(1,Math.round(sp/c)), impr=Math.round(inst/0.0035/(ct/0.018)), clk=Math.round(impr*ct);
+      rows.push({date:ds,channel:ch,campaign:name,spend:+sp.toFixed(2),impressions:impr,clicks:clk,installs:inst,revenue:+(inst*arpu*(1+(r()-.5)*.2)).toFixed(2),frequency:fr?+fr.toFixed(2):null});
+    });
+  }
+  return rows;
+}
+
+let DATA=demoData(), range=7, active=new Set(["Google","Meta","TikTok"]), sortKey="spend", sortDir=-1;
+const $=id=>document.getElementById(id);
+const fmt$=v=>"$"+(v>=1000?Math.round(v).toLocaleString("en-US"):v.toFixed(2));
+const fmtN=v=>Math.round(v).toLocaleString("en-US");
+const pct=v=>(v>0?"+":"")+(v*100).toFixed(0)+"%";
+
+function dates(){return [...new Set(DATA.map(r=>r.date))].sort()}
+function agg(rows){const a={spend:0,impressions:0,clicks:0,installs:0,revenue:0,fs:0,fn:0};rows.forEach(r=>{a.spend+=r.spend;a.impressions+=r.impressions;a.clicks+=r.clicks;a.installs+=r.installs;a.revenue+=r.revenue;if(r.frequency!=null){a.fs+=r.frequency;a.fn++}});
+  a.cpi=a.installs?a.spend/a.installs:0;a.ctr=a.impressions?a.clicks/a.impressions:0;a.roas=a.spend?a.revenue/a.spend:0;a.freq=a.fn?a.fs/a.fn:null;return a}
+function periods(){const ds=dates();const cur=ds.slice(-range),prev=ds.slice(-range*2,-range);return{cur:new Set(cur),prev:new Set(prev),curList:cur}}
+function filt(set){return DATA.filter(r=>set.has(r.date)&&active.has(r.channel))}
+
+function chips(){const chs=[...new Set(DATA.map(r=>r.channel))];
+  $("chips").innerHTML=chs.map(c=>`<button class="chip" data-ch="${c}" aria-pressed="${active.has(c)}"><span class="dot" style="background:var(${CH[c]||"--accent"})"></span>${c}</button>`).join("");
+  $("legend").innerHTML=chs.filter(c=>active.has(c)).map(c=>`<span><span class="dot" style="background:var(${CH[c]||"--accent"})"></span>${c}</span>`).join("");
+}
+
+function kpis(){const p=periods(),a=agg(filt(p.cur)),b=agg(filt(p.prev));
+  const items=[["Spend",fmt$(a.spend),a.spend/b.spend-1,null],["Installs",fmtN(a.installs),a.installs/b.installs-1,true],["Blended CPI",fmt$(a.cpi),a.cpi/b.cpi-1,false],["ROAS (D7)",a.roas.toFixed(2)+"×",a.roas/b.roas-1,true]];
+  $("kpis").innerHTML=items.map(([l,v,d,upGood])=>{const cls=upGood==null||!isFinite(d)?"":((d>0)===upGood?"good":"bad");return`<div class="kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="delta ${cls}">${isFinite(d)?pct(d):"–"} vs prior ${range}d</div></div>`}).join("");
+}
+
+function chart(){const p=periods(),ds=p.curList,W=640,H=230,L=40,R=12,T=10,B=26;
+  const chs=[...active];const series=chs.map(c=>({c,pts:ds.map(d=>agg(DATA.filter(r=>r.date===d&&r.channel===c)).cpi)}));
+  const all=series.flatMap(s=>s.pts).filter(v=>v>0);if(!all.length){$("chart").innerHTML='<p class="note">Select a channel.</p>';return}
+  let lo=Math.floor(Math.min(...all)*2)/2,hi=Math.ceil(Math.max(...all)*2)/2;if(hi-lo<1)hi=lo+1;
+  const x=i=>L+(ds.length<2?0:i*(W-L-R)/(ds.length-1)),y=v=>T+(hi-v)*(H-T-B)/(hi-lo);
+  let g="";const step=(hi-lo)>3?1:.5;for(let v=lo;v<=hi+1e-9;v+=step){g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">$${v.toFixed(v%1?1:0)}</text>`}
+  const every=Math.ceil(ds.length/7);ds.forEach((d,i)=>{if(i%every===0||i===ds.length-1)g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${d.slice(5).replace("-","/")}</text>`});
+  const tgt=+$("tgt").value;if(tgt>=lo&&tgt<=hi)g+=`<line x1="${L}" x2="${W-R}" y1="${y(tgt)}" y2="${y(tgt)}" stroke="var(--muted)" stroke-dasharray="4 4"/><text x="${W-R}" y="${y(tgt)-4}" text-anchor="end">target</text>`;
+  series.forEach(s=>{const col=`var(${CH[s.c]||"--accent"})`;const d=s.pts.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+    g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2"/><circle cx="${x(ds.length-1)}" cy="${y(s.pts.at(-1))}" r="3.5" fill="${col}"/>`});
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily cost per install by channel">${g}</svg>`;
+}
+
+function campaigns(){const p=periods(),names=[...new Set(DATA.filter(r=>active.has(r.channel)).map(r=>r.channel+"|"+r.campaign))];
+  return names.map(k=>{const[ch,c]=k.split("|");const rows=DATA.filter(r=>r.channel===ch&&r.campaign===c);
+    const cur=agg(rows.filter(r=>p.cur.has(r.date))),prev=agg(rows.filter(r=>p.prev.has(r.date)));
+    return{channel:ch,campaign:c,...cur,cpiChg:prev.cpi?cur.cpi/prev.cpi-1:0,rows}}).filter(c=>c.spend>0)}
+
+function rec(c){const t=+$("tgt").value||3;if(c.cpi<=t*.85&&c.roas>=1)return["Scale","scale"];if(c.cpi>t*1.2)return["Fix","fix"];return["Hold","hold"]}
+
+function table(){const cs=campaigns();cs.forEach(c=>c.rec=rec(c)[0]);
+  cs.sort((a,b)=>{const va=a[sortKey],vb=b[sortKey];return(typeof va==="string"?va.localeCompare(vb):(va??-1)-(vb??-1))*sortDir});
+  const cols=[["channel","Channel"],["campaign","Campaign"],["spend","Spend"],["installs","Installs"],["cpi","CPI"],["cpiChg","CPI Δ"],["ctr","CTR"],["freq","Freq."],["roas","ROAS"],["rec","Action"]];
+  const t=+$("tgt").value||3;
+  $("tbl").innerHTML=`<thead><tr>${cols.map(([k,l])=>`<th data-k="${k}" scope="col">${l}${sortKey===k?(sortDir<0?" ↓":" ↑"):""}</th>`).join("")}</tr></thead><tbody>${cs.map(c=>{const[rl,rc]=rec(c);
+    return`<tr><td><span class="dot" style="display:inline-block;background:var(${CH[c.channel]||"--accent"});margin-right:6px"></span>${c.channel}</td><td>${c.campaign}</td><td class="n">${fmt$(c.spend)}</td><td class="n">${fmtN(c.installs)}</td><td class="n ${c.cpi<=t?"cpi-good":c.cpi>t*1.2?"cpi-bad":""}">${fmt$(c.cpi)}</td><td class="n ${c.cpiChg>.1?"cpi-bad":c.cpiChg<-.1?"cpi-good":""}">${pct(c.cpiChg)}</td><td class="n">${(c.ctr*100).toFixed(2)}%</td><td class="n">${c.freq==null?"–":c.freq.toFixed(1)}</td><td class="n">${c.roas.toFixed(2)}×</td><td><span class="pill ${rc}">${rl}</span></td></tr>`}).join("")}</tbody>`;
+}
+
+function detect(){const ds=dates(),last3=new Set(ds.slice(-3)),base=new Set(ds.slice(-17,-3)),out=[];
+  campaigns().forEach(c=>{const daily=[...base].map(d=>agg(c.rows.filter(r=>r.date===d)).cpi).filter(v=>v>0);if(daily.length<5)return;
+    const m=daily.reduce((a,b)=>a+b,0)/daily.length,sd=Math.sqrt(daily.reduce((a,b)=>a+(b-m)**2,0)/daily.length)||.01;
+    const n=agg(c.rows.filter(r=>last3.has(r.date))),bb=agg(c.rows.filter(r=>base.has(r.date))),z=(n.cpi-m)/sd;
+    const fat=n.freq!=null&&bb.freq!=null&&n.freq>bb.freq*1.3&&n.ctr<bb.ctr*.85;
+    if(z>2)out.push({sev:"bad",c,z,chg:n.cpi/m-1,fat,n,bb,kind:"spike"});
+    else if(fat)out.push({sev:"warn",c,z,chg:n.cpi/m-1,fat,n,bb,kind:"fatigue"});
+    else if(z<-1.8)out.push({sev:"good",c,z,chg:n.cpi/m-1,n,bb,kind:"drop"});
+  });return out.sort((a,b)=>Math.abs(b.z)-Math.abs(a.z))}
+
+function summary(){const p=periods(),a=agg(filt(p.cur)),b=agg(filt(p.prev)),al=detect(),t=+$("tgt").value||3;
+  const cs=campaigns(),best=cs.filter(c=>rec(c)[0]==="Scale").sort((x,y)=>x.cpi-y.cpi)[0];
+  $("asof").textContent="Data to "+dates().at(-1);
+  let s=`<p>Blended CPI was <b>${fmt$(a.cpi)}</b> over the last ${range} days, ${pct(a.cpi/b.cpi-1)} vs the prior period, on ${fmt$(a.spend)} spend.</p>`;
+  const top=al.find(x=>x.sev!=="good");
+  if(top){s+=`<p><b>Main driver:</b> ${top.c.channel} “${top.c.campaign}”. CPI is ${pct(top.chg)} over the last 3 days vs its 14-day baseline${top.fat?`, while frequency rose to ${top.n.freq.toFixed(1)} and CTR fell ${pct(top.n.ctr/top.bb.ctr-1).replace("-","")}. This pattern points to creative fatigue: rotate in new creatives or widen the audience`:"; check recent bid, budget or audience changes"}.</p>`}
+  if(best)s+=`<p><b>Opportunity:</b> ${best.channel} “${best.campaign}” runs at ${fmt$(best.cpi)} CPI, ${Math.round((1-best.cpi/t)*100)}% under target, with ${best.roas.toFixed(2)}× ROAS. Consider raising its budget about 20%.</p>`;
+  if(!top&&!best)s+=`<p>No anomalies against the 14-day baseline. Performance is stable.</p>`;
+  $("summary").innerHTML=s;
+  $("alerts").innerHTML=al.slice(0,4).map(x=>`<div class="alert ${x.sev}"><b>${x.kind==="spike"?"CPI spike":x.kind==="fatigue"?"Creative fatigue":"CPI improving"} · ${x.c.campaign}</b>${x.c.channel} · CPI ${pct(x.chg)} vs baseline${x.fat?` · freq ${x.n.freq.toFixed(1)}`:""}</div>`).join("");
+}
+
+const QS=["What should I scale this week?","Which campaigns beat my target CPI?","What changed the most vs last period?","Any creative fatigue?"];
+function answer(q){q=q.toLowerCase();const cs=campaigns(),t=+$("tgt").value||3;let h="",list=[];
+  const tbl=(rows,f)=>`<div class="tablewrap"><table><thead><tr><th>Campaign</th><th>Channel</th><th>${f[0]}</th></tr></thead><tbody>${rows.map(c=>`<tr><td>${c.campaign}</td><td>${c.channel}</td><td class="n">${f[1](c)}</td></tr>`).join("")}</tbody></table></div>`;
+  if(/scale|budget|increase|grow/.test(q)){list=cs.filter(c=>rec(c)[0]==="Scale").sort((a,b)=>a.cpi-b.cpi);
+    h=list.length?`<p>${list.length} campaign${list.length>1?"s":""} can take more budget: CPI at least 15% under your ${fmt$(t)} target with ROAS ≥ 1.0.</p>`+tbl(list,["CPI · ROAS",c=>fmt$(c.cpi)+" · "+c.roas.toFixed(2)+"×"]):`<p>Nothing is clearly under target right now. Hold budgets.</p>`}
+  else if(/target|beat|under|below/.test(q)){list=cs.filter(c=>c.cpi<=t).sort((a,b)=>a.cpi-b.cpi);
+    h=`<p>${list.length} of ${cs.length} campaigns are at or under ${fmt$(t)} CPI in the last ${range} days.</p>`+tbl(list,["CPI",c=>fmt$(c.cpi)])}
+  else if(/fatigue|creative|frequency/.test(q)){list=detect().filter(x=>x.fat).map(x=>x.c);
+    h=list.length?`<p>Fatigue signs (frequency up 30%+ and CTR down 15%+ vs baseline) on:</p>`+tbl(list,["Freq. last 3d",c=>agg(c.rows.slice(-3)).freq?.toFixed(1)??"–"]):`<p>No fatigue signals in the selected channels.</p>`}
+  else if(/change|why|moved|differ|biggest/.test(q)){list=[...cs].sort((a,b)=>Math.abs(b.cpiChg)-Math.abs(a.cpiChg)).slice(0,4);
+    h=`<p>Largest CPI moves vs the prior ${range} days:</p>`+tbl(list,["CPI Δ",c=>pct(c.cpiChg)])}
+  else h=`<p>This demo answers four question types: what to scale, what beats target, what changed, and creative fatigue. In the full version, Claude answers any question about the loaded data.</p>`;
+  $("answer").innerHTML=h;
+}
+
+function render(){chips();kpis();chart();table();summary()}
+
+document.querySelector(".seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;range=+b.dataset.range;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));render();$("answer").innerHTML=""});
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const c=b.dataset.ch;if(active.has(c)&&active.size>1)active.delete(c);else active.add(c);render()});
+$("tbl").addEventListener("click",e=>{const th=e.target.closest("th");if(!th)return;const k=th.dataset.k;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=["channel","campaign","rec"].includes(k)?1:-1}table()});
+$("tgt").addEventListener("input",()=>{chart();table();summary()});
+$("askform").addEventListener("submit",e=>{e.preventDefault();answer($("q").value)});
+$("suggest").innerHTML=QS.map(q=>`<button type="button">${q}</button>`).join("");
+$("suggest").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;$("q").value=b.textContent;answer(b.textContent)});
+
+$("file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{
+  const lines=rd.result.trim().split(/\r?\n/),hd=lines[0].split(",").map(s=>s.trim().toLowerCase());
+  const need=["date","channel","campaign","spend","impressions","clicks","installs","revenue"];const miss=need.filter(n=>!hd.includes(n));
+  if(miss.length){$("uploadmsg").textContent="Missing columns: "+miss.join(", ")+". Add them and upload again.";return}
+  const rows=lines.slice(1).map(l=>{const v=l.split(",");const o={};hd.forEach((h,i)=>o[h]=v[i]?.trim());
+    return{date:o.date,channel:o.channel,campaign:o.campaign,spend:+o.spend||0,impressions:+o.impressions||0,clicks:+o.clicks||0,installs:+o.installs||0,revenue:+o.revenue||0,frequency:o.frequency?+o.frequency:null}}).filter(r=>r.date);
+  if(!rows.length){$("uploadmsg").textContent="No data rows found in that file.";return}
+  DATA=rows;active=new Set(rows.map(r=>r.channel));$("acct").textContent="Your upload: "+f.name+" · "+rows.length+" rows";
+  document.querySelector(".demo").hidden=true;$("uploadmsg").textContent="Loaded "+rows.length+" rows.";render();
+}catch(err){$("uploadmsg").textContent="Could not read that file. Save it as a comma-separated CSV and try again."}};rd.readAsText(f)});
+$("reset").addEventListener("click",()=>{DATA=demoData();active=new Set(["Google","Meta","TikTok"]);$("acct").textContent="Sample account: Fitly fitness app · Google Ads, Meta, TikTok · install campaigns";document.querySelector(".demo").hidden=false;$("uploadmsg").textContent="";$("file").value="";render()});
+
+render();
+})();
+</script>
+
+<a href="../../index.html" class="pf-back" aria-label="Back to portfolio">&larr; Portfolio</a>
+<style>.pf-back{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 13px/1 ui-monospace,Menlo,monospace;color:#0b0d12;background:#c6f432;padding:9px 13px;border-radius:999px;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.pf-back:hover{filter:brightness(1.08)}</style>
+</body></html>

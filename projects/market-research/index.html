@@ -1,0 +1,219 @@
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Market Research Agent</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Albert+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400&display=swap">
+<style>
+/* Layout: query bar on top, agent trace on the left while it runs, analyst-style report with footnoted sources on the right; watchlist as a second view */
+:root{
+  --bg:#f5f4f0; --paper:#ffffff; --ink:#1c1b18; --muted:#66625a; --line:#e0ddd4; --accent:#2b4fa8; --accent-soft:#e6ecf8;
+  --up:#1f7a4d; --up-bg:#e2f3e9; --chg:#9a5b00; --chg-bg:#fbefd9;
+  --f-display:"Newsreader",Georgia,serif; --f-body:"Albert Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"Martian Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131311; --paper:#1c1c19; --ink:#ebe9e3; --muted:#a29e94; --line:#2f2e2a; --accent:#8eaaf0; --accent-soft:#1e2a45;
+  --up:#6fd39c; --up-bg:#183a29; --chg:#f0bf5c; --chg-bg:#3a2e14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131311; --paper:#1c1c19; --ink:#ebe9e3; --muted:#a29e94; --line:#2f2e2a; --accent:#8eaaf0; --accent-soft:#1e2a45;
+  --up:#6fd39c; --up-bg:#183a29; --chg:#f0bf5c; --chg-bg:#3a2e14; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+h1{font:600 28px var(--f-display);margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px}
+.demo{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;background:var(--chg-bg);color:var(--chg);padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.views{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.views button{border:0;background:none;color:var(--muted);font:600 13px var(--f-body);padding:7px 14px;cursor:pointer}
+.views button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+form.q{display:flex;gap:8px;flex-wrap:wrap}
+form.q input{flex:1 1 300px;min-width:0;font:16px var(--f-body);padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.btn{border:1px solid var(--line);background:var(--paper);color:var(--ink);font:600 13px var(--f-body);padding:9px 14px;border-radius:10px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.btn:focus-visible,input:focus-visible,.views button:focus-visible,.samples button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.samples{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.samples button{border:1px dashed var(--line);background:none;color:var(--accent);font:13px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;align-items:start}
+.trace{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.trace h2{font:600 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0}
+.stepl{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;font-size:13px;align-items:start}
+.stepl .ic{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);margin-top:2px}
+.stepl.done .ic{background:var(--up);border-color:var(--up)}
+.stepl.run .ic{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+.stepl .d{font-size:12px;color:var(--muted)}
+.stepl:not(.done):not(.run){opacity:.5}
+@keyframes spin{to{transform:rotate(360deg)}}
+.report{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:26px 30px;min-width:0;display:flex;flex-direction:column;gap:22px}
+.rhead{border-bottom:1px solid var(--line);padding-bottom:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
+.rhead h2{font:600 26px/1.2 var(--f-display);margin:0;text-wrap:balance;max-width:30ch}
+.meta{font-size:12px;color:var(--muted)}
+.report h3{font:600 19px var(--f-display);margin:0 0 8px}
+.report p{margin:0 0 8px;max-width:70ch}
+sup{font:10px var(--f-mono);color:var(--accent)}
+.signals{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.sig{border-top:2px solid var(--ink);padding-top:8px}
+.sig .v{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums}
+.sig .k{font-size:12px;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
+.pains{display:flex;flex-direction:column;gap:8px}
+.pain{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:center}
+.bar{height:8px;background:var(--accent-soft);border-radius:4px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+.pain .lab{font-size:13px}
+.pain .pc{font:11px var(--f-mono);color:var(--muted)}
+ul.opp{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:70ch}
+ol.src{margin:0;padding-left:22px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.watch{display:flex;flex-direction:column;gap:14px}
+.wcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.wcard header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:baseline}
+.wcard h3{font:600 20px var(--f-display);margin:0}
+.badge{font:600 12px var(--f-body);background:var(--chg-bg);color:var(--chg);padding:2px 10px;border-radius:999px}
+.chg{display:grid;grid-template-columns:90px 110px minmax(0,1fr);gap:10px;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
+.chg .t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.note{font-size:12px;color:var(--muted)}
+.toast{font-size:13px;color:var(--up)}
+.demo.live{background:var(--up-bg);color:var(--up)}
+ol.src a{color:var(--accent);overflow-wrap:anywhere}
+.err{color:var(--chg);font-size:13px}
+.btn[disabled]{opacity:.5;cursor:default}
+@media (max-width:860px){.layout{grid-template-columns:1fr}.trace{position:static}.report{padding:18px 16px}.chg{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.stepl.run .ic{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Market Research Agent <span class="demo" id="modeTag">Samples</span></h1>
+      <div class="sub">Ask about a market or competitor set. Get a structured, sourced report, then track what changes each week.</div>
+    </div>
+    <div class="views" role="tablist">
+      <button role="tab" aria-selected="true" data-v="research" id="vres">Research</button>
+      <button role="tab" aria-selected="false" data-v="watch" id="vwatch">Watchlist</button>
+    </div>
+  </div>
+
+  <div id="research">
+    <form class="q" id="qform">
+      <input id="query" type="text" value="B2B invoicing software for marketing agencies in Europe" aria-label="Research question">
+      <button class="btn primary" type="submit">Research</button>
+    </form>
+    <div class="samples" style="margin:10px 0 16px">Try:<span id="samples"></span></div>
+    <div class="layout">
+      <aside class="trace" id="trace"></aside>
+      <article class="report" id="report"></article>
+    </div>
+  </div>
+
+  <div id="watch" class="watch" hidden></div>
+  <p class="note" id="foot">The two suggested markets are fictional samples that load instantly. Type any other market or competitor question to run a live research report.</p>
+</div>
+
+<script>
+(function(){
+const R={
+ "B2B invoicing software for marketing agencies in Europe":{
+  title:"Invoicing & payments software for marketing agencies, Europe",
+  summary:"Agencies are moving from generic accounting tools to software that links time tracking, retainers and invoicing. Buyers are small: 10–80-person agencies where the founder or a finance lead decides. Late payment is the top complaint, so automated reminders and payment links drive most switching.",
+  signals:[["~118K","marketing agencies in the EU (est.)",1],["52 days","average payment delay agencies report",2],["€25–60","typical price per user / month",3],["3","funding rounds in the space in 2026",4]],
+  players:[["Billora","Generic SMB invoicing, strong in DACH","€15/user","Series B · 2025","Cheap, broad; weak on retainers"],["Retainly","Built for agencies: retainers + time","€39/user","Series A · Jun 2026","Closest competitor; no payment reminders"],["Paydesk","Payments-first, invoices as add-on","1.4% + €0.25","Series C · 2024","Strong collections; complex setup"],["AgencyOS","All-in-one agency management","€55/user","Seed · Mar 2026","Wide scope; invoicing is shallow"]],
+  pains:[["Chasing late payments",41],["Manual retainer billing",24],["Multi-currency clients",15],["Syncing with accounting",12],["Approval workflows",8]],
+  opps:["Lead with automated reminders and payment links: the top pain, and Retainly lacks it.","Target 10–50-person agencies in DACH and Benelux, where multi-currency is common.","Integrate with the accounting tools agencies already use rather than replacing them."],
+  sources:["EU business register summary, 2025","Agency payment survey, 2026 (n=640)","Vendor pricing pages, checked Oct 2026","Funding announcements, Jan–Oct 2026","App marketplace and G2-style reviews, 1,210 reviews analysed"]},
+ "Mobile fitness apps in Germany":{
+  title:"Mobile fitness apps, Germany",
+  summary:"The market is crowded at the top and growing in niches: strength training, women's health and programmes tied to health insurers. Paid UA costs rose through 2026, so retention and partnerships with insurers decide who grows.",
+  signals:[["~21M","fitness app users in Germany (est.)",1],["€4.10","median iOS CPI, health & fitness",2],["31%","users paying for at least one app",3],["2","insurer partnership launches in Q3",4]],
+  players:[["Fitnio","Home workouts, broad audience","€9.99/mo","Public","Market leader; high churn"],["Kraftwerk","Strength training plans","€12.99/mo","Series A · 2026","Fast growth, strong reviews"],["Vela Health","Women's health & fitness","€7.99/mo","Seed · 2025","Insurer-backed programme"],["RunLoop","Running & community","Freemium","Series B · 2024","Strong community; weak strength content"]],
+  pains:[["Price vs value",34],["Repetitive workouts",26],["Poor progress tracking",18],["Subscription cancellation",14],["German-language coaching",8]],
+  opps:["Insurer partnerships lower CAC: two launched this year and more insurers are tendering.","Progress tracking is a top complaint across all four players.","Strength training is the fastest-growing segment by app-store rank movement."],
+  sources:["Consumer survey, 2026","Mobile ad benchmark report, Q3 2026","App store data, Oct 2026","Insurer press releases, Jul–Sep 2026","App Store and Google Play reviews, 3,400 analysed"]}
+};
+const W=[
+ {q:"B2B invoicing software for marketing agencies in Europe",last:"Run Mon 26 Oct",changes:[["Pricing","Retainly","Raised price from €35 to €39 per user and added an annual plan."],["Funding","AgencyOS","Announced a €6M seed extension."],["Product","Paydesk","Launched automated payment reminders, closing the gap you flagged."]]},
+ {q:"Mobile fitness apps in Germany",last:"Run Mon 26 Oct",changes:[["Partnership","Vela Health","Signed a second statutory insurer partnership."],["Hiring","Kraftwerk","Posted 6 growth and UA roles in Berlin."]]}
+];
+const STEPS=[["Plan","Breaking the question into 8 sub-questions"],["Search","Running 24 searches, fetching 37 pages"],["Extract","Pulling pricing, funding and positioning into a table"],["Reviews","Clustering complaints from user reviews"],["Verify","Dropping unsourced claims, flagging conflicts"],["Write","Assembling the report"]];
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let timer=null, sample=null, ctl=null;
+(async()=>{try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}
+  if(sample){$("modeTag").textContent="Live";$("modeTag").classList.add("live")}})();
+const today=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+const num=(v,d)=>{v=Number(v);return isFinite(v)?v:d};
+function clean(r,q){
+  const arr=x=>Array.isArray(x)?x:[];
+  return {live:true,asof:today(),title:String(r.title||q),summary:String(r.summary||""),
+    signals:arr(r.signals).slice(0,4).map(x=>[String(x.value??x[0]??""),String(x.label??x[1]??""),num(x.source??x[2],1)]),
+    players:arr(r.players).slice(0,6).map(p=>Array.isArray(p)?p.map(String):[p.company,p.positioning,p.price,p.funding,p.read].map(v=>String(v??"–"))),
+    pains:arr(r.complaints||r.pains).slice(0,5).map(x=>[String(x.theme??x[0]??""),Math.max(1,Math.min(50,num(x.share??x[1],10)))]),
+    opps:arr(r.opportunities||r.opps).slice(0,4).map(String),
+    sources:arr(r.sources).slice(0,10).map(x=>typeof x==="string"?{title:x}:{title:String(x.title||x.url||"Source"),url:/^https?:\/\//.test(x.url||"")?x.url:""})};
+}
+async function live(q){
+  if(ctl)ctl.abort(); ctl=new AbortController(); const my=ctl;
+  let n=0;trace(0);$("report").innerHTML=`<p class="note">Researching “${esc(q)}”. This takes 30–90 seconds while the agent searches and reads sources.</p>`;
+  clearInterval(timer);timer=setInterval(()=>{if(n<STEPS.length-1){n++;trace(n)}},9000);
+  const prompt=`You are a market research analyst. Research this question and write a concise, sourced report.
+Question: ${q}
+Today is ${today()}. Search the web for current facts: market size signals, the main companies with their positioning, pricing and latest funding, what customers complain about in reviews, and opportunities. Only state figures you found in a source, and number sources in the order you list them.
+Reply with only JSON in this shape:
+{"title":"short report title","summary":"3 sentences","signals":[{"value":"~118K","label":"what the number measures","source":1}],"players":[{"company":"","positioning":"","price":"","funding":"","read":"one short judgement"}],"complaints":[{"theme":"short theme","share":25}],"opportunities":["one sentence each"],"sources":[{"title":"page or publisher name","url":"https://..."}]}
+Give 3-4 signals, 3-6 players, 3-5 complaint themes (share = rough % of complaints found that mention it), 3 opportunities, and every source you used. Use "–" for unknown values.`;
+  try{
+    const r=await sample.json(prompt,{signal:my.signal,webSearch:true,cache:false});
+    if(my!==ctl)return; clearInterval(timer);
+    const rep=clean(r,q); R[q]=rep; trace(STEPS.length); report(q);
+  }catch(e){
+    if(my!==ctl)return; clearInterval(timer); trace(-1);
+    const msg=e&&e.code==="cancelled"?"Stopped.":e&&e.code==="rate_limited"?"Too many reports right now. Try again in a few minutes.":e&&e.code==="invalid_json"?"The report came back in the wrong shape. Try again.":"Couldn't finish the research. Try again.";
+    $("report").innerHTML=`<p class="err">${msg}</p>`;
+  }
+}
+$("samples").innerHTML=Object.keys(R).map(k=>`<button type="button">${k}</button>`).join(" ");
+
+function trace(n){$("trace").innerHTML=`<h2>Agent steps</h2>`+STEPS.map(([t,d],i)=>`<div class="stepl ${i<n?"done":i===n?"run":""}"><span class="ic" aria-hidden="true"></span><div><b>${t}</b><div class="d">${d}</div></div></div>`).join("")}
+
+function report(key){const r=R[key];
+  $("report").innerHTML=`<div class="rhead"><div><div class="meta">${r.live?"Live report":"Sample report"} · ${r.sources.length} sources · as of ${r.asof||"1 Nov 2026"}</div><h2>${r.title}</h2></div>
+   <div class="actions"><button class="btn" type="button" id="save">Add to watchlist</button><button class="btn" type="button" id="copy">Copy as text</button></div></div>
+   <section><h3>Summary</h3><p>${r.summary}</p></section>
+   <section><h3>Size signals</h3><div class="signals">${r.signals.map(([v,k,s])=>`<div class="sig"><div class="v">${v}</div><div class="k">${k}<sup>${s}</sup></div></div>`).join("")}</div></section>
+   <section><h3>Key players</h3><div class="tablewrap"><table><thead><tr><th>Company</th><th>Positioning</th><th>Price</th><th>Funding</th><th>Read</th></tr></thead><tbody>${r.players.map(p=>`<tr><td><b>${p[0]}</b></td><td>${p[1]}</td><td class="n">${p[2]}</td><td class="n">${p[3]}</td><td>${p[4]}</td></tr>`).join("")}</tbody></table></div><p class="note">Prices and funding from vendor pages and announcements<sup>3,4</sup>.</p></section>
+   <section><h3>What customers complain about</h3><div class="pains">${r.pains.map(([l,v])=>`<div class="pain"><span class="lab">${l}</span><div><div class="bar"><span style="width:${v*2}%"></span></div><span class="pc">${v}% of negative reviews</span></div></div>`).join("")}</div><p class="note">Share of negative reviews mentioning each theme<sup>5</sup>.</p></section>
+   <section><h3>Opportunities</h3><ul class="opp">${r.opps.map(o=>`<li>${o}</li>`).join("")}</ul></section>
+   <section><h3>Sources</h3><ol class="src">${r.sources.map(s=>typeof s==="string"?`<li>${esc(s)} (sample)</li>`:`<li>${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title||s.url)}</a>`:esc(s.title)}</li>`).join("")}</ol></section>`;
+  $("save").addEventListener("click",e=>{if(!W.find(w=>w.q===key))W.unshift({q:key,last:"Saved today",changes:[]});e.target.textContent="On watchlist";renderWatch()});
+  $("copy").addEventListener("click",e=>{const txt=$("report").innerText;try{navigator.clipboard.writeText(txt).then(()=>{e.target.textContent="Copied"},()=>{})}catch(err){}});
+}
+
+function run(q){clearInterval(timer);if(ctl){ctl.abort();ctl=null}const key=R[q]?q:sample?null:Object.keys(R).find(k=>q.toLowerCase().split(/\s+/).some(w=>w.length>4&&k.toLowerCase().includes(w)));
+  if(!R[q]&&q.trim().length>3&&sample){live(q.trim());return}
+  if(!key){trace(-1);$("report").innerHTML=`<p class="note">Live research isn't available in this view. Pick one of the two sample markets above.</p>`;return}
+  $("query").value=key;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){trace(STEPS.length);report(key);return}
+  let n=0;trace(0);$("report").innerHTML=`<p class="note">Researching… the report appears when all steps finish.</p>`;
+  timer=setInterval(()=>{n++;trace(n);if(n>=STEPS.length){clearInterval(timer);report(key)}},550);
+}
+
+function renderWatch(){$("watch").innerHTML=W.map((w,i)=>`<div class="wcard"><header><h3>${w.q}</h3><span>${w.changes.length?`<span class="badge">${w.changes.length} change${w.changes.length>1?"s":""} since last week</span>`:'<span class="note">No changes yet</span>'}</span></header>
+  <div class="meta">${w.last}${w.last==="Saved today"?" · run it again any time to see what changed":" · refreshes every Monday"}</div>
+  ${w.changes.map(([t,c,d])=>`<div class="chg"><span class="t">${t}</span><b>${c}</b><span>${d}</span></div>`).join("")}
+  <div class="actions"><button class="btn" type="button" data-open="${i}">Open full report</button></div></div>`).join("")}
+
+$("qform").addEventListener("submit",e=>{e.preventDefault();run($("query").value)});
+$("samples").addEventListener("click",e=>{const b=e.target.closest("button");if(b)run(b.textContent)});
+document.querySelector(".views").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;document.querySelectorAll(".views button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  $("research").hidden=b.dataset.v!=="research";$("watch").hidden=b.dataset.v!=="watch";if(b.dataset.v==="watch")renderWatch()});
+$("watch").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(!b)return;$("vres").click();const q=W[+b.dataset.open].q;clearInterval(timer);$("query").value=q;trace(STEPS.length);report(q)});
+
+trace(STEPS.length);report("B2B invoicing software for marketing agencies in Europe");renderWatch();
+})();
+</script>
+
+<a href="../../index.html" class="pf-back" aria-label="Back to portfolio">&larr; Portfolio</a>
+<style>.pf-back{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 13px/1 ui-monospace,Menlo,monospace;color:#0b0d12;background:#c6f432;padding:9px 13px;border-radius:999px;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.pf-back:hover{filter:brightness(1.08)}</style>
+</body></html>
