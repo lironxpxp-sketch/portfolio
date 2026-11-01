@@ -12,7 +12,7 @@
  * Leave it empty and the projects run in demo/template mode.
  */
 (function () {
-  var AI_ENDPOINT = ""; // e.g. "https://liron-ai.<your-subdomain>.workers.dev"
+  var AI_ENDPOINT = "https://liron-ai.lironxpxp.workers.dev"; // e.g. "https://liron-ai.<your-subdomain>.workers.dev"
 
   if (window.claude && window.claude.use) return; // running inside Claude: use the real thing
 
