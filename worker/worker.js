@@ -20,7 +20,7 @@ const MODELS = {
 
 const MAX_BODY_BYTES = 60_000;   // largest prompt accepted
 const MAX_OUTPUT_TOKENS = 6000;  // longest answer
-const PER_IP_LIMIT = 15;         // calls per visitor...
+const PER_IP_LIMIT = 40;         // AI calls per visitor...
 const PER_IP_WINDOW_MS = 10 * 60 * 1000; // ...per 10 minutes (best effort)
 
 const hits = new Map();
@@ -77,6 +77,35 @@ export default {
     let body;
     try { body = JSON.parse(raw); } catch {
       return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin);
+    }
+
+    // Tool-using projects (Ad Performance Copilot) send a full Messages API request
+    // and run their own tools in the browser; pass it through with safe limits.
+    if (body.raw && typeof body.raw === "object") {
+      const r = body.raw;
+      const okMsgs = Array.isArray(r.messages) && r.messages.length &&
+        r.messages.every((m) => m && (m.role === "user" || m.role === "assistant") && (typeof m.content === "string" || Array.isArray(m.content)));
+      if (!okMsgs) return reply(400, { code: "invalid_request", message: "Bad messages" }, origin);
+      const tools = (Array.isArray(r.tools) ? r.tools : [])
+        .filter((t) => t && !t.type && typeof t.name === "string" && t.input_schema)
+        .slice(0, 12);
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: r.model === MODELS.quick ? MODELS.quick : MODELS.default,
+          max_tokens: Math.min(Number(r.max_tokens) || 1500, 2000),
+          system: typeof r.system === "string" ? r.system.slice(0, 6000) : undefined,
+          messages: r.messages,
+          ...(tools.length ? { tools } : {}),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const busy = res.status === 429 || res.status === 529;
+        return reply(busy ? 429 : 502, { error: { message: busy ? "Too many requests right now. Try again in a minute." : (data?.error?.message || "AI service error") } }, origin);
+      }
+      return reply(200, { content: data.content, stop_reason: data.stop_reason }, origin);
     }
 
     const messages = Array.isArray(body.messages)

@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ad Performance Copilot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: operator console — import strip, takeaways (+ simulator, track record), KPIs, chart + digest, heatmap, breakdown table, ask box; drawer + settings dialog */
+:root{
+  --bg:#f3f5f7; --panel:#ffffff; --ink:#14212b; --muted:#5d6b77; --line:#dde3e8; --accent:#1f5f8b; --accent-soft:#e3eef6;
+  --c1:#2f7d4f; --c2:#3b5bd6; --c3:#c2417a; --c4:#b26b00; --c5:#6b4fbb;
+  --good:#1f7a4d; --good-bg:#e2f3e9; --warn:#9a6400; --warn-bg:#fbf0d9; --bad:#b3362c; --bad-bg:#f9e3e0;
+  --f-ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-num:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f161c; --panel:#16212a; --ink:#e4ebf0; --muted:#93a3b0; --line:#26343f; --accent:#6fb0de; --accent-soft:#1b3344;
+  --c1:#5cc488; --c2:#8ea2ff; --c3:#ef7fae; --c4:#f0b35c; --c5:#b9a2ff;
+  --good:#6fd39c; --good-bg:#183a29; --warn:#f0bf5c; --warn-bg:#3a2e14; --bad:#f08a80; --bad-bg:#40201d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161c; --panel:#16212a; --ink:#e4ebf0; --muted:#93a3b0; --line:#26343f; --accent:#6fb0de; --accent-soft:#1b3344;
+  --c1:#5cc488; --c2:#8ea2ff; --c3:#ef7fae; --c4:#f0b35c; --c5:#b9a2ff;
+  --good:#6fd39c; --good-bg:#183a29; --warn:#f0bf5c; --warn-bg:#3a2e14; --bad:#f08a80; --bad-bg:#40201d; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45}
+[hidden]{display:none!important}
+.wrap{max-width:1200px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px}
+.tag{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle;background:var(--accent-soft);color:var(--accent)}
+.tag.sample{background:var(--warn-bg);color:var(--warn)}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:none;color:var(--muted);font:500 13px var(--f-ui);padding:7px 11px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 13px var(--f-ui);padding:7px 12px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+select,input[type=number],input[type=text]{font:13px var(--f-ui);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.panel h2{font-size:14px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.panel h2 small{font-weight:400;color:var(--muted);font-size:12px}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop b{font-size:15px}
+.files{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.file{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.file .fh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.file .fh b{word-break:break-all}
+.maps{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.maps label{display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.maps select{width:100%;text-transform:none;letter-spacing:0;font-weight:400}
+.maps .miss select{border-color:var(--warn)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 11px;font:500 13px var(--f-ui);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="false"]{opacity:.45}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.kpi .v{font:500 22px var(--f-num);margin-top:4px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.delta{font:500 12px var(--f-num);color:var(--muted)}
+.delta.good{color:var(--good)} .delta.bad{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);font-weight:400}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+svg text{font-family:var(--f-num);font-size:10px;fill:var(--muted)}
+.summary p{margin:0 0 10px;max-width:68ch}
+.alerts{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.alert{border-left:3px solid var(--line);background:var(--bg);border-radius:0 6px 6px 0;padding:8px 10px;font-size:13px}
+.alert.bad{border-color:var(--bad)} .alert.warn{border-color:var(--warn)} .alert.good{border-color:var(--good)}
+.alert b{display:block;font-weight:600}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+#tbl{min-width:980px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);cursor:pointer;user-select:none;position:sticky;top:0;background:var(--panel)}
+.tl{text-align:left;white-space:normal;min-width:160px}
+td.n{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font:600 11px var(--f-ui);padding:2px 8px;border-radius:999px}
+.pill.scale{background:var(--good-bg);color:var(--good)} .pill.hold{background:var(--accent-soft);color:var(--accent)} .pill.fix{background:var(--bad-bg);color:var(--bad)} .pill.watch{background:var(--warn-bg);color:var(--warn)}
+.g{color:var(--good)} .r{color:var(--bad)}
+.tctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;color:var(--muted);font-weight:400}
+.tctl input{width:84px;font-family:var(--f-num)}
+.ask{display:flex;gap:8px;flex-wrap:wrap}
+.ask input{flex:1 1 260px;min-width:0;font-size:14px;padding:9px 12px}
+.suggest{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.suggest button{border:1px dashed var(--line);background:none;color:var(--accent);font:13px var(--f-ui);padding:5px 10px;border-radius:999px;cursor:pointer}
+.answer{margin-top:12px}
+.answer table{margin-top:8px;max-width:640px}
+.note{font-size:12px;color:var(--muted);margin:6px 0 0}
+.err{color:var(--bad);font-size:13px}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.ins{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.ins li{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--panel)}
+.ins li.bad{border-left-color:var(--bad)} .ins li.warn{border-left-color:var(--warn)} .ins li.good{border-left-color:var(--good)}
+.ins li.emptyli{border-left-color:var(--line);color:var(--muted)}
+.ins-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ins p{margin:4px 0 6px;max-width:90ch}
+.impact{display:inline-block;font:500 12px var(--f-num);color:var(--muted);background:var(--bg);border-radius:4px;padding:2px 6px}
+.new{font:600 10px var(--f-ui);text-transform:uppercase;letter-spacing:.06em;background:var(--accent);color:var(--panel);padding:2px 6px;border-radius:4px}
+.mixnote{border:1px solid var(--line);background:var(--accent-soft);border-radius:8px;padding:8px 12px;font-size:13px}
+.mixnote p{margin:4px 0}
+.tag.off{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.printonly{display:none}
+.warnbox{border:1px solid var(--warn);background:var(--warn-bg);border-radius:8px;padding:8px 12px;font-size:13px}.warnbox p{margin:4px 0}
+.rates{display:flex;flex-wrap:wrap;gap:12px}
+.samp{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px;min-height:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.guide{margin-top:12px;font-size:13px}.guide summary{cursor:pointer;color:var(--accent);font-weight:500}
+.gcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}.gcols p{margin:4px 0 0;color:var(--muted)}
+.focusbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:8px 12px;margin-bottom:16px}
+.ins-f{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.acts{display:flex;flex-wrap:wrap;gap:4px}
+.acts button,.linkbtn{border:0;background:none;color:var(--accent);font:500 12px var(--f-ui);padding:4px 6px;border-radius:4px;cursor:pointer}
+.acts button:hover,.linkbtn:hover{background:var(--accent-soft)}
+table.why{margin-top:8px;font-size:12px;max-width:640px}table.why th{position:static;text-transform:none;letter-spacing:0;font-weight:500;text-align:left;cursor:default;white-space:normal;background:none}table.why td{text-align:right;font-family:var(--f-num);white-space:normal}
+.sim{margin:12px 0 0;padding:10px 12px;border-radius:8px;background:var(--bg);font-size:13px}
+.aisum{margin-top:12px;padding:10px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent-soft)}.aisum p{margin:6px 0}
+.aihead{display:flex;justify-content:space-between;align-items:center}
+.trackwrap{margin-top:12px;font-size:13px}.trackwrap summary{cursor:pointer;color:var(--muted)}
+.track{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}.track li{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:2px}.track .linkbtn{justify-self:start;padding-left:0}
+ul.gap{margin:0 0 10px;padding-left:18px}
+.hm{min-width:0;width:auto;border-collapse:separate;border-spacing:3px}
+.hm th{position:static;cursor:default;text-transform:none;letter-spacing:0;font-size:12px;background:none;padding:4px 8px}
+.hm th[scope=row]{text-align:left;white-space:nowrap}
+.hm td.hc{padding:0;border:0}
+.hm td.hc button,.hm td.none{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:76px;height:46px;border:0;border-radius:6px;font:500 13px var(--f-num);color:var(--ink);cursor:pointer;width:100%}
+.hm td.none{background:var(--bg);color:var(--muted);cursor:default;font-size:12px}
+.hm small{font-size:10px;color:var(--muted);font-weight:400}
+#tbl tbody tr{cursor:pointer}#tbl tbody tr:hover td{background:var(--bg)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:20}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100%);background:var(--panel);border-left:1px solid var(--line);z-index:21;overflow-y:auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 32px 16px;box-shadow:-8px 0 24px rgba(0,0,0,.12)}
+.drh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.drh h2{margin:0;font-size:17px}
+.drawer h3{font-size:13px;margin:16px 0 6px}
+.dk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.dk div{background:var(--bg);border-radius:6px;padding:8px}.dk span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.dk b{font:500 15px var(--f-num)}
+.drawer .alert{margin-bottom:6px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);max-width:560px;width:calc(100% - 32px);padding:20px}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h2{margin:0 0 12px;font-size:18px}
+fieldset{border:1px solid var(--line);border-radius:8px;margin:0 0 14px;padding:10px 12px;display:grid;gap:10px}
+legend{font-weight:600;font-size:13px;padding:0 4px}
+fieldset label{font-size:13px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+fieldset input[type=number]{width:80px;font-family:var(--f-num)}
+input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.steps{list-style:none;padding:0;margin:0 0 8px;font-size:12px;color:var(--muted)}.steps li::before{content:"→ "}
+#aout ul{padding-left:18px}
+@media (max-width:640px){
+  #tbl{min-width:0}#tbl thead{display:none}#tbl,#tbl tbody,#tbl tr{display:block;width:100%}
+  #tbl tr{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;padding:6px 8px}
+  #tbl td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0;text-align:right;white-space:normal}
+  #tbl td::before{content:attr(data-l);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;text-align:left;font-family:var(--f-ui)}
+  #tbl td.nm{font-weight:600}
+  .dk{grid-template-columns:repeat(2,1fr)}
+}
+@media print{
+  body{background:#fff;color:#000}.noprint,.drop,#files,.guide,#aiTag,.acts,.drawer,.scrim,dialog{display:none!important}
+  .printonly{display:block;color:#444;margin-top:4px}
+  .panel,.kpi,.ins li{break-inside:avoid;box-shadow:none}.wrap{max-width:none;padding:0}
+  .grid2{grid-template-columns:1fr 1fr}
+  #tbl{min-width:0;font-size:11px}th{position:static}
+}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Ad Performance Copilot <span class="tag" id="srcTag">No data</span><span class="tag off noprint" id="aiTag">Claude off</span></h1>
+      <div class="sub" id="srcLine">Upload Google Ads, Meta or TikTok exports, plus an optional MMP or CRM conversions file. Your files stay in this browser.</div>
+      <div class="printonly" id="printHead"></div>
+    </div>
+    <div class="controls noprint">
+      <span id="rangeCtl" hidden><span class="seg" role="group" aria-label="Date range" id="rangeSeg"><button data-range="7">7d</button><button data-range="14">14d</button><button data-range="30">30d</button><button data-range="0">All</button></span></span>
+      <button class="btn" type="button" id="printBtn" hidden>Print / PDF</button>
+      <button class="btn" type="button" id="settingsBtn">Settings</button>
+    </div>
+  </header>
+
+  <section class="panel noprint">
+    <h2>1. Import data <small>CSV or Excel · one or several files</small></h2>
+    <div class="drop" id="drop">
+      <b>Drop export files here</b>
+      <div class="sub">Add files together or one at a time. Platform exports are combined and overlaps counted once; a file without spend (MMP or CRM) replaces platform conversions by campaign. Country and OS come from columns or campaign names.</div>
+      <div class="controls" style="justify-content:center">
+        <label class="btn primary" for="file">Choose files</label>
+        <input type="file" id="file" accept=".csv,.tsv,.txt,.xlsx,.xls" multiple hidden>
+        <button class="btn" type="button" id="sampleBtn">Load sample data</button>
+        <button class="btn" type="button" id="clearBtn" hidden>Clear all</button>
+        <span class="sub" id="busy" hidden>Reading files…</span>
+      </div>
+    </div>
+    <details class="guide">
+      <summary>Which reports should I export?</summary>
+      <div class="gcols">
+        <div><b>Google Ads</b><p>Campaigns table, add the segment <i>Day</i> (optionally <i>Device</i>), then Download as CSV or Excel. For country, use a Locations or Report Editor export with Day + Country.</p></div>
+        <div><b>Meta Ads Manager</b><p>Campaigns, ad sets or ads tab. Under Breakdown pick <i>Time → Day</i> and, if you want, <i>Delivery → Country</i> or <i>Impression device</i>. Then Export table data as CSV.</p></div>
+        <div><b>TikTok Ads Manager</b><p>Campaign or ad group list, or a custom report with <i>Day</i> as a dimension and Cost, Impressions, Clicks, Conversions as metrics. Export as CSV or Excel.</p></div>
+        <div><b>MMP / CRM (optional)</b><p>An aggregated report with Campaign, Date and Installs or Conversions (AppsFlyer, Adjust, Branch, HubSpot…). It's matched to your spend by campaign name, so names must be identical.</p></div>
+      </div>
+      <p class="note">Tip: name campaigns with country and OS (e.g. “App – iOS – US”) and the tool will spot patterns even when your export has no Country or OS column.</p>
+    </details>
+    <div class="files" id="files"></div>
+  </section>
+
+  <div id="dash" hidden>
+    <div class="chips noprint" id="chips" style="margin-bottom:16px"></div>
+    <div class="focusbar" id="focusBar" hidden><span>Showing only: <b id="focusLbl"></b></span><button type="button" class="btn" id="focusClear">Show everything</button></div>
+
+    <section class="panel" id="insPanel" style="margin-bottom:16px">
+      <h2><span>What to do now <small id="insSub"></small></span><span class="controls noprint"><button class="btn" type="button" id="aiSumBtn" hidden>Summarize with Claude</button><button class="btn" type="button" id="copyBtn">Copy</button></span></h2>
+      <ol class="ins" id="ins"></ol>
+      <p class="sim" id="sim" hidden></p>
+      <div class="aisum" id="aiSum" hidden></div>
+      <details class="trackwrap" id="trackWrap" hidden><summary>Your actions and results (<span id="trackCount"></span>)</summary><ul class="track" id="track"></ul></details>
+    </section>
+
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2" style="margin-top:16px">
+      <section class="panel">
+        <h2><span>Trend <select id="metric" aria-label="Chart metric"><option value="cpa">CPA</option><option value="spend">Spend</option><option value="conv">Conversions</option><option value="roas">ROAS</option><option value="ctr">CTR</option></select></span><span class="legend" id="legend"></span></h2>
+        <div id="chart"></div>
+      </section>
+      <section class="panel summary">
+        <h2>Digest <small id="asof"></small></h2>
+        <div id="summary"></div>
+        <div class="alerts" id="alerts"></div>
+      </section>
+    </div>
+
+    <section class="panel" id="heatPanel" style="margin-top:16px" hidden>
+      <h2><span>Where CPA is good or bad</span><span class="tctl noprint"><label for="hmR">Rows</label><select id="hmR"></select><label for="hmC">Columns</label><select id="hmC"></select></span></h2>
+      <div class="tablewrap" id="heat"></div>
+      <p class="note" id="heatNote"></p>
+    </section>
+
+    <section class="panel" style="margin-top:16px">
+      <h2>Breakdown
+        <span class="tctl">
+          <label for="groupBy">By</label><select id="groupBy"></select>
+          <label for="tgt">Target CPA</label><input id="tgt" type="number" step="0.01" min="0"><small id="tgtHint" class="sub"></small>
+          <label for="convName">Conversion</label><input id="convName" type="text" value="Conversions" style="width:110px">
+          <button class="btn noprint" type="button" id="exportBtn">Export CSV</button>
+        </span>
+      </h2>
+      <div class="tablewrap"><table id="tbl"></table></div>
+      <p class="note" id="ruleNote"></p>
+    </section>
+
+    <section class="panel noprint" style="margin-top:16px">
+      <h2>Ask your data</h2>
+      <form class="ask" id="askform">
+        <input id="q" type="text" placeholder="e.g. Why did Meta get worse this week? What should I do with the BR campaigns?" autocomplete="off">
+        <button class="btn primary" type="submit">Ask</button>
+      </form>
+      <p class="note" id="askMode"></p>
+      <div class="suggest" id="suggest"></div>
+      <div class="answer" id="answer"></div>
+    </section>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-labelledby="drTitle" role="dialog">
+  <div class="drh"><div><h2 id="drTitle"></h2><div class="sub" id="drSub"></div></div><button type="button" class="btn" id="drClose" aria-label="Close">Close</button></div>
+  <div id="drBody"></div>
+</aside>
+
+<dialog id="settings">
+  <form id="sForm" method="dialog">
+    <h2>Settings</h2>
+    <fieldset><legend>Rules for takeaways</legend>
+      <label>Pause when adjusted CPA is at least <input id="sPause" type="number" step="0.05" min="1.05" max="5"> × target</label>
+      <label>Cut budget when CPA is more than <input id="sCut" type="number" step="0.05" min="1" max="3"> × target</label>
+      <label>Scale when CPA is at most <input id="sScale" type="number" step="0.05" min="0.3" max="1"> × target</label>
+      <label>Minimum conversions before scaling <input id="sMin" type="number" step="1" min="1" max="1000"></label>
+      <label>Spend elasticity <input id="sEl" type="number" step="0.05" min="0.3" max="1"> <span class="sub">(1 = results grow 1:1 with spend; 0.7 = each extra dollar buys less)</span></label>
+      <button type="button" class="linkbtn" id="sReset">Reset to defaults</button>
+    </fieldset>
+    <fieldset><legend>Claude (optional)</legend>
+      <label>Anthropic API key <input id="sKey" type="password" autocomplete="off" placeholder="sk-ant-…" style="width:100%"></label>
+      <label>Model <select id="sModel"></select></label>
+      <p class="note">The key is stored only in this browser and sent only to api.anthropic.com. Claude receives aggregated figures and campaign names through tool calls, never your raw files. Usage is billed to your Anthropic account. <button type="button" class="linkbtn" id="sForget">Remove key</button> <span id="sMsg"></span></p>
+    </fieldset>
+    <div class="controls" style="justify-content:flex-end"><button type="button" class="btn" id="sCancel">Cancel</button><button type="submit" class="btn primary">Save</button></div>
+  </form>
+</dialog>
+
+<script>
+// ===== ENGINE START (no DOM access) =====
+const ENGINE=(function(){
+const FIELDS=[
+ ["date","Date"],["channel","Channel"],["campaign","Campaign"],["adset","Ad set / Ad group"],["ad","Ad"],["geo","Country / Geo"],["os","OS / Device"],
+ ["spend","Spend / Cost"],["impressions","Impressions"],["clicks","Clicks"],["conv","Conversions"],["revenue","Revenue / Conv. value"],["frequency","Frequency"]
+];
+const SYN={
+ date:["day","date","reportingstarts","stattimeday","statdate","bydate","byday","stattime","segmentsdate","dateutc","dateday","installdate","eventdate","week","month","timeperiod","reportingdate"],
+ channel:["channel","mediasource","source","adplatform","publisher","adnetwork"],
+ campaign:["campaign","campaignname"],
+ adset:["adset","adsetname","adgroup","adgroupname"],
+ ad:["ad","adname","creative","creativename","adid"],
+ geo:["country","countrycode","countryname","countryterritory","countryregion","geo","location","market","region"],
+ os:["os","operatingsystem","platform","device","devicetype","deviceplatform","impressiondevice"],
+ spend:["cost","spend","amountspent","totalcost","costusd","spendusd","amountspentusd","amountspenteur","amountspentils","costmicros"],
+ impressions:["impressions","impr","impression"],
+ clicks:["linkclicks","clicks","clicksall","click","clicksdestination"],
+ conv:["conversions","conv","results","installs","appinstalls","mobileappinstalls","purchases","leads","totalconversions","conversion","websitepurchases","completepayment","registrations"],
+ revenue:["conversionvalue","convvalue","allconvvalue","purchaseconversionvalue","revenue","totalpurchasevalue","purchasesconversionvalue","websitepurchasesconversionvalue","value","totalcompletepaymentvalue"],
+ frequency:["frequency"]
+};
+const EXCL=/(rate|per|avg|average|cost|value|share|top|abs|budget|type|id|status|delivery|bid|percent|pct)/;
+const norm=s=>String(s??"").toLowerCase().replace(/[^a-z0-9]/g,"");
+function matchField(h){const n=norm(h);if(!n)return null;
+  for(const [f] of FIELDS){if(SYN[f].includes(n))return f}
+  for(const [f] of FIELDS){if(SYN[f].some(s=>s.length>=4&&n.startsWith(s)&&!EXCL.test(n.slice(s.length))))return f}
+  return null}
+function autoMap(headers){const map={},used=new Set();
+  for(const [f] of FIELDS){
+    let best=-1,bi=-1;headers.forEach((h,i)=>{if(used.has(i))return;const n=norm(h);
+      let rank=SYN[f].indexOf(n);if(rank<0){const k=SYN[f].findIndex(s=>s.length>=4&&n.startsWith(s)&&!EXCL.test(n.slice(s.length)));if(k>=0)rank=100+k}
+      if(rank>=0&&(bi<0||rank<best)){best=rank;bi=i}});
+    if(bi>=0){map[f]=bi;used.add(bi)}
+  }
+  return map}
+function findHeaderRow(rows){let best=0,score=-1;for(let i=0;i<Math.min(rows.length,15);i++){const sc=(rows[i]||[]).filter(h=>matchField(h)).length;if(sc>score){score=sc;best=i}}return best}
+function detectChannel(headers,fname){const n=headers.map(norm).join("|"),f=String(fname||"").toLowerCase();
+  if(/meta|facebook|fb_|instagram/.test(f))return"Meta";if(/google|adwords|gads/.test(f))return"Google Ads";if(/tiktok/.test(f))return"TikTok";if(/linkedin/.test(f))return"LinkedIn";
+  if(/amountspent|reportingstarts|adsetname|resultindicator/.test(n))return"Meta";
+  if(/stattimeday|completepayment|tiktok/.test(n))return"TikTok";
+  if(/convvalue|adgroup|avgcpc|searchimprshare|interactions/.test(n))return"Google Ads";
+  if(/campaigngroup|sponsored|leadformopens/.test(n))return"LinkedIn";
+  return"Other"}
+function chNorm(v){const s=norm(v);if(!s)return null;
+  if(/google|adwords|gads|youtube|uac/.test(s))return"Google Ads";if(/facebook|meta|instagram|^fb/.test(s))return"Meta";
+  if(/tiktok|bytedance|pangle/.test(s))return"TikTok";if(/linkedin/.test(s))return"LinkedIn";return null}
+function numFormat(values){let eu=0,us=0;for(const v of values){if(typeof v!=="string")continue;const s=v.replace(/[^\d.,]/g,"");
+  if(/\d,\d{1,2}$/.test(s)||/\.\d{3},/.test(s))eu++;if(/\d\.\d{1,2}$/.test(s)||/,\d{3}\./.test(s))us++}
+  return eu>us?"eu":us>0?"us":null}
+function num(v,fmt){if(typeof v==="number")return isFinite(v)?v:0;let s=String(v??"").trim();if(!s||/^(-+|n\/?a|null|—)$/i.test(s))return 0;
+  const neg=/^\(.*\)$/.test(s)||/^-/.test(s.replace(/[^\d\-().,]/g,""));s=s.replace(/[^\d.,]/g,"");if(!s)return 0;
+  if(fmt==="eu"){const x=parseFloat(s.replace(/\./g,"").replace(",","."));return isNaN(x)?0:(neg?-x:x)}
+  if(fmt==="us"){const x=parseFloat(s.replace(/,/g,""));return isNaN(x)?0:(neg?-x:x)}
+  const lc=s.lastIndexOf(","),ld=s.lastIndexOf(".");
+  if(lc>-1&&ld>-1){s=lc>ld?s.replace(/\./g,"").replace(",","."):s.replace(/,/g,"")}
+  else if(lc>-1){s=/^\d{1,3}(,\d{3})+$/.test(s)?s.replace(/,/g,""):s.replace(",",".")}
+  else if(ld>-1&&/^\d{1,3}(\.\d{3}){2,}$/.test(s)){s=s.replace(/\./g,"")}
+  const x=parseFloat(s);return isNaN(x)?0:(neg?-x:x)}
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+function dayOrder(values){let dmy=0,mdy=0;values.slice(0,500).forEach(v=>{const m=String(v??"").trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);if(m){if(+m[1]>12)dmy++;if(+m[2]>12)mdy++}});return dmy>mdy?"dmy":"mdy"}
+function parseDate(v,order){if(v==null||v==="")return null;
+  if(v instanceof Date)return isNaN(v)?null:iso(v);
+  if(typeof v==="number"){if(v>20000&&v<80000){const d=new Date(Math.round((v-25569)*864e5));return iso(new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()))}return null}
+  let s=String(v).trim();let m=s.match(/^(\d{4})[\-\/.](\d{1,2})[\-\/.](\d{1,2})/);if(m)return m[1]+"-"+pad(m[2])+"-"+pad(m[3]);
+  m=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;const[a,b]=order==="dmy"?[m[2],m[1]]:[m[1],m[2]];return y+"-"+pad(a)+"-"+pad(b)}
+  m=s.match(/^(\d{8})$/);if(m)return s.slice(0,4)+"-"+s.slice(4,6)+"-"+s.slice(6,8);
+  const t=Date.parse(s.replace(/ - .*/,""));return isNaN(t)?null:iso(new Date(t))}
+
+// ---- geo / OS dimensions: from a column when present, otherwise from campaign & ad set names ----
+const GEO={us:"US",usa:"US",unitedstates:"US",uk:"UK",gb:"UK",unitedkingdom:"UK",greatbritain:"UK",de:"DE",germany:"DE",fr:"FR",france:"FR",ca:"CA",canada:"CA",
+ au:"AU",australia:"AU",br:"BR",brazil:"BR",mx:"MX",mexico:"MX",jp:"JP",japan:"JP",kr:"KR",korea:"KR",southkorea:"KR",in:"IN",india:"IN",il:"IL",israel:"IL",
+ es:"ES",spain:"ES",it:"IT",italy:"IT",nl:"NL",netherlands:"NL",se:"SE",sweden:"SE",tr:"TR",turkey:"TR",turkiye:"TR",pl:"PL",poland:"PL",id:"ID",indonesia:"ID",
+ ph:"PH",philippines:"PH",ar:"AR",argentina:"AR",za:"ZA",southafrica:"ZA",sa:"SA",saudiarabia:"SA",ae:"AE",uae:"AE",unitedarabemirates:"AE",at:"AT",austria:"AT",
+ ch:"CH",switzerland:"CH",be:"BE",belgium:"BE",no:"NO",norway:"NO",dk:"DK",denmark:"DK",fi:"FI",finland:"FI",ie:"IE",ireland:"IE",nz:"NZ",newzealand:"NZ",
+ sg:"SG",singapore:"SG",th:"TH",thailand:"TH",vn:"VN",vietnam:"VN",tw:"TW",taiwan:"TW",hk:"HK",hongkong:"HK",cn:"CN",china:"CN",pt:"PT",portugal:"PT",
+ ww:"WW",worldwide:"WW",global:"WW",latam:"LATAM",emea:"EMEA",apac:"APAC",eu:"EU",europe:"EU",t1:"Tier 1",tier1:"Tier 1",t2:"Tier 2",tier2:"Tier 2",t3:"Tier 3",tier3:"Tier 3"};
+const EMPTYV=/^(unknown|all|other|none|total|n\/?a|-+|\(not set\)|undefined)$/i;
+function geoVal(v){const s=String(v??"").trim();if(!s||EMPTYV.test(s))return null;return GEO[norm(s)]||s}
+function nameGeo(s){const t=String(s||"").split(/[^A-Za-z0-9]+/).filter(Boolean);
+  for(let i=0;i<t.length;i++){const w=t[i],l=w.toLowerCase();
+    if(i+1<t.length&&/^[A-Z]/.test(w)){const p=(w+t[i+1]).toLowerCase();if(p.length>5&&GEO[p])return GEO[p]}
+    if(w.length===2){if(w===w.toUpperCase()&&GEO[l])return GEO[l]}
+    else if(w.length>2&&GEO[l]&&/^[A-Z]/.test(w))return GEO[l]}
+  return null}
+function osVal(v){const s=String(v??"").trim(),l=s.toLowerCase();if(!s||EMPTYV.test(s))return null;
+  if(/facebook|instagram|messenger|audience|whatsapp|threads/.test(l))return null;
+  if(/ios|iphone|ipad|apple/.test(l))return"iOS";if(/android/.test(l))return"Android";
+  if(/desktop|computer|\bpc\b|web|windows|mac/.test(l))return"Desktop/Web";if(/tablet/.test(l))return"Tablet";
+  if(/mobile|phone/.test(l))return"Mobile";if(/\btv\b|ctv|connected/.test(l))return"CTV";return s}
+function nameOs(s){s=String(s||"");if(/(^|[^a-z])ios([^a-z]|$)/i.test(s))return"iOS";if(/android|(^|[^a-z])aos([^a-z]|$)/i.test(s))return"Android";
+  if(/(^|[^a-z])(desktop|web)([^a-z]|$)/i.test(s))return"Desktop/Web";return null}
+
+function toRows(table,map,channel,fileId){
+  const out=[],order=map.date!=null?dayOrder(table.map(r=>r[map.date])):"mdy";
+  const numCols=["spend","impressions","clicks","conv","revenue","frequency"].filter(f=>map[f]!=null);
+  const fmt=numFormat(table.slice(0,300).flatMap(r=>numCols.map(f=>r[map[f]])));
+  const micros=map.spend!=null&&/micros/.test(norm(table.headers?.[map.spend]||""));
+  for(const r of table){
+    const g=f=>map[f]!=null?r[map[f]]:undefined;
+    const camp=String(g("campaign")??"").trim(),adset=String(g("adset")??"").trim(),ad=String(g("ad")??"").trim();
+    const label=camp||adset||ad;
+    if(!label)continue;
+    if(/^(total|totals|grand total|summary)\b/i.test(label)||/^total:/i.test(label))continue;
+    const firstCell=String(r[0]??"");if(/^total/i.test(firstCell))continue;
+    let spend=num(g("spend"),fmt);if(micros)spend/=1e6;
+    const nm=camp+" "+adset;
+    const row={file:fileId,channel:map.channel!=null&&String(g("channel")??"").trim()?String(g("channel")).trim():channel,
+      campaign:camp||"(no campaign)",adset:adset||null,ad:ad||null,date:map.date!=null?parseDate(g("date"),order):null,
+      geo:(map.geo!=null?geoVal(g("geo")):null)||nameGeo(nm),os:(map.os!=null?osVal(g("os")):null)||nameOs(nm),
+      spend,impressions:num(g("impressions"),fmt),clicks:num(g("clicks"),fmt),conv:num(g("conv"),fmt),revenue:num(g("revenue"),fmt),
+      frequency:map.frequency!=null?num(g("frequency"),fmt)||null:null};
+    if(!row.spend&&!row.impressions&&!row.clicks&&!row.conv&&!row.revenue)continue;
+    out.push(row)}
+  return out}
+
+// ---- combine several files ----
+// files: [{id,name,role:"spend"|"conv",detail,hasRev,rows}] in upload order.
+// Spend files are stacked. Where two files cover the same channel + campaign + day, only one is used:
+// the more detailed file (ad set / ad / geo / OS breakdown), or the newest when equally detailed.
+// Conversion files (MMP, CRM) replace platform conversions on matching campaign (+ day) rows.
+function combine(files){
+  const stats={},kept=[],notes=[];
+  files.forEach(f=>stats[f.id]={total:f.rows.length,used:0,dropped:0,matched:0,unmatched:0,overBy:new Set()});
+  const spendF=files.filter(f=>f.role!=="conv"),convF=files.filter(f=>f.role==="conv");
+  const ck=r=>r.channel+"|"+norm(r.campaign)+"|"+(r.date||""),cc=r=>r.channel+"|"+norm(r.campaign);
+  const owner=new Map(),datedCamp=new Map();
+  spendF.forEach((f,i)=>f.rows.forEach(r=>{const k=ck(r),o=owner.get(k);
+    if(!o||f.detail>o.detail||(f.detail===o.detail&&i>o.i))owner.set(k,{i,detail:f.detail,id:f.id});
+    if(r.date){const c=cc(r);if(!datedCamp.has(c))datedCamp.set(c,new Set());datedCamp.get(c).add(f.id)}}));
+  spendF.forEach(f=>f.rows.forEach(r=>{const o=owner.get(ck(r));let keep=o.id===f.id,by=o.id;
+    if(keep&&!r.date){const ds=datedCamp.get(cc(r));const other=ds&&[...ds].find(id=>id!==f.id);if(other){keep=false;by=other}}
+    if(keep){kept.push(r);stats[f.id].used++}else{stats[f.id].dropped++;stats[f.id].overBy.add(by)}}));
+  if(convF.length&&kept.length){
+    const crow=convF.flatMap(f=>f.rows.map(r=>({r,f})));
+    const useDates=crow.every(x=>x.r.date)&&kept.filter(r=>r.date).length/kept.length>.9;
+    const hasRev=convF.some(f=>f.hasRev);
+    const idx=new Map();kept.forEach(r=>{const k=norm(r.campaign)+"|"+(useDates?r.date:"");if(!idx.has(k))idx.set(k,[]);idx.get(k).push(r)});
+    const ca=new Map();
+    for(const{r,f}of crow){const ch=chNorm(r.channel)||"*",k2=norm(r.campaign)+"|"+(useDates?r.date:""),k=ch+"|"+k2;
+      if(!ca.has(k))ca.set(k,{ch,k2,conv:0,rev:0,ids:new Set()});const c=ca.get(k);c.conv+=r.conv;c.rev+=r.revenue;c.ids.add(f.id)}
+    const touched=new Set();let uC=0,uConv=0;
+    for(const c of ca.values()){let g=idx.get(c.k2)||[];if(c.ch!=="*"){const g2=g.filter(r=>r.channel===c.ch);if(g2.length)g=g2}
+      if(!g.length){uC++;uConv+=c.conv;c.ids.forEach(id=>stats[id].unmatched++);continue}
+      c.ids.forEach(id=>stats[id].matched++);
+      g.forEach(r=>{if(!touched.has(r)){touched.add(r);r.platConv=r.conv;r.platRev=r.revenue;r.conv=0;if(hasRev)r.revenue=0;r.convSrc=true}});
+      const pc=g.reduce((a,r)=>a+r.platConv,0),ps=g.reduce((a,r)=>a+r.spend,0);
+      g.forEach(r=>{const w=pc>0?r.platConv/pc:ps>0?r.spend/ps:1/g.length;r.conv+=c.conv*w;if(hasRev)r.revenue+=c.rev*w})}
+    if(touched.size)notes.push(`Conversions${hasRev?" and revenue":""} from your conversions file replace platform-reported numbers on ${touched.size.toLocaleString("en-US")} matching spend rows (matched by campaign name${useDates?" and day":""}).`);
+    else notes.push("No campaign names in the conversions file match your spend files, so platform conversions are used. Campaign names need to be the same in both.");
+    const um=kept.filter(r=>!touched.has(r)&&r.spend>0).length;
+    if(touched.size&&um)notes.push(`${um.toLocaleString("en-US")} spend rows had no match in the conversions file and keep platform-reported conversions.`);
+    if(uC)notes.push(`${Math.round(uConv).toLocaleString("en-US")} conversions in the conversions file (${uC} campaign${useDates?"-days":"s"}) had no matching campaign in your spend files and are left out.`);
+  }else if(convF.length)notes.push("A conversions file needs at least one spend file to attach to.");
+  return{rows:kept,stats,notes}}
+
+function agg(rows){const a={spend:0,impressions:0,clicks:0,conv:0,revenue:0,fw:0,fi:0,n:rows.length};
+  for(const r of rows){a.spend+=r.spend;a.impressions+=r.impressions;a.clicks+=r.clicks;a.conv+=r.conv;a.revenue+=r.revenue;if(r.frequency){a.fw+=r.frequency*(r.impressions||1);a.fi+=(r.impressions||1)}}
+  a.cpa=a.conv>=.5?a.spend/a.conv:null;a.ctr=a.impressions?a.clicks/a.impressions:null;a.cpc=a.clicks?a.spend/a.clicks:null;a.cvr=a.clicks?a.conv/a.clicks:null;
+  a.roas=a.spend&&a.revenue?a.revenue/a.spend:null;a.freq=a.fi?a.fw/a.fi:null;return a}
+function dateList(rows){return[...new Set(rows.map(r=>r.date).filter(Boolean))].sort()}
+function addDays(s,n){const d=new Date(s+"T00:00:00");d.setDate(d.getDate()+n);return iso(d)}
+function periods(rows,range){const ds=dateList(rows);if(!ds.length||!range)return{cur:null,prev:null,days:ds};
+  const end=ds[ds.length-1],start=addDays(end,-(range-1)),pEnd=addDays(start,-1),pStart=addDays(start,-range);
+  const hasPrev=ds[0]<=pEnd;return{cur:[start,end],prev:hasPrev?[pStart,pEnd]:null,days:ds.filter(d=>d>=start)}}
+const inR=(r,p)=>p&&r.date&&r.date>=p[0]&&r.date<=p[1];
+function groupKey(r,by){const b=r.channel+" › "+r.campaign;
+  return by==="channel"?r.channel:by==="campaign"?b:by==="adset"?b+" › "+(r.adset||"—"):by==="geo"?r.channel+" › "+(r.geo||"Unknown"):by==="os"?r.channel+" › "+(r.os||"Unknown"):b+" › "+(r.adset||"—")+" › "+(r.ad||"—")}
+function breakdown(rows,by,per){const cur=per.cur?rows.filter(r=>inR(r,per.cur)):rows,prev=per.prev?rows.filter(r=>inR(r,per.prev)):[];
+  const m=new Map();for(const r of cur){const k=groupKey(r,by);if(!m.has(k))m.set(k,{key:k,channel:r.channel,campaign:r.campaign,adset:r.adset,ad:r.ad,cur:[],prev:[]});m.get(k).cur.push(r)}
+  for(const r of prev){const k=groupKey(r,by);if(m.has(k))m.get(k).prev.push(r)}
+  return[...m.values()].map(g=>{const a=agg(g.cur),b=agg(g.prev);return{...g,...a,prevCpa:b.cpa,cpaChg:a.cpa!=null&&b.cpa?a.cpa/b.cpa-1:null,spendChg:b.spend?a.spend/b.spend-1:null}})}
+function recommend(g,target,th){if(!target)return["—","hold"];th=th||{cut:1.2,scale:.85,minConv:3};
+  if(g.conv<.5&&g.spend>2*target)return["Fix","fix"];
+  if(g.cpa!=null&&g.cpa>target*th.cut)return["Fix","fix"];
+  if(g.cpa!=null&&g.cpa<=target*th.scale&&(g.roas==null||g.roas>=1)&&g.conv>=Math.min(3,th.minConv))return["Scale","scale"];
+  if(g.cpaChg!=null&&g.cpaChg>.25)return["Watch","watch"];
+  return["Hold","hold"]}
+function anomalies(rows,by){const ds=dateList(rows);if(ds.length<10)return[];
+  const end=ds[ds.length-1],recentStart=addDays(end,-2),baseStart=addDays(end,-16),baseEnd=addDays(end,-3),out=[];
+  const groups=new Map();for(const r of rows){if(!r.date||r.date<baseStart)continue;const k=groupKey(r,by);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)}
+  for(const[k,rs]of groups){const base=rs.filter(r=>r.date<=baseEnd),rec=rs.filter(r=>r.date>=recentStart);const ba=agg(base),ra=agg(rec);
+    if(ba.spend<=0||ra.spend<=0)continue;
+    const byDay=new Map();base.forEach(r=>{if(!byDay.has(r.date))byDay.set(r.date,[]);byDay.get(r.date).push(r)});
+    const daily=[...byDay.values()].map(agg).filter(a=>a.cpa!=null).map(a=>a.cpa);
+    const meta={key:k,channel:rs[0].channel,base:ba,rec:ra};
+    const fat=ra.freq!=null&&ba.freq!=null&&ra.freq>ba.freq*1.25&&ra.ctr!=null&&ba.ctr&&ra.ctr<ba.ctr*.85;
+    if(daily.length>=5&&ra.cpa!=null&&ba.cpa){const mu=daily.reduce((x,y)=>x+y,0)/daily.length,sd=Math.sqrt(daily.reduce((x,y)=>x+(y-mu)**2,0)/daily.length)||mu*.1;
+      const z=(ra.cpa-mu)/sd,chg=ra.cpa/ba.cpa-1;
+      if(z>2&&chg>.15){out.push({...meta,kind:"spike",sev:"bad",z,chg,fat});continue}
+      if(z<-2&&chg<-.15){out.push({...meta,kind:"drop",sev:"good",z,chg});continue}}
+    if(ba.conv>=5&&ra.conv<.5&&ra.spend>(ba.cpa||0)*2){out.push({...meta,kind:"zero",sev:"bad",z:9});continue}
+    if(fat)out.push({...meta,kind:"fatigue",sev:"warn",z:2,chg:ra.cpa&&ba.cpa?ra.cpa/ba.cpa-1:null})}
+  return out.sort((a,b)=>(b.base.spend+b.rec.spend)*Math.abs(b.z)-(a.base.spend+a.rec.spend)*Math.abs(a.z))}
+
+// ---- takeaways: 3-5 concrete conclusions ----
+// o: {range, target, targetAuto, convName, th (thresholds), exclude (Set of ids to skip), f:{m,n,a,x}}
+const DEF_TH={pause:1.75,cut:1.2,scale:.85,minConv:5,prior:3,elastic:.7};
+function focusPred(fc){if(!fc)return()=>true;if(fc.kind==="group")return r=>groupKey(r,fc.by)===fc.key;
+  const f=fc.f||{};return r=>Object.entries(f).every(([k,v])=>r[k]===v)}
+function attribution(rows,range){const per=periods(rows,range),cur=(per.cur?rows.filter(r=>inR(r,per.cur)):rows).filter(r=>r.convSrc),m=new Map();
+  for(const r of cur){if(!m.has(r.channel))m.set(r.channel,{channel:r.channel,plat:0,src:0,spend:0});const x=m.get(r.channel);x.plat+=r.platConv||0;x.src+=r.conv;x.spend+=r.spend}
+  return[...m.values()].filter(x=>x.plat>0&&x.src>0).map(x=>({...x,gap:x.plat/x.src-1}))}
+function insights(rows,o){
+  const f=o.f,th={...DEF_TH,...(o.th||{})},ex=o.exclude||new Set(),cn=String(o.convName||"conversions").toLowerCase(),per=periods(rows,o.range),cur=per.cur?rows.filter(r=>inR(r,per.cur)):rows,tot=agg(cur);
+  if(!tot.spend)return[];
+  if(tot.conv<.5)return[{id:"noconv",type:"investigate",sev:"bad",score:1,title:`No ${cn} in this data`,
+    text:`${f.m(tot.spend)} of spend but zero ${cn}. Check that the Conversions column is mapped (use “Check columns”), or add a conversions file.`}];
+  const T=o.target>0?o.target:tot.cpa,vs=o.targetAuto?"the account average":"your target",tw=o.targetAuto?"average":"target";
+  const nDays=per.cur?per.days.length:dateList(cur).length,pl=per.cur?`the last ${o.range} days`:nDays?`these ${nDays} days`:"this report",pw=per.cur?`${o.range} days`:nDays?`${nDays} days`:"period";
+  const day=s=>nDays?s/nDays:null,hasRev=tot.revenue>0,C=[],e=th.elastic;
+  const camps=breakdown(rows,"campaign",per),nm=g=>g.key.split(" › ").slice(1).join(" › "),minS=tot.spend*.02;
+  const sc=g=>(g.spend+th.prior*T)/(g.conv+th.prior); // low-volume adjusted CPA: pulls small samples toward the target
+  const cw=g=>[["Spend",f.m(g.spend)],[o.convName||"Conversions",f.n(g.conv)],["CPA",f.m(g.cpa)],["Low-volume adjusted CPA",f.m(sc(g))],[`Compared with (${tw})`,f.m(T)]]
+    .concat(g.prevCpa!=null?[["CPA in the previous period",f.m(g.prevCpa)]]:[]).concat(g.roas!=null?[["ROAS",f.x(g.roas)]]:[]);
+  const gf=g=>({kind:"group",by:"campaign",key:g.key,label:nm(g)});
+
+  // 1. campaign actions
+  for(const g of camps){if(g.spend<minS)continue;const name=nm(g),d=day(g.spend),roasOk=hasRev&&g.roas!=null&&g.roas>=1.2,base={key:g.key,channel:g.channel,focus:gf(g)};
+    if(!roasOk&&((g.conv<.5&&g.spend>=1.5*T)||(g.cpa!=null&&sc(g)>=th.pause*T))){
+      C.push({...base,id:"pause|"+g.key,type:"pause",sev:"bad",score:g.spend-g.conv*T,title:`Pause ${name}`,act:{kind:"group",key:g.key,factor:0},
+        text:(g.conv<.5?`Spent ${f.m(g.spend)} in ${pl} with no ${cn}.`:`CPA is ${f.m(g.cpa)}, ${f.a(g.cpa/T-1)} above ${vs} (${f.m(T)}), on ${f.m(g.spend)} spend.`)
+          +` Pause it, or drop it to a small test budget while you fix targeting and creatives.`,
+        impact:`${f.m(g.spend)} freed per ${pw}`,why:cw(g).concat([["Rule",`Adjusted CPA at least ${th.pause}× ${tw}, or no ${cn} after 1.5× ${tw} in spend`]])});continue}
+    if(!roasOk&&g.cpa!=null&&g.cpa>th.cut*T&&sc(g)>th.cut*T){const k=Math.max(.5,Math.min(.85,T/g.cpa)),cut=Math.round((1-k)*100);
+      C.push({...base,id:"cut|"+g.key,type:"cut",sev:"warn",score:g.spend-g.conv*T,title:`Cut budget on ${name}`,act:{kind:"group",key:g.key,factor:k},
+        text:`CPA is ${f.m(g.cpa)}, ${f.a(g.cpa/T-1)} above ${vs} (${f.m(T)}). `+(d?`Lower daily spend from ~${f.m(d)} to ~${f.m(d*k)} (−${cut}%)`:`Lower its budget about ${cut}%`)+` and move that money to campaigns under ${tw}.`,
+        impact:`~${f.m(g.spend*(1-k))} less spend per ${pw}`,why:cw(g).concat([["Rule",`CPA more than ${th.cut}× ${tw}; budget cut sized so spend matches what ${tw} CPA would justify (max −50%)`]])});continue}
+    if(g.cpa!=null&&g.cpa<=th.scale*T&&sc(g)<=th.scale*T&&g.conv>=th.minConv&&(!hasRev||g.roas==null||g.roas>=1)&&(g.cpaChg==null||g.cpaChg<.15)){
+      const up=g.cpa<=.65*T?.3:.2,upP=Math.round(up*100),extra=g.conv*((1+up)**e-1);
+      C.push({...base,id:"scale|"+g.key,type:"scale",sev:"good",score:g.conv*(T-g.cpa)*.8,title:`Scale ${name}`,act:{kind:"group",key:g.key,factor:1+up},
+        text:`CPA is ${f.m(g.cpa)}, ${f.a(1-g.cpa/T)} below ${vs}, on ${f.n(g.conv)} ${cn}${g.roas!=null?` (ROAS ${f.x(g.roas)})`:""}. `+(d?`Raise daily budget from ~${f.m(d)} to ~${f.m(d*(1+up))} (+${upP}%)`:`Raise its budget about ${upP}%`)+`, then check CPA after 3–4 days.`,
+        impact:`~+${f.n(extra)} ${cn} per ${pw} (with diminishing returns)`,why:cw(g).concat([["Expected extra "+cn,`+${f.n(extra)}, assuming results grow slower than spend (elasticity ${e})`],["Rule",`CPA at most ${th.scale}× ${tw}, ${th.minConv}+ ${cn}, CPA not rising`]])})}}
+
+  // 2. segment patterns across channel × country × OS
+  const dims=["channel","geo","os"].filter(dm=>{const v=new Map();cur.forEach(r=>{if(r[dm])v.set(r[dm],(v.get(r[dm])||0)+r.spend)});let cov=0;v.forEach(x=>cov+=x);return v.size>=2&&cov>=tot.spend*.5});
+  const combos=[];for(let m=1;m<1<<dims.length;m++){const c=dims.filter((_,i)=>m>>i&1);if(!(c.length===1&&c[0]==="channel"))combos.push(c)}
+  const pats=[];
+  for(const c of combos){const segs=new Map();for(const r of cur){if(c.some(dm=>!r[dm]))continue;const k=c.map(dm=>r[dm]).join("\u0001");if(!segs.has(k))segs.set(k,[]);segs.get(k).push(r)}
+    for(const[k,rs]of segs){const a=agg(rs),share=a.spend/tot.spend;if(share<.08||share>.6||a.conv<th.minConv)continue;
+      const rc=tot.conv-a.conv;if(rc<5)continue;const rest=(tot.spend-a.spend)/rc,diff=a.cpa/rest-1,good=diff<=-.25,bad=diff>=.3;if(!good&&!bad)continue;
+      const byC=new Map();rs.forEach(r=>{const x=groupKey(r,"campaign");if(!byC.has(x))byC.set(x,[]);byC.get(x).push(r)});
+      const cs=[...byC.entries()].map(([x,y])=>({x,a:agg(y)})).filter(z=>z.a.spend>=a.spend*.05),n=cs.length;if(n<2)continue;
+      const cons=cs.filter(z=>good?(z.a.cpa!=null&&z.a.cpa<rest):(z.a.cpa==null||z.a.cpa>rest)).length;if(cons/n<.75)continue;
+      const vals=k.split("\u0001"),ov={};c.forEach((dm,i)=>ov[dm]=vals[i]);
+      pats.push({good,diff,a,rest,share,n,cons,ov,c,cs,set:new Set(cs.map(z=>z.x)),score:Math.abs(diff)*a.spend*(cons/n)**2*(.25+.05*c.length)*(good?1.5:1)})}}
+  pats.sort((x,y)=>y.score-x.score);
+  const ovl=(a,b)=>{let i=0;a.forEach(x=>{if(b.has(x))i++});return i/Math.min(a.size,b.size)},picked=[];
+  for(const p of pats){if(picked.some(q=>q.good===p.good&&ovl(q.set,p.set)>=.8))continue;picked.push(p)}
+  for(const p of picked){const lab=[p.ov.os,p.ov.geo].filter(Boolean).join(" · "),on=p.ov.channel?` on ${p.ov.channel}`:"",
+      who=p.cons===p.n?(p.n===2?"Both":"All "+p.n):p.cons+" of "+p.n,sh=Math.round(p.share*100);
+    C.push({id:"pat|"+p.c.map(d=>p.ov[d]).join("|"),type:"pattern",sev:p.good?"good":"bad",score:p.score,focus:{kind:"seg",f:p.ov,label:lab+on},
+      title:p.good?`${lab}${on} beats the rest of the account`:`${lab}${on} is dragging CPA up`,
+      text:`${who} ${lab} campaigns${on} run at ${f.m(p.a.cpa)} CPA, ${f.a(p.diff)} ${p.good?"below":"above"} the rest of the account (${f.m(p.rest)}), on ${sh}% of spend. `
+        +(p.good?`Shift budget here first and use these campaigns as the template for new ones.`:`Review bids, creatives and targeting here before adding budget anywhere in this segment.`),
+      impact:`${sh}% of spend`,
+      why:[["Segment CPA",f.m(p.a.cpa)],["Rest of account CPA",f.m(p.rest)],["Share of spend",sh+"%"]]
+        .concat(p.cs.sort((a,b)=>b.a.spend-a.a.spend).slice(0,6).map(z=>[z.x.split(" › ").slice(1).join(" › "),`${f.m(z.a.cpa)} CPA · ${f.m(z.a.spend)}`]))
+        .concat([["Rule","Segment CPA 25%+ better (or 30%+ worse) than the rest, and at least 3 of 4 of its campaigns agree"]])})}
+
+  // 3. channel mix
+  if(dims.includes("channel")){const ch=breakdown(rows,"channel",per).filter(g=>g.conv>=th.minConv&&g.cpa!=null).sort((a,b)=>a.cpa-b.cpa);
+    if(ch.length>=2){const b=ch[0],w=ch[ch.length-1],r=w.cpa/b.cpa;
+      if(r>=1.35&&w.spend/tot.spend>=.15){const mv=w.spend*.15;
+        C.push({id:"shift|"+w.channel+"|"+b.channel,type:"shift",sev:"warn",score:mv*(r-1),title:`Move budget from ${w.channel} to ${b.channel}`,
+          focus:{kind:"seg",f:{channel:w.channel},label:w.channel},act:{kind:"shift",from:w.channel,to:b.channel,amount:mv,T},
+          text:`${w.channel} CPA is ${f.m(w.cpa)}, ${f.a(r-1)} higher than ${b.channel} (${f.m(b.cpa)}). Move ~15% of ${w.channel} spend`+(nDays?` (~${f.m(mv/nDays)}/day)`:"")+` into ${b.channel} campaigns that are under ${tw}.`,
+          impact:`~+${f.n(mv/b.cpa-mv/w.cpa)} ${cn} per ${pw}`,
+          why:ch.map(g=>[g.channel,`${f.m(g.cpa)} CPA · ${f.m(g.spend)} spend`]).concat([["Rule","Worst channel CPA 35%+ above the best, with 15%+ of spend"]])})}}}
+
+  // 4. platform vs conversions-file gap
+  for(const x of attribution(rows,o.range))if(Math.abs(x.gap)>=.3)
+    C.push({id:"attr|"+x.channel,type:"note",sev:"warn",score:x.spend*Math.abs(x.gap)*.3,title:`${x.channel} ${x.gap>0?"over":"under"}-reports ${cn} by ${f.a(x.gap)}`,
+      focus:{kind:"seg",f:{channel:x.channel},label:x.channel},
+      text:`On matched campaigns, ${x.channel} reports ${f.n(x.plat)} ${cn} vs ${f.n(x.src)} in your conversions file. Judge ${x.channel} on your file's numbers, and check its attribution window before trusting in-platform CPA.`,
+      why:[["Platform-reported",f.n(x.plat)],["Conversions file",f.n(x.src)],["Spend on matched rows",f.m(x.spend)]]});
+
+  // 5. recent anomalies
+  for(const a of anomalies(rows,"campaign").slice(0,4)){const name=a.key.split(" › ").slice(1).join(" › "),wk=a.rec.spend/3*7,
+      base={key:a.key,channel:a.channel,focus:{kind:"group",by:"campaign",key:a.key,label:name}},
+      why=[["Last 3 days CPA",f.m(a.rec.cpa)],["Previous 14 days CPA",f.m(a.base.cpa)],["Last 3 days spend",f.m(a.rec.spend)]]
+        .concat(a.rec.freq!=null?[["Frequency (3d vs 14d)",`${a.rec.freq.toFixed(1)} vs ${a.base.freq.toFixed(1)}`]]:[]).concat(a.rec.ctr!=null&&a.base.ctr?[["CTR (3d vs 14d)",`${(a.rec.ctr*100).toFixed(2)}% vs ${(a.base.ctr*100).toFixed(2)}%`]]:[]);
+    if(a.kind==="drop"){C.push({...base,id:"up|"+a.key,type:"note",sev:"good",score:wk*.1,title:`${name} is improving`,why,
+      text:`CPA is ${f.a(a.chg)} better over the last 3 days than its 14-day baseline (${f.m(a.base.cpa)} → ${f.m(a.rec.cpa)}). If it holds a few more days, give it more budget.`});continue}
+    if(a.kind==="zero"){C.push({...base,id:"zero|"+a.key,type:"investigate",sev:"bad",score:wk,title:`Check tracking on ${name}`,why,
+      text:`${f.m(a.rec.spend)} spent in the last 3 days with no ${cn}, after ${f.n(a.base.conv)} in the 2 weeks before. Check the pixel or SDK, the landing page and any recent edits.`,impact:`~${f.m(wk)}/week at risk`});continue}
+    const fat=a.kind==="fatigue"||a.fat;
+    C.push({...base,id:"anom|"+a.key,type:"investigate",sev:"bad",score:wk*Math.min(1,Math.abs(a.chg||.3))*.6,why,
+      title:fat?`Refresh creatives in ${name}`:`Check what changed in ${name}`,
+      text:fat?`Frequency rose to ${a.rec.freq.toFixed(1)} and CTR fell ${f.a(a.rec.ctr/a.base.ctr-1)} in the last 3 days${a.chg!=null?`, and CPA is ${f.a(a.chg)} ${a.chg>=0?"above":"below"} its 14-day baseline`:""}. Rotate in new creatives or widen the audience.`
+        :`CPA jumped ${f.a(a.chg)} in the last 3 days vs its 14-day baseline (${f.m(a.base.cpa)} → ${f.m(a.rec.cpa)}). Look for recent bid, budget, audience or creative changes.`,
+      impact:`~${f.m(wk)}/week affected`})}
+
+  // pick: best of each kind first (variety), then fill by score; one conclusion per campaign; max 5; skip done/dismissed/snoozed
+  const kind=c=>c.type==="pattern"?"pattern-"+c.sev:c.type,CAP={pause:2,cut:2,scale:2,"pattern-good":1,"pattern-bad":1,investigate:2,shift:1,note:1};
+  const pool=C.filter(c=>!ex.has(c.id)).sort((a,b)=>b.score-a.score);
+  const out=[],keys=new Set(),cnt={};
+  const can=c=>!out.includes(c)&&!(c.key&&keys.has(c.key))&&(cnt[kind(c)]||0)<(CAP[kind(c)]||1);
+  const take=c=>{out.push(c);if(c.key)keys.add(c.key);cnt[kind(c)]=(cnt[kind(c)]||0)+1};
+  const firsts=[],seen=new Set();for(const c of pool){const k=kind(c);if(k!=="note"&&!seen.has(k)){seen.add(k);firsts.push(c)}}
+  for(const c of firsts.slice(0,5))if(can(c))take(c);
+  for(const c of pool){if(out.length>=5)break;if(can(c))take(c)}
+  const fill=c=>{if(out.length<3&&!ex.has(c.id)&&!(c.key&&keys.has(c.key)))take(c)};
+  if(out.length<3){const best=camps.filter(g=>g.cpa!=null&&g.conv>=3).sort((a,b)=>a.cpa-b.cpa)[0];
+    if(best&&best.cpa<T)fill({key:best.key,channel:best.channel,focus:gf(best),id:"best|"+best.key,type:"note",sev:"good",score:0,title:`Best CPA: ${nm(best)}`,why:cw(best),
+      text:`${f.m(best.cpa)} CPA on ${f.n(best.conv)} ${cn}, ${f.a(1-best.cpa/T)} below ${vs}. Keep it fully funded before testing elsewhere.`});
+    const top=[...camps].sort((a,b)=>b.spend-a.spend)[0];
+    if(top&&top.spend/tot.spend>=.4)fill({key:top.key,channel:top.channel,focus:gf(top),id:"conc|"+top.key,type:"note",sev:"warn",score:0,title:`${nm(top)} carries the account`,why:cw(top),
+      text:`It takes ${Math.round(top.spend/tot.spend*100)}% of spend in ${pl}. If it slips, everything slips; start testing a second campaign that can take budget.`});
+    const band=camps.filter(g=>g.cpa!=null&&Math.abs(g.cpa/T-1)<=.2).reduce((s,g)=>s+g.spend,0);
+    fill({id:"band",type:"note",sev:"good",score:0,title:"Most spend is on track",
+      text:`${Math.round(band/tot.spend*100)}% of spend in ${pl} is in campaigns within 20% of ${vs} (${f.m(T)}). No big budget moves needed; keep a steady flow of new creative tests.`})}
+  return out.sort((a,b)=>b.score-a.score)}
+
+// ---- what-if: apply the suggested budget moves. Results scale as (new spend / old spend)^elasticity ----
+function simulate(rows,o,list){const per=periods(rows,o.range),camps=breakdown(rows,"campaign",per),e=(o.th&&o.th.elastic)||DEF_TH.elastic;
+  const sp=new Map(camps.map(g=>[g.key,g.spend]));let moves=0;
+  for(const i of list){const a=i.act;if(!a)continue;moves++;
+    if(a.kind==="group"&&sp.has(a.key))sp.set(a.key,sp.get(a.key)*a.factor);
+    if(a.kind==="shift"){const from=camps.filter(g=>g.channel===a.from),fs=from.reduce((s,g)=>s+sp.get(g.key),0);
+      let to=camps.filter(g=>g.channel===a.to&&g.cpa!=null&&g.cpa<=a.T);if(!to.length)to=camps.filter(g=>g.channel===a.to);const ts=to.reduce((s,g)=>s+sp.get(g.key),0);
+      if(fs>0&&ts>0){const mv=Math.min(a.amount,fs);from.forEach(g=>sp.set(g.key,sp.get(g.key)-mv*sp.get(g.key)/fs));to.forEach(g=>sp.set(g.key,sp.get(g.key)+mv*sp.get(g.key)/ts))}}}
+  const b={spend:0,conv:0},n={spend:0,conv:0};
+  for(const g of camps){const s2=sp.get(g.key);b.spend+=g.spend;b.conv+=g.conv;n.spend+=s2;n.conv+=g.spend>0?g.conv*Math.pow(s2/g.spend,e):0}
+  b.cpa=b.conv?b.spend/b.conv:null;n.cpa=n.conv?n.spend/n.conv:null;return{before:b,after:n,moves}}
+
+// ---- heatmap: CPA by two dimensions (channel, os, channel+os, geo) ----
+function heatmap(rows,range,rd,cd){const per=periods(rows,range),cur=per.cur?rows.filter(r=>inR(r,per.cur)):rows,tot=agg(cur);
+  const val=(r,d)=>d==="channel+os"?(r.os?r.channel+" · "+r.os:null):r[d]||null;
+  const filt=(d,v)=>d==="channel+os"?{channel:v.split(" · ")[0],os:v.split(" · ").slice(1).join(" · ")}:{[d]:v};
+  const rs=new Map(),cs=new Map(),cells=new Map();
+  for(const r of cur){const a=val(r,rd),b=val(r,cd);if(!a||!b)continue;rs.set(a,(rs.get(a)||0)+r.spend);cs.set(b,(cs.get(b)||0)+r.spend);const k=a+"\u0001"+b;if(!cells.has(k))cells.set(k,[]);cells.get(k).push(r)}
+  const top=(m,n)=>[...m.entries()].sort((x,y)=>y[1]-x[1]).slice(0,n).map(x=>x[0]);
+  return{avg:tot.cpa,rows:top(rs,12),cols:top(cs,8),cell:(a,b)=>{const x=cells.get(a+"\u0001"+b);return x?agg(x):null},filter:(a,b)=>({...filt(rd,a),...filt(cd,b)})}}
+
+function series(rows,days,metric,dims){const out={};for(const c of dims){out[c]=days.map(d=>{const a=agg(rows.filter(r=>r.date===d&&r.channel===c));
+  return metric==="cpa"?a.cpa:metric==="spend"?a.spend:metric==="conv"?a.conv:metric==="roas"?a.roas:a.ctr!=null?a.ctr*100:null})}return out}
+function parseCSV(text){const delim=(()=>{const l=text.split(/\r?\n/).slice(0,10).join("\n");const c={",":(l.match(/,/g)||[]).length,";":(l.match(/;/g)||[]).length,"\t":(l.match(/\t/g)||[]).length};return Object.entries(c).sort((a,b)=>b[1]-a[1])[0][0]})();
+  const rows=[];let row=[],f="",q=false;for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=ch}
+    else if(ch==='"')q=true;else if(ch===delim){row.push(f);f=""}else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&text[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f=""}else f+=ch}
+  if(f!==""||row.length){row.push(f);rows.push(row)}return rows.filter(r=>r.some(c=>String(c).trim()!==""))}
+
+// ---- sample data: 3 platforms + an overlapping Google re-export (to show de-duplication) ----
+function sample(){let s=7;const rnd=()=>{s=(s*16807)%2147483647;return(s-1)/2147483646};const end=new Date();end.setDate(end.getDate()-1);
+  const gh=["Campaign","Day","Cost","Impr.","Clicks","Conversions","Conv. value"];
+  const G=[gh],G2=[gh],M=[["Campaign name","Ad set name","Reporting starts","Amount spent (USD)","Impressions","Link clicks","Results","Purchases conversion value","Frequency"]],
+    T=[["Campaign name","By Day","Cost","Impressions","Clicks","Conversions","Total complete payment value"]];
+  // [sheet, campaign, ad set, CPA, daily spend, CTR, CPC, value per conv, frequency, mode]
+  const camps=[["G","Search – Brand – US",null,1.3,170,.08,.85,3.6],["G","App – iOS – US – tCPA",null,1.7,520,.03,.6,3.4],["G","App – iOS – US – Broad",null,1.9,360,.028,.55,3.2],
+    ["G","App – Android – US",null,3.0,420,.025,.4,2.4],["G","Search – Competitors – DE",null,8.5,190,.035,1.6,2.0],
+    ["M","Prospecting – iOS – US","LAL 3%",2.5,700,.014,.62,2.9,1.9,"fatigue"],["M","Prospecting – Android – BR","Broad 18-44",4.0,520,.015,.35,1.6,1.7],["M","Retargeting – US","Site visitors 30d",1.9,240,.022,.7,3.8,3.1],
+    ["T","Spark Ads – iOS – US",null,2.6,380,.019,.38,2.6,null,"improve"],["T","In-Feed – Android – BR",null,4.6,400,.011,.3,1.5]];
+  for(let d=41;d>=0;d--){const dt=new Date(end);dt.setDate(end.getDate()-d);const ds=iso(dt),i=41-d;
+    camps.forEach(([sh,c,as,cpa,sp,ctr,cpc,arpu,fr,mode])=>{let k=cpa*(1+(rnd()-.5)*.16),spend=sp*(1+(rnd()-.5)*.2),ct=ctr*(1+(rnd()-.5)*.1),fq=fr?fr*(1+(rnd()-.5)*.06)+i*.004:null;
+      if(mode==="fatigue"&&d<5){const j=5-d;k*=1+.14*j;ct*=1-.06*j;fq=fr+.55*j}if(mode==="improve")k*=1-.011*i;
+      const conv=Math.max(0,Math.round(spend/k)),clk=Math.round(spend/(cpc*(1+(rnd()-.5)*.12))),impr=Math.round(clk/ct),rev=+(conv*arpu*(1+(rnd()-.5)*.2)).toFixed(2);
+      if(sh==="G"){const row=[c,ds,spend.toFixed(2),impr,clk,conv,rev];G.push(row);if(d<10)G2.push(row)}
+      else if(sh==="M")M.push([c,as,ds,spend.toFixed(2),impr,clk,conv,rev,fq.toFixed(2)]);else T.push([c,ds,spend.toFixed(2),impr,clk,conv,rev])})}
+  return[["Sample – Google Ads campaign report.csv",G],["Sample – Meta ads export.csv",M],["Sample – TikTok campaign report.csv",T],["Sample – Google Ads last 10 days (re-export).csv",G2]]}
+
+return{DEF_TH,focusPred,attribution,simulate,heatmap,geoVal,osVal,nameGeo,nameOs,FIELDS,autoMap,findHeaderRow,detectChannel,num,parseDate,toRows,combine,agg,dateList,periods,breakdown,recommend,anomalies,insights,series,parseCSV,inR,addDays,groupKey,sample};
+})();
+if(typeof module!=="undefined")module.exports=ENGINE;
+// ===== ENGINE END =====
+</script>
+
+<script>
+(function(){
+if(typeof document==="undefined")return;
+const E=ENGINE,$=id=>document.getElementById(id);
+const COLORS=["--c1","--c2","--c3","--c4","--c5"];
+let FILES=[],ROWS=[],STATS={},NOTES=[],range=null,HIDDEN=new Set(),sortKey="spend",sortDir=-1,isSample=false,tgtTouched=false,FOCUS=null;
+let curr="$",mixed=null,PREV=null,NEW=new Set(),UPD="",pendingUpload=null,LAST_INS=[],CARDS={},RATES={},restored="",AISUM="";
+let SET={th:{...E.DEF_TH},model:"claude-sonnet-5-5"};
+let KEY="";try{KEY=localStorage.getItem("adcopilot.key")||""}catch(e){}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const m$=v=>v==null?"–":curr+(Math.abs(v)>=1000?Math.round(v).toLocaleString("en-US"):v.toFixed(2));
+const mN=v=>v==null?"–":Math.round(v).toLocaleString("en-US");
+const pct=v=>v==null||!isFinite(v)?"–":Math.abs(v)<.005?"0%":(v>0?"+":"")+(v*100).toFixed(0)+"%";
+const pc2=v=>v==null?"–":(v*100).toFixed(2)+"%";
+const x2=v=>v==null?"–":v.toFixed(2)+"×";
+const FMT={m:v=>v==null?"–":Math.abs(v)>=100?curr+Math.round(v).toLocaleString("en-US"):m$(v),n:mN,a:v=>Math.round(Math.abs(v)*100)+"%",x:x2};
+const chColor=c=>{const list=[...new Set(ROWS.map(r=>r.channel))].sort();return`var(${COLORS[Math.max(0,list.indexOf(c))%COLORS.length]})`};
+const CN=()=>($("convName").value.trim()||"Conversions");
+const defRole=f=>f.map.spend==null&&(f.map.conv!=null||f.map.revenue!=null)?"conv":"spend";
+const nameOf=id=>(FILES.find(f=>f.id===id)||{}).name||"another file";
+const lastDate=()=>E.dateList(ROWS).at(-1)||null;
+
+// ---------- persistence (IndexedDB, stays on this computer) ----------
+const DB={open(){return new Promise((res,rej)=>{const q=indexedDB.open("ad-copilot",1);q.onupgradeneeded=()=>q.result.createObjectStore("kv");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})},
+  async get(k){try{const db=await this.open();return await new Promise(res=>{const t=db.transaction("kv").objectStore("kv").get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>res(null)})}catch(e){return null}},
+  async set(k,v){try{const db=await this.open();await new Promise(res=>{const t=db.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res})}catch(e){}}};
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(()=>DB.set("ws",{v:2,files:FILES.map(f=>({id:f.id,name:f.name,headers:f.headers,body:Array.from(f.body),map:f.map,channel:f.channel,role:f.role,roleSet:!!f.roleSet,sample:!!f.sample})),
+  isSample,range,tgt:tgtTouched?$("tgt").value:null,convName:$("convName").value,hidden:[...HIDDEN],cards:CARDS,set:SET,rates:RATES,prev:PREV?[...PREV]:null}),400)}
+async function restore(){const s=await DB.get("ws");
+  if(s&&s.set)SET={...SET,...s.set,th:{...E.DEF_TH,...(s.set.th||{})}};
+  if(!s||!s.files||!s.files.length){renderFiles();render();return}
+  FILES=s.files.map(f=>{const body=f.body;body.headers=f.headers;return{...f,body}});
+  isSample=!!s.isSample;range=s.range??null;HIDDEN=new Set(s.hidden||[]);CARDS=s.cards||{};RATES=s.rates||{};PREV=s.prev?new Set(s.prev):null;
+  if(s.tgt){tgtTouched=true;$("tgt").value=s.tgt}if(s.convName)$("convName").value=s.convName;
+  restored=`Restored your last session (${FILES.length} file${FILES.length>1?"s":""}). Use “Clear all” to start fresh.`;
+  rebuild();renderFiles()}
+
+// ---------- import ----------
+function parseText(text){if(text.length<1.5e6||typeof Worker==="undefined")return Promise.resolve(E.parseCSV(text));
+  return new Promise(res=>{try{const w=new Worker(URL.createObjectURL(new Blob([`const parseCSV=${E.parseCSV.toString()};onmessage=e=>postMessage(parseCSV(e.data))`],{type:"text/javascript"})));
+    w.onmessage=e=>{w.terminate();res(e.data)};w.onerror=ev=>{ev.preventDefault();w.terminate();res(E.parseCSV(text))};w.postMessage(text)}catch(e){res(E.parseCSV(text))}})}
+async function readFile(file){const name=file.name;
+  if(/\.(xlsx|xls)$/i.test(name)){if(typeof XLSX==="undefined")throw new Error("Excel support needs an internet connection to load. Save the sheet as CSV, or connect and reload.");
+    const wb=XLSX.read(await file.arrayBuffer(),{cellDates:true});return wb.SheetNames.map(sn=>({name:wb.SheetNames.length>1?name+" · "+sn:name,rows:XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:""})})).filter(s=>s.rows.length>1)}
+  let text=await file.text();if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  if(/\u0000/.test(text.slice(0,200))){const buf=await file.arrayBuffer();text=new TextDecoder("utf-16le").decode(buf).replace(/^﻿/,"")}
+  return[{name,rows:await parseText(text)}]}
+function addSheet(name,rows){const h=E.findHeaderRow(rows),headers=rows[h].map(x=>String(x??"").trim()),body=rows.slice(h+1);body.headers=headers;
+  const map=E.autoMap(headers),f={id:Math.random().toString(36).slice(2),name,headers,body,map,channel:E.detectChannel(headers,name)};f.role=defRole(f);FILES.push(f)}
+async function handle(list){const errs=[],names=[];$("busy").hidden=false;
+  if(isSample){isSample=false;FILES=FILES.filter(f=>!f.sample);PREV=null;CARDS={}}
+  for(const f of list){try{(await readFile(f)).forEach(s=>{addSheet(s.name,s.rows);names.push(s.name)})}catch(e){errs.push(f.name+": "+e.message)}}
+  $("busy").hidden=true;restored="";
+  if(names.length)pendingUpload=names;
+  rebuild();renderFiles(errs)}
+const curOf=f=>{const h=(f.headers[f.map.spend]||"")+" "+(f.headers.includes("Currency code")?String(f.body[0]?.[f.headers.indexOf("Currency code")]||""):"");return/€|eur/i.test(h)?"€":/£|gbp/i.test(h)?"£":/₪|ils/i.test(h)?"₪":"$"};
+function rebuild(){
+  const sp0=FILES.filter(f=>f.role!=="conv");sp0.forEach(f=>f.curr=curOf(f));
+  const cnt=c=>sp0.filter(f=>f.curr===c).length,cs=[...new Set(sp0.map(f=>f.curr))].sort((a,b)=>cnt(b)-cnt(a));curr=cs[0]||"$";mixed=cs.length>1?cs:null;
+  const prepared=FILES.map(f=>{const rows=E.toRows(f.body,f.map,f.channel,f.id),rt=f.role!=="conv"&&f.curr!==curr?+RATES[f.curr]||0:0;
+    if(rt>0)rows.forEach(r=>{r.spend*=rt;r.revenue*=rt});
+    return{id:f.id,name:f.name,role:f.role,hasRev:f.map.revenue!=null,detail:["adset","ad","geo","os"].filter(k=>f.map[k]!=null).length,rows}});
+  const res=E.combine(prepared);ROWS=res.rows;STATS=res.stats;NOTES=res.notes;
+  const days=E.dateList(ROWS).length;if(range==null||range>days)range=days>=14?7:0;
+  if(!tgtTouched){const t=E.agg(ROWS);$("tgt").value=t.cpa?(Math.round(t.cpa*100)/100).toFixed(2):""}
+  if(FOCUS&&!ROWS.some(E.focusPred(FOCUS)))FOCUS=null;
+  render();save()}
+function sampleVal(f,i){for(const r of f.body.slice(0,30)){const v=r[i];if(v!==""&&v!=null)return v instanceof Date?v.toISOString().slice(0,10):String(v).slice(0,28)}return""}
+function renderFiles(errs=[]){
+  $("clearBtn").hidden=!FILES.length;
+  const anyDrop=FILES.some(f=>STATS[f.id]?.dropped);
+  const rateIn=mixed?mixed.filter(c=>c!==curr).map(c=>`<label>1 ${esc(c)} = <input type="number" step="0.0001" min="0" data-rate="${esc(c)}" value="${esc(RATES[c]??"")}" style="width:90px"> ${esc(curr)}</label>`).join(" "):"";
+  const conv=mixed&&mixed.filter(c=>c!==curr).every(c=>+RATES[c]>0);
+  $("files").innerHTML=(restored?`<p class="note">${esc(restored)}</p>`:"")
+    +(mixed?`<div class="${conv?"mixnote":"warnbox"}"><p>${conv?`Converted to ${esc(curr)} at your rates.`:`Your files use different currencies (${mixed.join(", ")}). Enter a rate to convert everything to ${esc(curr)}; until then those files are added as-is.`}</p><p class="rates">${rateIn}</p></div>`:"")
+    +(errs.length?`<p class="err">${errs.map(esc).join("<br>")}</p>`:"")
+    +(NOTES.length||anyDrop?`<div class="mixnote">${anyDrop?`<p>Files overlap for some campaigns and days. Each campaign-day is counted once: from the more detailed file (ad set, ad, country or OS breakdown), or the newest upload when equally detailed.</p>`:""}${NOTES.map(n=>`<p>${esc(n)}</p>`).join("")}</div>`:"")
+    +FILES.map(f=>{const st=STATS[f.id]||{used:0,dropped:0,matched:0,unmatched:0,overBy:new Set()},cv=f.role==="conv";
+    const line=cv?`${mN(st.matched)} campaign${f.map.date!=null?"-days":"s"} matched to spend${st.unmatched?` · ${mN(st.unmatched)} unmatched`:""}`
+      :`${mN(st.used)} rows used of ${mN(f.body.length)}${st.dropped?` · ${mN(st.dropped)} overlap with ${[...st.overBy].map(nameOf).map(esc).join(", ")} and are counted there`:""}`;
+    const missing=(cv?["campaign","conv"]:["campaign","spend"]).filter(k=>f.map[k]==null).concat(f.map.date==null?["date"]:[]);
+    return`<div class="file" data-id="${f.id}"><div class="fh"><span><b>${esc(f.name)}</b> <span class="sub">· ${line}</span></span>
+    <span class="controls"><label class="sub" for="rl-${f.id}">Use as</label><select id="rl-${f.id}" data-act="role"><option value="spend" ${cv?"":"selected"}>Spend + results</option><option value="conv" ${cv?"selected":""}>Conversions only (MMP / CRM)</option></select>
+    ${cv?"":`<label class="sub" for="ch-${f.id}">Channel</label><select id="ch-${f.id}" data-act="channel">${["Google Ads","Meta","TikTok","LinkedIn","Other"].map(c=>`<option ${c===f.channel?"selected":""}>${c}</option>`).join("")}</select>`}
+    <button class="btn" type="button" data-act="toggle">${f.open?"Hide columns":"Check columns"}</button><button class="btn" type="button" data-act="remove">Remove</button></span></div>
+    ${missing.length?`<div class="note" style="color:var(--warn)">Not found: ${missing.join(", ")}. ${missing.includes("date")&&!cv?"Without a date column you get totals but no trend or anomaly alerts. ":""}Use “Check columns” to map them.</div>`:""}
+    <div class="maps" ${f.open?"":"hidden"}>${E.FIELDS.map(([k,l])=>`<label class="${f.map[k]==null&&["campaign","spend","date","conv"].includes(k)?"miss":""}">${l}<select data-field="${k}"><option value="">— none —</option>${f.headers.map((h,i)=>`<option value="${i}" ${f.map[k]===i?"selected":""}>${esc(h||"(column "+(i+1)+")")}</option>`).join("")}</select><span class="samp">${f.map[k]!=null?"e.g. "+esc(sampleVal(f,f.map[k])):""}</span></label>`).join("")}</div></div>`}).join("");
+}
+$("files").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b||b.tagName==="SELECT")return;const f=FILES.find(x=>x.id===b.closest(".file").dataset.id);
+  if(b.dataset.act==="remove"){FILES=FILES.filter(x=>x!==f);PREV=null;NEW=new Set();UPD="";if(!FILES.length){range=null;isSample=false}rebuild()}else{f.open=!f.open}renderFiles()});
+$("files").addEventListener("change",e=>{const s=e.target;
+  if(s.dataset.rate){RATES[s.dataset.rate]=s.value;rebuild();renderFiles();return}
+  const f=FILES.find(x=>x.id===s.closest(".file")?.dataset.id);if(!f)return;
+  if(s.dataset.act==="channel")f.channel=s.value;else if(s.dataset.act==="role"){f.role=s.value;f.roleSet=true}
+  else if(s.dataset.field){if(s.value==="")delete f.map[s.dataset.field];else f.map[s.dataset.field]=+s.value;if(!f.roleSet)f.role=defRole(f)}
+  rebuild();renderFiles()});
+$("file").addEventListener("change",e=>{handle([...e.target.files]);e.target.value=""});
+const drop=$("drop");["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over")}));
+["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over")}));
+drop.addEventListener("drop",e=>handle([...e.dataTransfer.files]));
+$("clearBtn").addEventListener("click",()=>{FILES=[];ROWS=[];STATS={};NOTES=[];isSample=false;range=null;PREV=null;NEW=new Set();UPD="";HIDDEN=new Set();CARDS={};FOCUS=null;AISUM="";restored="";
+  tgtTouched=false;$("tgt").value="";renderFiles();render();save()});
+$("sampleBtn").addEventListener("click",()=>{FILES=[];E.sample().forEach(([n,rows])=>addSheet(n,rows));FILES.forEach(f=>f.sample=true);isSample=true;range=7;PREV=null;CARDS={};FOCUS=null;AISUM="";restored="";
+  pendingUpload=["sample data"];HIDDEN=new Set();rebuild();renderFiles()});
+
+// ---------- views ----------
+function baseView(){return ROWS.filter(r=>!HIDDEN.has(r.channel))}
+function view(){const p=E.focusPred(FOCUS);return baseView().filter(p)}
+function shown(rows){return[...new Set((rows||view()).map(r=>r.channel))].filter(c=>!HIDDEN.has(c)).sort()}
+function setFocus(fc){FOCUS=fc;render();$("dash").scrollIntoView({behavior:"smooth",block:"start"})}
+function render(){const has=ROWS.length>0;$("dash").hidden=!has;$("rangeCtl").hidden=!has||!E.dateList(ROWS).length;$("printBtn").hidden=!has;
+  $("srcTag").textContent=!has?"No data":isSample?"Sample data":"Your data";$("srcTag").className="tag"+(isSample?" sample":"");
+  $("aiTag").textContent=KEY?"Claude on":"Claude off";$("aiTag").className="tag"+(KEY?"":" off");
+  if(!has){$("srcLine").textContent="Upload Google Ads, Meta or TikTok exports, plus an optional MMP or CRM conversions file. Your files stay in this browser.";return}
+  const ds=E.dateList(ROWS);$("srcLine").textContent=`${FILES.length} file${FILES.length>1?"s":""} · ${ROWS.length.toLocaleString()} rows · ${ds.length?ds[0]+" to "+ds.at(-1):"no dates"} · files stay in this browser`;
+  $("printHead").textContent=`Ad performance report · ${range?`last ${range} days to ${ds.at(-1)}`:ds.length?ds[0]+" to "+ds.at(-1):""}`;
+  const days=ds.length;document.querySelectorAll("#rangeSeg button").forEach(b=>{const v=+b.dataset.range;b.disabled=v>0&&v>days;b.setAttribute("aria-pressed",v===range)});
+  const levels=[["channel","Channel"],["campaign","Campaign"]];if(ROWS.some(r=>r.adset))levels.push(["adset","Ad set"]);if(ROWS.some(r=>r.ad))levels.push(["ad","Ad"]);
+  if(ROWS.some(r=>r.geo))levels.push(["geo","Country"]);if(ROWS.some(r=>r.os))levels.push(["os","OS / Device"]);
+  const gb=$("groupBy").value||"campaign";$("groupBy").innerHTML=levels.map(([v,l])=>`<option value="${v}" ${v===gb?"selected":""}>${l}</option>`).join("");
+  $("tgtHint").textContent=tgtTouched?"":"account avg";
+  $("focusBar").hidden=!FOCUS;if(FOCUS)$("focusLbl").textContent=FOCUS.label;
+  $("ruleNote").textContent=`Scale: CPA at least ${Math.round((1-SET.th.scale)*100)}% under target (and ROAS ≥ 1 when revenue exists). Fix: CPA more than ${Math.round((SET.th.cut-1)*100)}% over target, or spend above 2× target with no conversions. Watch: CPA up more than 25% vs the previous period. Click a column to sort, or a row for details. Thresholds are in Settings.`;
+  chips();takeaways();kpis();chart();digest();heat();table();suggest()}
+function chips(){const chs=[...new Set(ROWS.map(r=>r.channel))].sort();$("chips").innerHTML=chs.length>1?chs.map(c=>`<button class="chip" data-ch="${esc(c)}" aria-pressed="${!HIDDEN.has(c)}"><span class="dot" style="background:${chColor(c)}"></span>${esc(c)}</button>`).join(""):""}
+
+// ---------- takeaways ----------
+const LAB={pause:"Pause",cut:"Cut budget",scale:"Scale",pattern:"Pattern",shift:"Shift budget",investigate:"Investigate",note:"Note"};
+const PILL={pause:"fix",cut:"watch",scale:"scale",shift:"watch",investigate:"watch",note:"hold"};
+const excluded=()=>new Set(Object.entries(CARDS).filter(([,c])=>c.s==="done"||c.s==="dismissed"||(c.s==="snoozed"&&c.until>Date.now())).map(([id])=>id));
+const insOpts=()=>({range,target:+$("tgt").value,targetAuto:!tgtTouched,convName:CN(),th:SET.th,f:FMT});
+function takeaways(){
+  const list=E.insights(baseView(),{...insOpts(),exclude:excluded()});LAST_INS=list;
+  const ids=list.map(i=>i.id);
+  if(pendingUpload){NEW=PREV?new Set(ids.filter(i=>!PREV.has(i))):new Set();PREV=new Set(ids);
+    UPD=pendingUpload[0]==="sample data"?"":`Updated after adding ${pendingUpload.length===1?pendingUpload[0]:pendingUpload.length+" files"}`;pendingUpload=null;save()}
+  const bv=baseView(),per=E.periods(bv,range),T=+$("tgt").value>0?+$("tgt").value:E.agg(per.cur?bv.filter(r=>E.inR(r,per.cur)):bv).cpa;
+  $("insSub").textContent=[per.cur?`Last ${range} days`:"All dates",`vs ${tgtTouched?"target":"account avg"} CPA ${m$(T)}`,UPD].filter(Boolean).join(" · ");
+  $("aiSumBtn").hidden=!KEY;
+  $("ins").innerHTML=list.length?list.map(i=>`<li class="${i.sev}" data-id="${esc(i.id)}"><div class="ins-h"><span class="pill ${i.type==="pattern"?(i.sev==="good"?"scale":"fix"):PILL[i.type]}">${LAB[i.type]}</span>${NEW.has(i.id)?'<span class="new">New</span>':""}<b>${esc(i.title)}</b>${i.channel?`<span class="sub">· ${esc(i.channel)}</span>`:""}</div>
+    <p>${esc(i.text)}</p>
+    <div class="ins-f">${i.impact?`<span class="impact">${esc(i.impact)}</span>`:""}<span class="acts noprint">${i.focus?`<button type="button" data-a="show">Show</button>`:""}${i.why?`<button type="button" data-a="why" aria-expanded="false">Why?</button>`:""}<button type="button" data-a="done">Done</button><button type="button" data-a="snooze">Snooze 7d</button><button type="button" data-a="dismiss">Dismiss</button></span></div>
+    ${i.why?`<table class="why" hidden>${i.why.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table>`:""}</li>`).join("")
+    :`<li class="emptyli">Nothing to act on in this range.${Object.keys(CARDS).length?" Some conclusions are done, snoozed or dismissed; see below.":""}</li>`;
+  const sim=E.simulate(bv,insOpts(),list);
+  $("sim").innerHTML=sim.moves?`<b>If you apply these ${sim.moves} budget move${sim.moves>1?"s":""}</b> (same ${per.cur?range+"-day":""} period): spend ${m$(sim.before.spend)} → ${m$(sim.after.spend)}, ${esc(CN().toLowerCase())} ${mN(sim.before.conv)} → ${mN(sim.after.conv)}, CPA ${m$(sim.before.cpa)} → <b class="${sim.after.cpa<=sim.before.cpa?"g":"r"}">${m$(sim.after.cpa)}</b>. <span class="sub">Estimate: results scale with spend at elasticity ${SET.th.elastic}, so extra budget buys less than the current average.</span>`:"";
+  $("sim").hidden=!sim.moves;
+  $("aiSum").hidden=!AISUM;$("aiSum").innerHTML=AISUM;
+  track()}
+function track(){const ents=Object.entries(CARDS);$("trackWrap").hidden=!ents.length;if(!ents.length)return;
+  $("trackCount").textContent=ents.length;const bv=baseView();
+  $("track").innerHTML=ents.sort((a,b)=>b[1].ts-a[1].ts).map(([id,c])=>{let res="";
+    if(c.s==="done"){const p=E.focusPred(c.focus),rs=bv.filter(p);
+      if(!c.at)res="No dates in the data, so results can't be tracked.";
+      else{const after=rs.filter(r=>r.date>c.at),before=rs.filter(r=>r.date<=c.at&&r.date>E.addDays(c.at,-7));
+        if(!after.length)res=`Waiting for data after ${c.at}. Upload a newer export to see the effect.`;
+        else{const a=E.agg(after),b=E.agg(before),da=E.dateList(after).length||1,db=E.dateList(before).length||1;
+          res=`Since ${c.at}: spend/day ${m$(b.spend/db)} → ${m$(a.spend/da)}, CPA ${m$(b.cpa)} → <b class="${a.cpa!=null&&b.cpa!=null?(a.cpa<=b.cpa?"g":"r"):""}">${m$(a.cpa)}</b>${a.cpa!=null&&b.cpa?` (${pct(a.cpa/b.cpa-1)})`:""}.`}}}
+    else if(c.s==="snoozed")res=c.until>Date.now()?`Snoozed until ${new Date(c.until).toLocaleDateString()}.`:"Snooze ended; it shows again if it still applies.";
+    else res="Dismissed.";
+    return`<li><div><b>${esc(c.title)}</b>${c.channel?` <span class="sub">· ${esc(c.channel)}</span>`:""} <span class="pill ${c.s==="done"?"scale":"hold"}">${c.s}</span></div><div class="sub">${res}</div><button type="button" class="linkbtn noprint" data-restore="${esc(id)}">Restore</button></li>`}).join("")}
+$("ins").addEventListener("click",e=>{const b=e.target.closest("button[data-a]");if(!b)return;const li=b.closest("li"),i=LAST_INS.find(x=>x.id===li.dataset.id);if(!i)return;
+  const a=b.dataset.a;
+  if(a==="why"){const t=li.querySelector(".why");t.hidden=!t.hidden;b.setAttribute("aria-expanded",String(!t.hidden));return}
+  if(a==="show"){setFocus(i.focus);return}
+  const bv=baseView(),per=E.periods(bv,range),fr=i.focus?bv.filter(E.focusPred(i.focus)).filter(r=>!per.cur||E.inR(r,per.cur)):[];
+  CARDS[i.id]={s:a==="done"?"done":a==="snooze"?"snoozed":"dismissed",until:a==="snooze"?Date.now()+7*864e5:null,ts:Date.now(),at:lastDate(),title:i.title,channel:i.channel||"",type:i.type,focus:i.focus||null,cpaAt:E.agg(fr).cpa};
+  render();save()});
+$("track").addEventListener("click",e=>{const b=e.target.closest("[data-restore]");if(!b)return;delete CARDS[b.dataset.restore];render();save()});
+$("copyBtn").addEventListener("click",async()=>{const txt=LAST_INS.map((i,n)=>`${n+1}. ${i.title}${i.channel?" ("+i.channel+")":""}: ${i.text}`).join("\n")+($("sim").hidden?"":"\n\n"+$("sim").innerText);
+  const b=$("copyBtn");try{await navigator.clipboard.writeText(txt);b.textContent="Copied"}catch(e){b.textContent="Copy failed"}setTimeout(()=>b.textContent="Copy",1500)});
+$("focusClear").addEventListener("click",()=>setFocus(null));
+
+function kpis(){const v=view(),per=E.periods(v,range),cur=agg(per.cur?v.filter(r=>E.inR(r,per.cur)):v),prev=per.prev?agg(v.filter(r=>E.inR(r,per.prev))):null;
+  const d=(a,b)=>b&&a!=null&&b!=null&&b!==0?a/b-1:null;
+  const items=[["Spend",m$(cur.spend),d(cur.spend,prev?.spend),null],[CN(),mN(cur.conv),d(cur.conv,prev?.conv),true],["CPA",m$(cur.cpa),d(cur.cpa,prev?.cpa),false],
+    cur.roas!=null?["ROAS",x2(cur.roas),d(cur.roas,prev?.roas),true]:["CTR",pc2(cur.ctr),d(cur.ctr,prev?.ctr),true],["CPC",m$(cur.cpc),d(cur.cpc,prev?.cpc),false]];
+  $("kpis").innerHTML=items.map(([l,val,dl,up])=>{const cls=dl==null||up==null?"":(dl>0)===up?"good":"bad";return`<div class="kpi"><div class="l">${esc(l)}</div><div class="v">${val}</div><div class="delta ${cls}">${dl==null?(per.cur?"no prior period":"all dates"):pct(dl)+" vs prior "+range+"d"}</div></div>`}).join("")}
+const agg=E.agg;
+function lineChart(days,S,chs,metric,W,H,tgt){const L=52,R=14,T=12,B=28,vals=Object.values(S).flat().filter(v=>v!=null&&isFinite(v));if(!vals.length)return'<p class="empty">No values for this metric.</p>';
+  let lo=Math.min(0,...vals),hi=Math.max(...vals)*1.08;if(hi<=lo)hi=lo+1;const step=nice((hi-lo)/4);hi=Math.ceil(hi/step)*step;
+  const x=i=>L+i*(W-L-R)/Math.max(1,days.length-1),y=v=>T+(hi-v)*(H-T-B)/(hi-lo);let g="";
+  const lab=v=>metric==="cpa"||metric==="spend"?curr+(v>=1000?(v/1000).toFixed(v%1000?1:0)+"k":v%1?v.toFixed(2):v):metric==="roas"?v.toFixed(1)+"×":metric==="ctr"?v.toFixed(1)+"%":v>=1000?(v/1000).toFixed(1)+"k":Math.round(v);
+  for(let v=lo;v<=hi+1e-9;v+=step)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${lab(v)}</text>`;
+  const every=Math.ceil(days.length/7);days.forEach((d,i)=>{if(i%every===0||i===days.length-1)g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${d.slice(5).replace("-","/")}</text>`});
+  if(metric==="cpa"&&tgt>lo&&tgt<hi)g+=`<line x1="${L}" x2="${W-R}" y1="${y(tgt)}" y2="${y(tgt)}" stroke="var(--muted)" stroke-dasharray="4 4"/><text x="${W-R}" y="${y(tgt)-4}" text-anchor="end">${tgtTouched?"target":"avg"}</text>`;
+  for(const c of chs){const pts=S[c];let d="",pen=false;pts.forEach((v,i)=>{if(v==null||!isFinite(v)){pen=false;return}d+=(pen?"L":"M")+x(i).toFixed(1)+","+y(v).toFixed(1);pen=true});
+    const li=pts.map((v,i)=>[v,i]).filter(([v])=>v!=null).at(-1);g+=`<path d="${d}" fill="none" stroke="${chColor(c)}" stroke-width="2"/>`;if(li)g+=`<circle cx="${x(li[1])}" cy="${y(li[0])}" r="3.5" fill="${chColor(c)}"/>`}
+  return`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Daily ${metric}">${g}</svg>`}
+function chart(){const v=view(),per=E.periods(v,range),days=per.cur?per.days:E.dateList(v),metric=$("metric").value,chs=shown(v);
+  if(days.length<2){$("chart").innerHTML=`<p class="empty">Add a Day or Date column (or a daily breakdown in your export) to see trends.</p>`;$("legend").innerHTML="";return}
+  $("chart").innerHTML=lineChart(days,E.series(v,days,metric,chs),chs,metric,660,240,+$("tgt").value);
+  $("legend").innerHTML=chs.map(c=>`<span><span class="dot" style="background:${chColor(c)}"></span>${esc(c)}</span>`).join("")}
+function nice(x){const p=Math.pow(10,Math.floor(Math.log10(x||1))),f=x/p;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
+function rowsFor(by){return E.breakdown(view(),by,E.periods(view(),range))}
+function digest(){const v=view(),per=E.periods(v,range),cur=agg(per.cur?v.filter(r=>E.inR(r,per.cur)):v),prev=per.prev?agg(v.filter(r=>E.inR(r,per.prev))):null;
+  const ds=E.dateList(v);$("asof").textContent=ds.length?"Data to "+ds.at(-1):"";
+  const by=["campaign","adset","ad"].includes($("groupBy").value)?$("groupBy").value:"campaign";
+  let s=`<p>${per.cur?`Last ${range} days`:"Across the full file"}${FOCUS?` for ${esc(FOCUS.label)}`:""}: <b>${m$(cur.spend)}</b> spend, <b>${mN(cur.conv)}</b> ${esc(CN().toLowerCase())} at <b>${m$(cur.cpa)}</b> CPA${prev&&prev.cpa&&cur.cpa?`, ${pct(cur.cpa/prev.cpa-1)} vs the prior ${range} days`:""}${cur.roas!=null?`, ROAS ${x2(cur.roas)}`:""}.</p>`;
+  const gap=E.attribution(v,range);
+  if(gap.length)s+=`<p><b>Platform vs your conversions file</b> (matched campaigns):</p><ul class="gap">${gap.map(x=>`<li>${esc(x.channel)}: ${mN(x.plat)} reported vs ${mN(x.src)} in your file <span class="${Math.abs(x.gap)>=.3?"r":"sub"}">(${pct(x.gap)})</span></li>`).join("")}</ul>`;
+  if(!ds.length)s+=`<p class="note">No date column found, so anomaly alerts are off.</p>`;else if(ds.length<10)s+=`<p class="note">Anomaly alerts need at least 10 days of daily data.</p>`;
+  $("summary").innerHTML=s;
+  const al=E.anomalies(v,by),lab={spike:"CPA spike",drop:"CPA improving",zero:"Spend with no conversions",fatigue:"Creative fatigue"};
+  $("alerts").innerHTML=al.length?al.slice(0,5).map(a=>`<div class="alert ${a.sev}"><b>${lab[a.kind]} · ${esc(a.key.split(" › ").slice(1).join(" › "))}</b>${esc(a.channel)} · last 3 days${a.chg!=null?` · CPA ${pct(a.chg)} vs baseline`:""}${a.rec.freq?` · freq ${a.rec.freq.toFixed(1)}`:""}</div>`).join(""):(ds.length>=10?`<p class="note">No unusual movement in the last 3 days.</p>`:"")}
+
+// ---------- heatmap ----------
+const HL={channel:"Channel",os:"OS / Device","channel+os":"Channel · OS",geo:"Country"};
+function heat(){const hasG=ROWS.some(r=>r.geo),hasO=ROWS.some(r=>r.os);$("heatPanel").hidden=!(hasG||hasO);if(!(hasG||hasO))return;
+  const ro=["channel"].concat(hasO?["channel+os","os"]:[]).concat(hasG?["geo"]:[]),co=(hasG?["geo"]:[]).concat(hasO?["os"]:[]).concat(["channel"]);
+  const rv=ro.includes($("hmR").value)?$("hmR").value:(hasO&&hasG?"channel+os":"channel"),cv=co.includes($("hmC").value)?$("hmC").value:co[0];
+  $("hmR").innerHTML=ro.map(x=>`<option value="${x}" ${x===rv?"selected":""}>${HL[x]}</option>`).join("");$("hmC").innerHTML=co.map(x=>`<option value="${x}" ${x===cv?"selected":""}>${HL[x]}</option>`).join("");
+  const h=E.heatmap(view(),range,rv,cv);if(!h.rows.length||!h.cols.length||!h.avg){$("heat").innerHTML='<p class="empty">No rows have both of these filled in.</p>';return}
+  const cell=(a,b)=>{const x=h.cell(a,b);if(!x||x.spend<=0)return`<td class="hc none">·</td>`;
+    if(x.cpa==null||x.conv<3)return`<td class="hc none" title="Too little data">${FMT.m(x.spend)}<small>low data</small></td>`;
+    const t=Math.max(-1,Math.min(1,Math.log2(x.cpa/h.avg))),c=t<0?"--good":"--bad",w=Math.round(Math.abs(t)*55);
+    return`<td class="hc"><button type="button" data-r="${esc(a)}" data-c="${esc(b)}" style="background:color-mix(in srgb,var(${c}) ${w}%,var(--panel))" title="${esc(a)} · ${esc(b)}: CPA ${m$(x.cpa)}, ${mN(x.conv)} ${esc(CN().toLowerCase())}, ${m$(x.spend)} spend">${m$(x.cpa)}<small>${FMT.m(x.spend)}</small></button></td>`};
+  $("heat").innerHTML=`<table class="hm"><thead><tr><th></th>${h.cols.map(c=>`<th scope="col">${esc(c)}</th>`).join("")}</tr></thead><tbody>${h.rows.map(a=>`<tr><th scope="row">${esc(a)}</th>${h.cols.map(b=>cell(a,b)).join("")}</tr>`).join("")}</tbody></table>`;
+  $("heatNote").textContent=`CPA per cell, spend underneath. Green is below the ${m$(h.avg)} average for this view, red above. Click a cell to focus on it.`;
+  $("heat").onclick=e=>{const b=e.target.closest("button[data-r]");if(!b)return;const f=h.filter(b.dataset.r,b.dataset.c);setFocus({kind:"seg",f,label:Object.values(f).join(" · ")})}}
+$("hmR").addEventListener("change",heat);$("hmC").addEventListener("change",heat);
+
+// ---------- table + drawer ----------
+let lastTable=[];
+const NL={channel:"Channel",campaign:"Campaign",adset:"Campaign › Ad set",ad:"Campaign › Ad set › Ad",geo:"Country",os:"OS / Device"};
+function table(){const by=$("groupBy").value||"campaign",t=+$("tgt").value,per=E.periods(view(),range);
+  const gs=rowsFor(by).map(g=>{const[r,c]=E.recommend(g,t,SET.th);return{...g,action:r,acls:c,name:g.key.split(" › ").slice(by==="channel"?0:1).join(" › ")}});
+  const hasRev=gs.some(g=>g.revenue>0),hasF=gs.some(g=>g.freq!=null);
+  gs.sort((a,b)=>{let va=a[sortKey],vb=b[sortKey];if(typeof va==="string"||typeof vb==="string")return String(va??"").localeCompare(String(vb??""))*sortDir;va=va??-Infinity;vb=vb??-Infinity;return(va-vb)*sortDir});
+  lastTable=gs;lastTable.by=by;
+  const cols=[["channel","Channel","tl"],["name",NL[by],"tl"],["spend","Spend"],["impressions","Impr."],["clicks","Clicks"],["ctr","CTR"],["cpc","CPC"],["conv",CN()],["cpa","CPA"]];
+  if(per.prev)cols.push(["cpaChg","CPA Δ"]);if(hasRev)cols.push(["revenue","Revenue"],["roas","ROAS"]);if(hasF)cols.push(["freq","Freq."]);cols.push(["action","Action"]);
+  const L=Object.fromEntries(cols.map(c=>[c[0],c[1]]));
+  const cell=(g,k)=>{const v=g[k],dl=` data-l="${esc(L[k])}"`;switch(k){case"channel":return`<td class="tl"${dl}><span><span class="dot" style="background:${chColor(g.channel)};margin-right:6px"></span>${esc(v)}</span></td>`;case"name":return`<td class="tl nm"${dl}><span>${esc(v)}</span></td>`;
+    case"spend":case"cpc":case"revenue":return`<td class="n"${dl}>${m$(v)}</td>`;case"cpa":return`<td class="n ${v!=null&&t?(v<=t?"g":v>t*SET.th.cut?"r":""):""}"${dl}>${m$(v)}</td>`;
+    case"cpaChg":return`<td class="n ${v>.1?"r":v<-.1?"g":""}"${dl}>${pct(v)}</td>`;case"ctr":return`<td class="n"${dl}>${pc2(v)}</td>`;case"roas":return`<td class="n"${dl}>${x2(v)}</td>`;case"freq":return`<td class="n"${dl}>${v==null?"–":v.toFixed(1)}</td>`;
+    case"action":return`<td${dl}><span class="pill ${g.acls}">${v}</span></td>`;default:return`<td class="n"${dl}>${mN(v)}</td>`}};
+  $("tbl").innerHTML=`<thead><tr>${cols.map(([k,l,c])=>`<th class="${c||""}" data-k="${k}" scope="col">${esc(l)}${sortKey===k?(sortDir<0?" ↓":" ↑"):""}</th>`).join("")}</tr></thead><tbody>${gs.map((g,i)=>`<tr data-i="${i}" tabindex="0">${cols.map(([k])=>cell(g,k)).join("")}</tr>`).join("")||`<tr><td colspan="${cols.length}" class="empty">No rows in this range.</td></tr>`}</tbody>`;
+  lastTable.cols=cols}
+function groupFocus(g,by){if(by==="channel")return{kind:"seg",f:{channel:g.channel},label:g.channel};
+  if(by==="geo"||by==="os"){const v=g.key.split(" › ")[1];return v==="Unknown"?{kind:"group",by,key:g.key,label:g.key}:{kind:"seg",f:{channel:g.channel,[by]:v},label:g.channel+" · "+v}}
+  return{kind:"group",by,key:g.key,label:g.key.split(" › ").slice(1).join(" › ")}}
+function openDrawer(g,by){const fc=groupFocus(g,by),all=baseView().filter(E.focusPred(fc)),days=E.dateList(all),t=+$("tgt").value;
+  const S={};const lc=shown(all);const pick=lc.length===1?lc:[lc[0]];
+  const daily=days.map(d=>agg(all.filter(r=>r.date===d)).cpa);S[pick[0]]=daily;
+  const peers=rowsFor(by==="channel"?"channel":by).filter(x=>x.channel===g.channel&&x.cpa!=null).sort((a,b)=>a.cpa-b.cpa),rank=peers.findIndex(x=>x.key===g.key);
+  const rel=LAST_INS.filter(i=>i.key===g.key||(i.focus&&i.focus.kind==="seg"&&fc.kind==="seg"&&JSON.stringify(i.focus.f)===JSON.stringify(fc.f)));
+  $("drTitle").textContent=fc.label;$("drSub").textContent=g.channel+(range?` · last ${range} days`:"");
+  $("drBody").innerHTML=`<div class="dk">${[["Spend",m$(g.spend)],[CN(),mN(g.conv)],["CPA",m$(g.cpa)],[g.roas!=null?"ROAS":"CTR",g.roas!=null?x2(g.roas):pc2(g.ctr)],["CPA Δ",pct(g.cpaChg)],["Freq.",g.freq!=null?g.freq.toFixed(1):"–"]].map(([l,v])=>`<div><span>${esc(l)}</span><b>${v}</b></div>`).join("")}</div>
+    ${days.length>=2?`<h3>Daily CPA, all dates</h3>${lineChart(days,S,pick,"cpa",420,180,t)}`:""}
+    ${rank>=0&&peers.length>1?`<p>${rank===0?"Best":`#${rank+1} of ${peers.length}`} by CPA among ${esc(g.channel)} ${by==="campaign"?"campaigns":"rows"} in this range.</p>`:""}
+    ${rel.length?`<h3>Takeaways</h3>${rel.map(i=>`<div class="alert ${i.sev}"><b>${esc(i.title)}</b>${esc(i.text)}</div>`).join("")}`:`<p class="sub">No takeaways for this one right now.</p>`}
+    <button type="button" class="btn primary" id="drFocus">Focus the dashboard on this</button>`;
+  $("drFocus").onclick=()=>{closeDrawer();setFocus(fc)};
+  $("drawer").hidden=false;$("scrim").hidden=false;$("drClose").focus()}
+function closeDrawer(){$("drawer").hidden=true;$("scrim").hidden=true}
+$("drClose").addEventListener("click",closeDrawer);$("scrim").addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("drawer").hidden)closeDrawer()});
+$("tbl").addEventListener("click",e=>{const th=e.target.closest("th");if(th&&th.dataset.k){const k=th.dataset.k;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=["channel","name","action"].includes(k)?1:-1}table();return}
+  const tr=e.target.closest("tr[data-i]");if(tr)openDrawer(lastTable[+tr.dataset.i],lastTable.by)});
+$("tbl").addEventListener("keydown",e=>{const tr=e.target.closest("tr[data-i]");if(tr&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openDrawer(lastTable[+tr.dataset.i],lastTable.by)}});
+
+// ---------- Claude (user's own API key; aggregated figures only) ----------
+const MODELS=[["claude-sonnet-5-5","Sonnet 5.5 · balanced"],["claude-haiku-5-5","Haiku 5.5 · fastest, cheapest"],["claude-opus-5-5","Opus 5.5 · most capable"]];
+const r2=x=>x==null||!isFinite(x)?null:Math.round(x*100)/100;
+const slim=g=>({name:g.key.split(" › ").slice(1).join(" › ")||g.key,channel:g.channel,spend:r2(g.spend),conversions:r2(g.conv),cpa:r2(g.cpa),roas:r2(g.roas),ctr_pct:g.ctr!=null?r2(g.ctr*100):null,cpa_change_vs_prev_pct:g.cpaChg!=null?r2(g.cpaChg*100):null,frequency:r2(g.freq)});
+const FILT={type:"object",description:"Optional filters",properties:{channel:{type:"string"},country:{type:"string"},os:{type:"string"},name_contains:{type:"string"}}};
+const TOOLS=[
+ {name:"get_overview",description:"Totals for the selected date window and the previous window, the date range, channels, countries and OS values present, target CPA and conversion name.",input_schema:{type:"object",properties:{}}},
+ {name:"get_breakdown",description:"Performance grouped by a dimension for the selected window, sorted and filtered.",input_schema:{type:"object",properties:{by:{type:"string",enum:["channel","campaign","adset","ad","geo","os"]},sort_by:{type:"string",enum:["spend","conversions","cpa","roas","ctr","cpa_change"]},order:{type:"string",enum:["asc","desc"]},limit:{type:"integer"},filter:FILT},required:["by"]}},
+ {name:"get_takeaways",description:"The dashboard's current rule-based conclusions (pause/cut/scale/patterns/anomalies), each with the numbers behind it, plus a what-if estimate if they are all applied.",input_schema:{type:"object",properties:{}}},
+ {name:"get_anomalies",description:"Campaigns whose last 3 days differ sharply from their previous 14 days (CPA spikes, fatigue, tracking breaks).",input_schema:{type:"object",properties:{}}},
+ {name:"get_daily",description:"Daily values of one metric for all data or a filtered slice, across all dates.",input_schema:{type:"object",properties:{metric:{type:"string",enum:["spend","conversions","cpa","roas","ctr"]},filter:FILT},required:["metric"]}}];
+function filterRows(rows,f){if(!f)return rows;const lc=s=>String(s||"").toLowerCase();
+  return rows.filter(r=>(!f.channel||lc(r.channel).includes(lc(f.channel)))&&(!f.country||lc(r.geo)===lc(f.country))&&(!f.os||lc(r.os)===lc(f.os))&&(!f.name_contains||lc(r.campaign+" "+(r.adset||"")+" "+(r.ad||"")).includes(lc(f.name_contains))))}
+function runTool(name,inp){const bv=baseView(),per=E.periods(bv,range);
+  if(name==="get_overview"){const cur=agg(per.cur?bv.filter(r=>E.inR(r,per.cur)):bv),prev=per.prev?agg(bv.filter(r=>E.inR(r,per.prev))):null,ds=E.dateList(bv),s=a=>a&&{spend:r2(a.spend),conversions:r2(a.conv),cpa:r2(a.cpa),roas:r2(a.roas),ctr_pct:a.ctr!=null?r2(a.ctr*100):null,cpc:r2(a.cpc)};
+    return{currency:curr,data_dates:ds.length?[ds[0],ds.at(-1)]:null,window:per.cur?{days:range,from:per.cur[0],to:per.cur[1]}:"all dates",current:s(cur),previous_window:s(prev),target_cpa:r2(+$("tgt").value),target_is_account_average:!tgtTouched,
+      conversion_name:CN(),channels:shown(bv),countries:[...new Set(bv.map(r=>r.geo).filter(Boolean))],os:[...new Set(bv.map(r=>r.os).filter(Boolean))],conversions_from_mmp_file:bv.some(r=>r.convSrc)}}
+  if(name==="get_breakdown"){const by=["channel","campaign","adset","ad","geo","os"].includes(inp.by)?inp.by:"campaign",key={conversions:"conv",cpa_change:"cpaChg"}[inp.sort_by]||inp.sort_by||"spend";
+    let g=E.breakdown(filterRows(bv,inp.filter),by,per).filter(x=>x[key]!=null);const asc=inp.order?inp.order==="asc":key==="cpa";g.sort((a,b)=>asc?a[key]-b[key]:b[key]-a[key]);
+    return{by,window:per.cur?`last ${range} days`:"all dates",rows:g.slice(0,Math.min(+inp.limit||15,40)).map(slim),total_rows:g.length}}
+  if(name==="get_takeaways"){const s=E.simulate(bv,insOpts(),LAST_INS);return{takeaways:LAST_INS.map(i=>({type:i.type,title:i.title,channel:i.channel,text:i.text,impact:i.impact,numbers:i.why})),
+    what_if_all_applied:s.moves?{spend:[r2(s.before.spend),r2(s.after.spend)],conversions:[r2(s.before.conv),r2(s.after.conv)],cpa:[r2(s.before.cpa),r2(s.after.cpa)]}:null}}
+  if(name==="get_anomalies")return E.anomalies(bv,"campaign").slice(0,8).map(a=>({campaign:a.key.split(" › ").slice(1).join(" › "),channel:a.channel,kind:a.kind,last3_cpa:r2(a.rec.cpa),prev14_cpa:r2(a.base.cpa),last3_spend:r2(a.rec.spend),freq_last3:r2(a.rec.freq),freq_prev14:r2(a.base.freq)}));
+  if(name==="get_daily"){const rs=filterRows(bv,inp.filter),m=inp.metric;return E.dateList(rs).map(d=>{const a=agg(rs.filter(r=>r.date===d));return{date:d,value:r2(m==="conversions"?a.conv:m==="cpa"?a.cpa:m==="roas"?a.roas:m==="ctr"?(a.ctr!=null?a.ctr*100:null):a.spend)}})}
+  return{error:"unknown tool"}}
+const SYS=()=>`You are a senior performance-marketing analyst inside "Ad Performance Copilot". The user's ad data is reachable only through your tools; call them before stating any number and never invent figures. Currency: ${curr}. Conversions are called "${CN()}". The dashboard's selected window is ${range?`the last ${range} days`:"all dates"}.
+Write for a busy marketer: lead with the answer, then concrete actions with numbers (daily budgets, which campaigns to pause or scale). Use short paragraphs or "- " bullets and **bold** for key figures. Stay under 180 words unless asked for more. If the data can't answer the question, say which export or breakdown would.`;
+async function callClaude(messages){const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+    headers:{"content-type":"application/json","x-api-key":KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:SET.model,max_tokens:1500,system:SYS(),tools:TOOLS,messages})});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j?.error?.message||`Request failed (HTTP ${r.status})`);return j}
+async function agent(q,onStep){const msgs=[{role:"user",content:q}];
+  for(let i=0;i<8;i++){const res=await callClaude(msgs);msgs.push({role:"assistant",content:res.content});
+    const uses=res.content.filter(c=>c.type==="tool_use");
+    if(res.stop_reason!=="tool_use"||!uses.length)return res.content.filter(c=>c.type==="text").map(c=>c.text).join("\n").trim();
+    msgs.push({role:"user",content:uses.map(u=>{onStep&&onStep(u);let out;try{out=runTool(u.name,u.input||{})}catch(e){out={error:e.message}}return{type:"tool_result",tool_use_id:u.id,content:JSON.stringify(out)}})})}
+  return"I ran out of steps before finishing. Try a narrower question."}
+function md(s){const lines=esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").split(/\n/);let h="",ul=false;
+  for(const l of lines){const t=l.trim();if(/^[-*•] /.test(t)){if(!ul){h+="<ul>";ul=true}h+=`<li>${t.slice(2)}</li>`;continue}if(ul){h+="</ul>";ul=false}
+    if(!t)continue;if(/^#{1,4} /.test(t))h+=`<p><b>${t.replace(/^#+ /,"")}</b></p>`;else h+=`<p>${t}</p>`}
+  return h+(ul?"</ul>":"")}
+const STEPL={get_overview:"totals",get_breakdown:"breakdown",get_takeaways:"takeaways",get_anomalies:"recent anomalies",get_daily:"daily trend"};
+function stepText(u){const i=u.input||{};return STEPL[u.name]+(u.name==="get_breakdown"?` by ${i.by}${i.sort_by?`, sorted by ${i.sort_by}`:""}`:"")+(i.metric?` of ${i.metric}`:"")+(i.filter&&Object.values(i.filter).some(Boolean)?` (${Object.values(i.filter).filter(Boolean).join(", ")})`:"")}
+$("aiSumBtn").addEventListener("click",async()=>{const b=$("aiSumBtn");b.disabled=true;b.textContent="Writing…";$("aiSum").hidden=false;$("aiSum").innerHTML='<p class="sub">Claude is reading the numbers…</p>';
+  try{const t=await agent("Write a performance summary I can send to my manager, with three short sections: What happened, Why, What we'll do next. Under 150 words. Use the overview and takeaways tools first.");
+    AISUM=`<div class="aihead"><b>Summary by Claude</b><button type="button" class="linkbtn" id="aiSumCopy">Copy</button></div>${md(t)}`;$("aiSum").innerHTML=AISUM;$("aiSum").dataset.raw=t}
+  catch(e){AISUM="";$("aiSum").innerHTML=`<p class="err">${esc(e.message)}</p>`}
+  b.disabled=false;b.textContent="Summarize with Claude"});
+$("aiSum").addEventListener("click",async e=>{if(e.target.id!=="aiSumCopy")return;try{await navigator.clipboard.writeText($("aiSum").dataset.raw||$("aiSum").innerText);e.target.textContent="Copied"}catch(x){e.target.textContent="Copy failed"}});
+
+// ---------- ask ----------
+const QS=["What should I do?","Why did CPA change vs last period?","Where am I wasting money?","Best country by CPA","Which channel is most efficient?","Any creative fatigue?"];
+function suggest(){$("suggest").innerHTML=QS.map(q=>`<button type="button">${q}</button>`).join("");
+  $("askMode").innerHTML=KEY?`Answers by Claude (${esc((MODELS.find(m=>m[0]===SET.model)||[0,SET.model])[1])}). It sees aggregated figures and campaign names, not your files.`:`Quick answers from built-in rules. <button type="button" class="linkbtn" data-open-settings>Add a Claude API key</button> for free-form questions.`}
+function mini(rows,label,f){return`<div class="tablewrap"><table><thead><tr><th class="tl">Name</th><th class="tl">Channel</th><th>${esc(label)}</th></tr></thead><tbody>${rows.map(g=>`<tr><td class="tl">${esc(g.key.split(" › ").slice(1).join(" › ")||g.key)}</td><td class="tl">${esc(g.channel)}</td><td class="n">${f(g)}</td></tr>`).join("")}</tbody></table></div>`}
+async function answer(q){if(!q.trim())return;
+  if(KEY){const box=$("answer");box.innerHTML='<ul class="steps" id="steps"><li>Thinking…</li></ul><div id="aout"></div>';const st=$("steps");st.innerHTML="";
+    try{const t=await agent(q,u=>{st.insertAdjacentHTML("beforeend",`<li>Looked at ${esc(stepText(u))}</li>`)});$("aout").innerHTML=md(t)}
+    catch(e){$("aout").innerHTML=`<p class="err">Claude couldn't answer: ${esc(e.message)}</p>`+ruleAnswer(q)}return}
+  $("answer").innerHTML=ruleAnswer(q)}
+function ruleAnswer(q){q=q.toLowerCase();const t=+$("tgt").value;
+  const by=/ad ?set|ad group/.test(q)&&ROWS.some(r=>r.adset)?"adset":/\bads?\b|creative/.test(q)&&ROWS.some(r=>r.ad)?"ad":/country|geo|market/.test(q)&&ROWS.some(r=>r.geo)?"geo":/\bos\b|ios|android|device/.test(q)&&ROWS.some(r=>r.os)?"os":/channel|platform|network/.test(q)?"channel":"campaign";
+  const gs=rowsFor(by).map(g=>({...g,rec:E.recommend(g,t,SET.th)})),nm={channel:"channels",adset:"ad sets",ad:"ads",geo:"countries",os:"OS / device groups",campaign:"campaigns"}[by];
+  const n=+(q.match(/\b(top|bottom|worst|best)\s*(\d+)/)||[])[2]||5;
+  const metricOf=()=>/roas|return/.test(q)?["roas","ROAS",x2]:/cpa|cost per|cpi/.test(q)?["cpa","CPA",m$]:/ctr/.test(q)?["ctr","CTR",pc2]:/conv|install|lead|result|purchase/.test(q)?["conv",CN(),mN]:/click/.test(q)?["clicks","Clicks",mN]:/revenue|value/.test(q)?["revenue","Revenue",m$]:["spend","Spend",m$];
+  if(/what should i do|takeaway|insight|recommend|summar|conclusion/.test(q))return LAST_INS.length?`<ol class="ins">${LAST_INS.map(i=>`<li class="${i.sev}"><b>${esc(i.title)}</b><p>${esc(i.text)}</p></li>`).join("")}</ol>`:`<p>Nothing to act on right now.</p>`;
+  if(/efficient|best channel|channel/.test(q)&&by==="channel"){const l=gs.filter(g=>g.cpa!=null).sort((a,b)=>a.cpa-b.cpa);return`<p>Channels ranked by CPA (lower is better):</p>`+mini(l,"CPA · spend share",g=>m$(g.cpa)+" · "+Math.round(g.spend/gs.reduce((a,x)=>a+x.spend,0)*100)+"%")}
+  if(/scale|increase|grow|more budget/.test(q)){const l=gs.filter(g=>g.rec[0]==="Scale").sort((a,b)=>a.cpa-b.cpa);
+    return l.length?`<p>${l.length} ${nm} can take more budget:</p>`+mini(l,"CPA · spend",g=>m$(g.cpa)+" · "+m$(g.spend)):`<p>No ${nm} are clearly under your ${m$(t)} target right now.</p>`}
+  if(/wast|pause|cut|losing|bad|worst|fix/.test(q)&&!/(top|bottom|worst|best)\s*\d/.test(q)){const l=gs.filter(g=>g.rec[0]==="Fix").sort((a,b)=>b.spend-a.spend);const tot=l.reduce((a,g)=>a+g.spend,0);
+    return l.length?`<p>${m$(tot)} is going to ${l.length} ${nm} well over target CPA or with no ${esc(CN().toLowerCase())}:</p>`+mini(l,"Spend · CPA",g=>m$(g.spend)+" · "+m$(g.cpa)):`<p>No ${nm} are far over your ${m$(t)} target.</p>`}
+  if(/fatigue|frequency|creative/.test(q)){const l=E.anomalies(view(),["campaign","adset","ad"].includes(by)?by:"campaign").filter(a=>a.fat||a.kind==="fatigue");
+    return l.length?`<p>Fatigue signs (frequency up 25%+ and CTR down 15%+ in the last 3 days vs the 14 before):</p>`+mini(l,"Freq. · CTR Δ",a=>a.rec.freq.toFixed(1)+" · "+pct(a.rec.ctr/a.base.ctr-1)):`<p>No fatigue signals. ${ROWS.some(r=>r.frequency)?"":"Your files have no Frequency column, so this check only works for exports that include it."}</p>`}
+  if(/change|moved|differ|why|vs|compare/.test(q)){const per=E.periods(view(),range);
+    if(!per.prev)return`<p>Pick a date range (7d, 14d or 30d) with an earlier period in the file to compare.</p>`;const l=gs.filter(g=>g.cpaChg!=null).sort((a,b)=>Math.abs(b.cpaChg)*b.spend-Math.abs(a.cpaChg)*a.spend).slice(0,n);return`<p>Biggest CPA moves vs the prior ${range} days, weighted by spend:</p>`+mini(l,"CPA Δ · now",g=>pct(g.cpaChg)+" · "+m$(g.cpa))}
+  if(/top|best|highest|most|bottom|lowest|least|worst/.test(q)){const[k,l,f]=metricOf();const low=/bottom|lowest|least/.test(q)||(/worst/.test(q)&&k!=="cpa")||(/best|top/.test(q)&&k==="cpa");
+    const sorted=gs.filter(g=>g[k]!=null).sort((a,b)=>low?a[k]-b[k]:b[k]-a[k]).slice(0,n);return`<p>${low?"Lowest":"Highest"} ${n} ${nm} by ${esc(l)}:</p>`+mini(sorted,l,g=>f(g[k]))}
+  if(/total|how much|spent|overall/.test(q)){const a=agg(view());return`<p>Total across the loaded data: ${m$(a.spend)} spend, ${mN(a.conv)} ${esc(CN().toLowerCase())}, ${m$(a.cpa)} CPA${a.roas!=null?", "+x2(a.roas)+" ROAS":""}.</p>`}
+  return`<p>Without Claude I can answer: what to do, what to scale, where money is wasted, top/bottom N by spend, CPA, ROAS, CTR or conversions (by campaign, country, OS, ad set or ad), what changed vs last period, creative fatigue, and channel efficiency.</p>`}
+
+// ---------- settings ----------
+function openSettings(){const th=SET.th;$("sPause").value=th.pause;$("sCut").value=th.cut;$("sScale").value=th.scale;$("sMin").value=th.minConv;$("sEl").value=th.elastic;
+  $("sKey").value=KEY;$("sModel").innerHTML=MODELS.map(([v,l])=>`<option value="${v}" ${v===SET.model?"selected":""}>${l}</option>`).join("");$("sMsg").textContent="";
+  if($("settings").showModal)$("settings").showModal();else $("settings").setAttribute("open","")}
+document.addEventListener("click",e=>{if(e.target.closest("[data-open-settings]"))openSettings()});
+$("settingsBtn").addEventListener("click",openSettings);
+$("sCancel").addEventListener("click",()=>$("settings").close());
+$("sReset").addEventListener("click",()=>{const d=E.DEF_TH;$("sPause").value=d.pause;$("sCut").value=d.cut;$("sScale").value=d.scale;$("sMin").value=d.minConv;$("sEl").value=d.elastic});
+$("sForget").addEventListener("click",()=>{$("sKey").value="";$("sMsg").textContent="Key will be removed when you save."});
+$("sForm").addEventListener("submit",e=>{e.preventDefault();const n=(id,lo,hi,d)=>{const v=+$(id).value;return isFinite(v)&&v>=lo&&v<=hi?v:d},d=E.DEF_TH;
+  SET.th={...SET.th,pause:n("sPause",1.05,5,d.pause),cut:n("sCut",1,3,d.cut),scale:n("sScale",.3,1,d.scale),minConv:Math.round(n("sMin",1,1000,d.minConv)),elastic:n("sEl",.3,1,d.elastic)};
+  if(SET.th.cut>=SET.th.pause)SET.th.cut=Math.max(1,SET.th.pause-.2);
+  KEY=$("sKey").value.trim();SET.model=$("sModel").value;try{KEY?localStorage.setItem("adcopilot.key",KEY):localStorage.removeItem("adcopilot.key")}catch(x){}
+  $("settings").close();render();save()});
+
+// ---------- events ----------
+$("rangeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.disabled)return;range=+b.dataset.range;render();save()});
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const c=b.dataset.ch;if(HIDDEN.has(c))HIDDEN.delete(c);else if(shown(ROWS).length>1)HIDDEN.add(c);render();save()});
+$("tgt").addEventListener("input",()=>{tgtTouched=$("tgt").value.trim()!=="";$("tgtHint").textContent=tgtTouched?"":"account avg";takeaways();chart();table();save()});
+$("metric").addEventListener("change",chart);
+$("groupBy").addEventListener("change",()=>{digest();table()});$("convName").addEventListener("input",()=>{takeaways();kpis();digest();table();save()});
+$("askform").addEventListener("submit",e=>{e.preventDefault();answer($("q").value)});
+$("suggest").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;$("q").value=b.textContent;answer(b.textContent)});
+$("printBtn").addEventListener("click",()=>window.print());
+$("exportBtn").addEventListener("click",()=>{const cols=lastTable.cols||[];const v=(g,k)=>{const x=g[k];return x==null?"":typeof x==="number"?(["ctr","cpaChg"].includes(k)?(x*100).toFixed(2)+"%":Math.round(x*100)/100):String(x)};
+  const csv=[cols.map(c=>c[1]).join(",")].concat(lastTable.map(g=>cols.map(([k])=>{const s=String(v(g,k));return/[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(","))).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="ad-copilot-breakdown.csv";document.body.appendChild(a);a.click();a.remove()});
+restore();
+})();
+</script>
+</body>
+</html>

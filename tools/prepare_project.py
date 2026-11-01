@@ -13,7 +13,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Bump when assets/claude-shim.js changes, so browsers don't keep an old copy
-SHIM_VERSION = "2"
+SHIM_VERSION = "3"
 
 HEAD = ('<script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script>'
         '<script src="../../assets/claude-shim.js?v=' + SHIM_VERSION + '"></script>')
@@ -42,6 +42,17 @@ TWEAKS = {
          "Live research is switched off right now. The examples still work."),
         ("Sign in on claude.ai to keep your watchlist between visits. Items saved now last until you close the page.",
          "Saved markets stay here until you close the page."),
+    ],
+    # Ad Performance Copilot: visitors without their own API key use the site's backend
+    "ad-copilot": [
+        ('let KEY="";try{KEY=localStorage.getItem("adcopilot.key")||""}catch(e){}',
+         'let KEY="";try{KEY=localStorage.getItem("adcopilot.key")||""}catch(e){}\nconst PROXY=window.__aiEndpoint||"";if(!KEY&&PROXY)KEY="__site__";'),
+        ('async function callClaude(messages){const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",',
+         'async function callClaude(messages){if(KEY==="__site__"){const r=await fetch(PROXY,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({raw:{model:SET.model,max_tokens:1500,system:SYS(),tools:TOOLS,messages}})});let j=null;try{j=await r.json()}catch(e){}if(!r.ok)throw new Error(j?.error?.message||j?.message||`Request failed (HTTP ${r.status})`);return j}\n  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",'),
+        ('$("sKey").value=KEY;', '$("sKey").value=KEY==="__site__"?"":KEY;'),
+        ('KEY=$("sKey").value.trim();', 'KEY=$("sKey").value.trim()||(PROXY?"__site__":"");'),
+        ('KEY?localStorage.setItem("adcopilot.key",KEY):localStorage.removeItem("adcopilot.key")',
+         'KEY&&KEY!=="__site__"?localStorage.setItem("adcopilot.key",KEY):localStorage.removeItem("adcopilot.key")'),
     ],
     "pre-call-brief": [
         ("Drafting needs Claude, which isn't available in this view.",

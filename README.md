@@ -45,4 +45,9 @@ Guardrails built in: only your domain can call the Worker, each visitor gets 15 
 
 ## Updating projects
 
+Ad Performance Copilot's master copy is `sources/ad-copilot.html` (run its tests with `node sources/ad-copilot.test.js`). The other projects come from their Claude artifacts.
+
+If `worker/worker.js` changes, paste the new version into the Cloudflare Worker again (Edit code → paste → Deploy).
+
+
 Projects are copies of the Claude artifacts. After you change one in Claude, ask Claude to "refresh the site": it re-downloads each artifact, runs `tools/prepare_project.py` on it, and pushes the result.

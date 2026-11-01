@@ -84,6 +84,7 @@
   };
 
   window.__aiWeb = !!AI_ENDPOINT; // pages can check whether live web search is available
+  window.__aiEndpoint = AI_ENDPOINT; // for tools that send their own full requests (Ad Copilot)
   window.claude = {
     use: function (name) {
       if (name === "sample") return Promise.resolve(AI_ENDPOINT ? sample : null);
