@@ -12,8 +12,11 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Bump when assets/claude-shim.js changes, so browsers don't keep an old copy
+SHIM_VERSION = "2"
+
 HEAD = ('<script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script>'
-        '<script src="../../assets/claude-shim.js"></script>')
+        '<script src="../../assets/claude-shim.js?v=' + SHIM_VERSION + '"></script>')
 
 BACK = '''<a href="../../index.html" class="pf-back" aria-label="Back to portfolio">&larr; Portfolio</a>
 <style>.pf-back{position:fixed;right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;font:600 13px/1 ui-monospace,Menlo,monospace;color:#0b0d12;background:#c6f432;padding:9px 13px;border-radius:999px;text-decoration:none;box-shadow:0 4px 18px rgba(0,0,0,.4)}.pf-back:hover{filter:brightness(1.08)}</style>
@@ -51,6 +54,8 @@ def prepare(raw_path, slug):
     s = open(raw_path, encoding="utf8").read()
     if "claude-shim.js" not in s:
         s = s.replace("<head>", "<head>" + HEAD, 1)
+    import re
+    s = re.sub(r'claude-shim\.js(\?v=[^"]*)?"', 'claude-shim.js?v=' + SHIM_VERSION + '"', s)
     if "pf-back" not in s:
         i = s.rfind("</body>")
         s = s[:i] + BACK + s[i + len("</body>"):] if i >= 0 else s + BACK
