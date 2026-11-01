@@ -3,214 +3,468 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Albert+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400&display=swap">
 <style>
-/* Layout: query bar on top, agent trace on the left while it runs, analyst-style report with footnoted sources on the right; watchlist as a second view */
+/* Layout: query bar on top; agent trace beside the report while it runs, collapsing to a one-line summary when done; analyst-style report with numbered sources; saved watchlist as a second view */
 :root{
   --bg:#f5f4f0; --paper:#ffffff; --ink:#1c1b18; --muted:#66625a; --line:#e0ddd4; --accent:#2b4fa8; --accent-soft:#e6ecf8;
-  --up:#1f7a4d; --up-bg:#e2f3e9; --chg:#9a5b00; --chg-bg:#fbefd9;
+  --up:#1f7a4d; --up-bg:#e2f3e9; --chg:#9a5b00; --chg-bg:#fbefd9; --bad:#a3352b; --bad-bg:#f8e3e0;
   --f-display:"Newsreader",Georgia,serif; --f-body:"Albert Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"Martian Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#131311; --paper:#1c1c19; --ink:#ebe9e3; --muted:#a29e94; --line:#2f2e2a; --accent:#8eaaf0; --accent-soft:#1e2a45;
-  --up:#6fd39c; --up-bg:#183a29; --chg:#f0bf5c; --chg-bg:#3a2e14; color-scheme:dark}}
+  --up:#6fd39c; --up-bg:#183a29; --chg:#f0bf5c; --chg-bg:#3a2e14; --bad:#f08b7f; --bad-bg:#3d1f1b; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#131311; --paper:#1c1c19; --ink:#ebe9e3; --muted:#a29e94; --line:#2f2e2a; --accent:#8eaaf0; --accent-soft:#1e2a45;
-  --up:#6fd39c; --up-bg:#183a29; --chg:#f0bf5c; --chg-bg:#3a2e14; color-scheme:dark}
+  --up:#6fd39c; --up-bg:#183a29; --chg:#f0bf5c; --chg-bg:#3a2e14; --bad:#f08b7f; --bad-bg:#3d1f1b; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55}
 .wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
 .top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
-h1{font:600 28px var(--f-display);margin:0;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:13px}
-.demo{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;background:var(--chg-bg);color:var(--chg);padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle}
+h1{font:600 28px var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;max-width:62ch}
+.tag{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:4px;vertical-align:middle;white-space:nowrap}
+.tag.live{background:var(--up-bg);color:var(--up)}
+.tag.ex{background:var(--chg-bg);color:var(--chg)}
 .views{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
 .views button{border:0;background:none;color:var(--muted);font:600 13px var(--f-body);padding:7px 14px;cursor:pointer}
 .views button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.views .count{font:11px var(--f-mono);margin-left:4px}
 form.q{display:flex;gap:8px;flex-wrap:wrap}
 form.q input{flex:1 1 300px;min-width:0;font:16px var(--f-body);padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
 .btn{border:1px solid var(--line);background:var(--paper);color:var(--ink);font:600 13px var(--f-body);padding:9px 14px;border-radius:10px;cursor:pointer}
+.btn:disabled{opacity:.55;cursor:default}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper)}
-.btn:focus-visible,input:focus-visible,.views button:focus-visible,.samples button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.samples{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
-.samples button{border:1px dashed var(--line);background:none;color:var(--accent);font:13px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
-.layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:18px;align-items:start}
-.trace{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.btn.small{padding:6px 11px;font-size:12px;border-radius:8px}
+.btn.danger{color:var(--bad)}
+.btn:focus-visible,input:focus-visible,.views button:focus-visible,.chips button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.chips button{border:1px dashed var(--line);background:none;color:var(--accent);font:13px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
+.chips button.ex{border-style:solid}
+.banner{font-size:13px;padding:10px 14px;border-radius:10px;background:var(--chg-bg);color:var(--chg)}
+.banner.err{background:var(--bad-bg);color:var(--bad)}
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start}
+.layout.done{grid-template-columns:minmax(0,1fr)}
+.trace{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);min-width:0}
+.layout.done .trace{position:static;padding:10px 14px}
 .trace h2{font:600 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0}
+.trace summary{cursor:pointer;font-size:13px;color:var(--muted);list-style:none}
+.trace summary::-webkit-details-marker{display:none}
+.trace summary b{color:var(--ink)}
+.trace details[open] summary{margin-bottom:10px}
+.steps{display:flex;flex-direction:column;gap:10px}
 .stepl{display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;font-size:13px;align-items:start}
 .stepl .ic{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);margin-top:2px}
 .stepl.done .ic{background:var(--up);border-color:var(--up)}
+.stepl.fail .ic{background:var(--bad);border-color:var(--bad)}
 .stepl.run .ic{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
-.stepl .d{font-size:12px;color:var(--muted)}
-.stepl:not(.done):not(.run){opacity:.5}
+.stepl .d{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.stepl:not(.done):not(.run):not(.fail){opacity:.5}
+.subqs{margin:4px 0 0;padding-left:16px;font-size:12px;color:var(--muted)}
 @keyframes spin{to{transform:rotate(360deg)}}
-.report{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:26px 30px;min-width:0;display:flex;flex-direction:column;gap:22px}
+.report{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:26px 30px;min-width:0;display:flex;flex-direction:column;gap:24px}
 .rhead{border-bottom:1px solid var(--line);padding-bottom:14px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-end}
-.rhead h2{font:600 26px/1.2 var(--f-display);margin:0;text-wrap:balance;max-width:30ch}
-.meta{font-size:12px;color:var(--muted)}
-.report h3{font:600 19px var(--f-display);margin:0 0 8px}
+.rhead>div:first-child{min-width:0}
+.rhead h2{font:600 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;max-width:30ch}
+.meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.report h3{font:600 19px var(--f-display);margin:0 0 8px;text-wrap:balance}
 .report p{margin:0 0 8px;max-width:70ch}
 sup{font:10px var(--f-mono);color:var(--accent)}
-.signals{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-.sig{border-top:2px solid var(--ink);padding-top:8px}
-.sig .v{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums}
+sup a{color:inherit;text-decoration:none}
+.signals{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.sig{border-top:2px solid var(--ink);padding-top:8px;display:flex;flex-direction:column;gap:2px}
+.sig .v{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .sig .k{font-size:12px;color:var(--muted)}
+.conf{font:600 10px var(--f-body);letter-spacing:.06em;text-transform:uppercase;align-self:flex-start;padding:1px 6px;border-radius:3px;margin-top:4px}
+.conf.high{background:var(--up-bg);color:var(--up)}
+.conf.medium{background:var(--accent-soft);color:var(--accent)}
+.conf.low{background:var(--chg-bg);color:var(--chg)}
 .tablewrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
-td.n{font-family:var(--f-mono);font-size:12px;white-space:nowrap}
-.pains{display:flex;flex-direction:column;gap:8px}
-.pain{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:center}
+td.n{font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums}
+mark.was{background:var(--chg-bg);color:var(--ink);padding:0 3px;border-radius:3px}
+.was-note{display:block;font:11px var(--f-body);color:var(--chg)}
+.pains{display:flex;flex-direction:column;gap:9px}
+.pain{display:grid;grid-template-columns:minmax(110px,190px) minmax(0,1fr);gap:12px;align-items:center}
 .bar{height:8px;background:var(--accent-soft);border-radius:4px;overflow:hidden}
 .bar span{display:block;height:100%;background:var(--accent)}
 .pain .lab{font-size:13px}
 .pain .pc{font:11px var(--f-mono);color:var(--muted)}
-ul.opp{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:70ch}
-ol.src{margin:0;padding-left:22px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+ul.opp{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.flag{font:600 10px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--chg);margin-left:4px}
+.sales{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 24px}
+.kv dt{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kv dd{margin:2px 0 10px}
+.accts{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line)}
+.acct{display:grid;grid-template-columns:minmax(120px,170px) minmax(0,1fr);gap:4px 14px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.acct .why{color:var(--muted)}
+.acct .angle{grid-column:2}
+.acct .angle::before{content:"Opener: ";font-weight:600;color:var(--accent)}
+ol.src{margin:0;padding-left:22px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+ol.src li:target{color:var(--ink);background:var(--accent-soft)}
+ul.cav{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
-.watch{display:flex;flex-direction:column;gap:14px}
-.wcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.panel{display:flex;flex-direction:column;gap:14px}
+.wcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .wcard header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:baseline}
-.wcard h3{font:600 20px var(--f-display);margin:0}
-.badge{font:600 12px var(--f-body);background:var(--chg-bg);color:var(--chg);padding:2px 10px;border-radius:999px}
-.chg{display:grid;grid-template-columns:90px 110px minmax(0,1fr);gap:10px;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
+.wcard h3{font:600 20px var(--f-display);margin:0;min-width:0;overflow-wrap:anywhere}
+.badge{font:600 12px var(--f-body);background:var(--chg-bg);color:var(--chg);padding:2px 10px;border-radius:999px;white-space:nowrap}
+.chg{display:grid;grid-template-columns:100px 140px minmax(0,1fr);gap:10px;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
 .chg .t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .note{font-size:12px;color:var(--muted)}
-.toast{font-size:13px;color:var(--up)}
-.demo.live{background:var(--up-bg);color:var(--up)}
-ol.src a{color:var(--accent);overflow-wrap:anywhere}
-.err{color:var(--chg);font-size:13px}
-.btn[disabled]{opacity:.5;cursor:default}
-@media (max-width:860px){.layout{grid-template-columns:1fr}.trace{position:static}.report{padding:18px 16px}.chg{grid-template-columns:1fr}}
+.empty{background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:28px 22px;color:var(--muted);text-align:left}
+.empty b{color:var(--ink)}
+.loading{display:flex;flex-direction:column;gap:12px}
+.skel{height:12px;border-radius:4px;background:var(--line);opacity:.6}
+.streamed{font:12px var(--f-mono);color:var(--muted)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:860px){.layout{grid-template-columns:1fr}.trace{position:static}.report{padding:18px 16px}.chg{grid-template-columns:1fr;gap:2px}}
+@media (max-width:640px){
+  table.players thead{display:none}
+  table.players,table.players tbody,table.players tr,table.players td{display:block;width:100%}
+  table.players tr{border-bottom:1px solid var(--line);padding:8px 0}
+  table.players td{border:0;padding:3px 0;display:grid;grid-template-columns:90px minmax(0,1fr);gap:8px}
+  table.players td::before{content:attr(data-l);font:600 10px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+  .pain{grid-template-columns:1fr;gap:4px}
+  .acct{grid-template-columns:1fr}.acct .angle{grid-column:1}
+}
 @media (prefers-reduced-motion:reduce){.stepl.run .ic{animation:none}}
 </style>
 
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>Market Research Agent <span class="demo" id="modeTag">Samples</span></h1>
-      <div class="sub">Ask about a market or competitor set. Get a structured, sourced report, then track what changes each week.</div>
+      <h1>Market Research Agent <span class="tag live" id="modeTag">Live</span></h1>
+      <div class="sub">Ask about any market or competitor set. Claude plans the research, writes a structured report with confidence levels and where to verify each figure, then you can save it and re-run it to see what changed.</div>
     </div>
-    <div class="views" role="tablist">
-      <button role="tab" aria-selected="true" data-v="research" id="vres">Research</button>
-      <button role="tab" aria-selected="false" data-v="watch" id="vwatch">Watchlist</button>
+    <div class="views" role="tablist" aria-label="Views">
+      <button role="tab" aria-selected="true" aria-controls="research" id="tab-research" data-v="research">Research</button>
+      <button role="tab" aria-selected="false" aria-controls="watch" id="tab-watch" data-v="watch" tabindex="-1">Watchlist<span class="count" id="wcount"></span></button>
     </div>
   </div>
 
-  <div id="research">
+  <section id="research" role="tabpanel" aria-labelledby="tab-research" class="panel">
     <form class="q" id="qform">
-      <input id="query" type="text" value="B2B invoicing software for marketing agencies in Europe" aria-label="Research question">
-      <button class="btn primary" type="submit">Research</button>
+      <input id="query" type="text" placeholder="e.g. Cybersecurity training platforms for SMBs in the UK" aria-label="Research question" autocomplete="off">
+      <button class="btn primary" type="submit" id="go">Research</button>
+      <button class="btn" type="button" id="stop" hidden>Stop</button>
     </form>
-    <div class="samples" style="margin:10px 0 16px">Try:<span id="samples"></span></div>
-    <div class="layout">
-      <aside class="trace" id="trace"></aside>
-      <article class="report" id="report"></article>
+    <div class="chips" id="chips">Try:</div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div class="layout" id="layout">
+      <aside class="trace" id="trace" aria-label="Research steps"></aside>
+      <article class="report" id="report" aria-live="polite"></article>
     </div>
-  </div>
+  </section>
 
-  <div id="watch" class="watch" hidden></div>
-  <p class="note" id="foot">The two suggested markets are fictional samples that load instantly. Type any other market or competitor question to run a live research report.</p>
+  <section id="watch" role="tabpanel" aria-labelledby="tab-watch" class="panel" hidden></section>
+
+  <p class="note" id="foot">Reports search the live web and link the pages they used. Figures carry a confidence level, so check low-confidence ones before you rely on them.</p>
 </div>
 
 <script>
 (function(){
-const R={
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+const fmtDate=t=>t?new Date(t).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}):"";
+
+/* ---------- Example reports (shown instantly, clearly marked) ---------- */
+const EXAMPLES={
  "B2B invoicing software for marketing agencies in Europe":{
   title:"Invoicing & payments software for marketing agencies, Europe",
   summary:"Agencies are moving from generic accounting tools to software that links time tracking, retainers and invoicing. Buyers are small: 10–80-person agencies where the founder or a finance lead decides. Late payment is the top complaint, so automated reminders and payment links drive most switching.",
-  signals:[["~118K","marketing agencies in the EU (est.)",1],["52 days","average payment delay agencies report",2],["€25–60","typical price per user / month",3],["3","funding rounds in the space in 2026",4]],
-  players:[["Billora","Generic SMB invoicing, strong in DACH","€15/user","Series B · 2025","Cheap, broad; weak on retainers"],["Retainly","Built for agencies: retainers + time","€39/user","Series A · Jun 2026","Closest competitor; no payment reminders"],["Paydesk","Payments-first, invoices as add-on","1.4% + €0.25","Series C · 2024","Strong collections; complex setup"],["AgencyOS","All-in-one agency management","€55/user","Seed · Mar 2026","Wide scope; invoicing is shallow"]],
-  pains:[["Chasing late payments",41],["Manual retainer billing",24],["Multi-currency clients",15],["Syncing with accounting",12],["Approval workflows",8]],
-  opps:["Lead with automated reminders and payment links: the top pain, and Retainly lacks it.","Target 10–50-person agencies in DACH and Benelux, where multi-currency is common.","Integrate with the accounting tools agencies already use rather than replacing them."],
-  sources:["EU business register summary, 2025","Agency payment survey, 2026 (n=640)","Vendor pricing pages, checked Oct 2026","Funding announcements, Jan–Oct 2026","App marketplace and G2-style reviews, 1,210 reviews analysed"]},
+  asOf:"Example data",
+  signals:[{value:"~118K",label:"marketing agencies in the EU",confidence:"medium",src:[1]},{value:"52 days",label:"average payment delay agencies report",confidence:"medium",src:[2]},{value:"€25–60",label:"typical price per user / month",confidence:"high",src:[3]},{value:"3",label:"funding rounds in the space this year",confidence:"low",src:[4]}],
+  players:[{name:"Billora",positioning:"Generic SMB invoicing, strong in DACH",price:"€15/user",funding:"Series B · 2025",read:"Cheap, broad; weak on retainers",src:[3,4]},{name:"Retainly",positioning:"Built for agencies: retainers + time",price:"€39/user",funding:"Series A · 2026",read:"Closest competitor; no payment reminders",src:[3,4]},{name:"Paydesk",positioning:"Payments-first, invoices as add-on",price:"1.4% + €0.25",funding:"Series C · 2024",read:"Strong collections; complex setup",src:[3]},{name:"AgencyOS",positioning:"All-in-one agency management",price:"€55/user",funding:"Seed · 2026",read:"Wide scope; invoicing is shallow",src:[3,4]}],
+  pains:[{theme:"Chasing late payments",share:41},{theme:"Manual retainer billing",share:24},{theme:"Multi-currency clients",share:15},{theme:"Syncing with accounting",share:12},{theme:"Approval workflows",share:8}],
+  opps:[{text:"Lead with automated reminders and payment links: the top complaint, and the closest competitor lacks it.",src:[2,5]},{text:"Target 10–50-person agencies in DACH and Benelux, where multi-currency clients are common.",src:[1]},{text:"Integrate with the accounting tools agencies already use rather than replacing them.",src:[5]}],
+  sales:{buyer:"Agency founder or finance lead at a 10–80-person agency",trigger:"A cash-flow squeeze, a new retainer client, or outgrowing spreadsheets",accounts:[{name:"Mid-size DACH performance agencies",why:"Multi-currency retainers, invoices still built by hand",angle:"How many days are you waiting on your three biggest retainers?"},{name:"Benelux creative studios",why:"Project + retainer mix; frequent late payers",angle:"Payment links on every invoice cut chasing to one click."}]},
+  sources:[{name:"EU business register summary",verify:"Count of agencies by NACE code"},{name:"Agency payment survey (n=640)",verify:"Reported payment delays"},{name:"Vendor pricing pages",verify:"Current list prices"},{name:"Funding announcements",verify:"Round size and date"},{name:"G2-style review sites",verify:"Complaint themes"}],
+  caveats:["All companies and figures in this example are fictional."]},
  "Mobile fitness apps in Germany":{
   title:"Mobile fitness apps, Germany",
-  summary:"The market is crowded at the top and growing in niches: strength training, women's health and programmes tied to health insurers. Paid UA costs rose through 2026, so retention and partnerships with insurers decide who grows.",
-  signals:[["~21M","fitness app users in Germany (est.)",1],["€4.10","median iOS CPI, health & fitness",2],["31%","users paying for at least one app",3],["2","insurer partnership launches in Q3",4]],
-  players:[["Fitnio","Home workouts, broad audience","€9.99/mo","Public","Market leader; high churn"],["Kraftwerk","Strength training plans","€12.99/mo","Series A · 2026","Fast growth, strong reviews"],["Vela Health","Women's health & fitness","€7.99/mo","Seed · 2025","Insurer-backed programme"],["RunLoop","Running & community","Freemium","Series B · 2024","Strong community; weak strength content"]],
-  pains:[["Price vs value",34],["Repetitive workouts",26],["Poor progress tracking",18],["Subscription cancellation",14],["German-language coaching",8]],
-  opps:["Insurer partnerships lower CAC: two launched this year and more insurers are tendering.","Progress tracking is a top complaint across all four players.","Strength training is the fastest-growing segment by app-store rank movement."],
-  sources:["Consumer survey, 2026","Mobile ad benchmark report, Q3 2026","App store data, Oct 2026","Insurer press releases, Jul–Sep 2026","App Store and Google Play reviews, 3,400 analysed"]}
+  summary:"The market is crowded at the top and growing in niches: strength training, women's health and programmes tied to health insurers. Paid acquisition costs rose, so retention and insurer partnerships decide who grows.",
+  asOf:"Example data",
+  signals:[{value:"~21M",label:"fitness app users in Germany",confidence:"medium",src:[1]},{value:"€4.10",label:"median iOS cost per install, health & fitness",confidence:"low",src:[2]},{value:"31%",label:"users paying for at least one app",confidence:"medium",src:[1]},{value:"2",label:"insurer partnership launches last quarter",confidence:"low",src:[4]}],
+  players:[{name:"Fitnio",positioning:"Home workouts, broad audience",price:"€9.99/mo",funding:"Public",read:"Market leader; high churn",src:[3]},{name:"Kraftwerk",positioning:"Strength training plans",price:"€12.99/mo",funding:"Series A · 2026",read:"Fast growth, strong reviews",src:[3]},{name:"Vela Health",positioning:"Women's health & fitness",price:"€7.99/mo",funding:"Seed · 2025",read:"Insurer-backed programme",src:[3,4]},{name:"RunLoop",positioning:"Running & community",price:"Freemium",funding:"Series B · 2024",read:"Strong community; weak strength content",src:[3]}],
+  pains:[{theme:"Price vs value",share:34},{theme:"Repetitive workouts",share:26},{theme:"Poor progress tracking",share:18},{theme:"Subscription cancellation",share:14},{theme:"German-language coaching",share:8}],
+  opps:[{text:"Insurer partnerships lower acquisition cost, and more insurers are tendering.",src:[4]},{text:"Progress tracking is a top complaint across all four players.",src:[5]},{text:"Strength training is the fastest-growing segment by app-store rank movement.",src:[3]}],
+  sales:{buyer:"Head of partnerships at a statutory insurer, or a corporate wellbeing lead",trigger:"Prevention budget renewal or a new employee-benefits cycle",accounts:[{name:"Statutory insurers (Krankenkassen)",why:"Fund certified prevention courses",angle:"A certified strength programme your members actually finish."}]},
+  sources:[{name:"Consumer survey",verify:"User and payer counts"},{name:"Mobile ad benchmark report",verify:"Cost per install"},{name:"App store rankings",verify:"Rank movement and prices"},{name:"Insurer press releases",verify:"Partnership launches"},{name:"App Store and Google Play reviews",verify:"Complaint themes"}],
+  caveats:["All companies and figures in this example are fictional."]}
 };
-const W=[
- {q:"B2B invoicing software for marketing agencies in Europe",last:"Run Mon 26 Oct",changes:[["Pricing","Retainly","Raised price from €35 to €39 per user and added an annual plan."],["Funding","AgencyOS","Announced a €6M seed extension."],["Product","Paydesk","Launched automated payment reminders, closing the gap you flagged."]]},
- {q:"Mobile fitness apps in Germany",last:"Run Mon 26 Oct",changes:[["Partnership","Vela Health","Signed a second statutory insurer partnership."],["Hiring","Kraftwerk","Posted 6 growth and UA roles in Berlin."]]}
-];
-const STEPS=[["Plan","Breaking the question into 8 sub-questions"],["Search","Running 24 searches, fetching 37 pages"],["Extract","Pulling pricing, funding and positioning into a table"],["Reviews","Clustering complaints from user reviews"],["Verify","Dropping unsourced claims, flagging conflicts"],["Write","Assembling the report"]];
-const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let timer=null, sample=null, ctl=null;
-(async()=>{try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}
-  if(sample){$("modeTag").textContent="Live";$("modeTag").classList.add("live")}})();
-const today=()=>new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
-const num=(v,d)=>{v=Number(v);return isFinite(v)?v:d};
-function clean(r,q){
-  const arr=x=>Array.isArray(x)?x:[];
-  return {live:true,asof:today(),title:String(r.title||q),summary:String(r.summary||""),
-    signals:arr(r.signals).slice(0,4).map(x=>[String(x.value??x[0]??""),String(x.label??x[1]??""),num(x.source??x[2],1)]),
-    players:arr(r.players).slice(0,6).map(p=>Array.isArray(p)?p.map(String):[p.company,p.positioning,p.price,p.funding,p.read].map(v=>String(v??"–"))),
-    pains:arr(r.complaints||r.pains).slice(0,5).map(x=>[String(x.theme??x[0]??""),Math.max(1,Math.min(50,num(x.share??x[1],10)))]),
-    opps:arr(r.opportunities||r.opps).slice(0,4).map(String),
-    sources:arr(r.sources).slice(0,10).map(x=>typeof x==="string"?{title:x}:{title:String(x.title||x.url||"Source"),url:/^https?:\/\//.test(x.url||"")?x.url:""})};
+const LIVE_IDEAS=["Cybersecurity awareness training for SMBs in the UK","Restaurant POS systems in Israel","AI meeting note-takers for sales teams"];
+
+/* ---------- State ---------- */
+let sample=null, db=null, coll=null, downloads=null;
+let liveOK=null;            // null = unknown yet, true / false
+let watch=[];               // [{id, query, report, runAt, prevRunAt, changes, createdAt}]
+let watchLocal=true;        // true until db answers
+let current=null;           // {query, report, runAt, example, watchId, changes}
+let ctl=null, running=false, tick=null;
+
+/* ---------- Trace ---------- */
+const STEP_NAMES=["Plan","Research & write","Verify"];
+let steps=[];
+function resetSteps(){steps=STEP_NAMES.map(t=>({t,state:"",d:"",extra:""}))}
+function renderTrace(collapsed,summary){
+  const layout=$("layout");
+  layout.classList.toggle("done",!!collapsed);
+  const list=`<div class="steps">${steps.map(s=>`<div class="stepl ${s.state}"><span class="ic" aria-hidden="true"></span><div><b>${esc(s.t)}</b><div class="d">${esc(s.d)}</div>${s.extra}</div></div>`).join("")}</div>`;
+  $("trace").innerHTML=collapsed
+    ?`<details><summary><b>Agent steps</b> · ${esc(summary)} <span aria-hidden="true">▾</span></summary>${list}</details>`
+    :`<h2>Agent steps</h2>${list}`;
 }
-async function live(q){
-  if(ctl)ctl.abort(); ctl=new AbortController(); const my=ctl;
-  let n=0;trace(0);$("report").innerHTML=`<p class="note">Researching “${esc(q)}”. This takes 30–90 seconds while the agent searches and reads sources.</p>`;
-  clearInterval(timer);timer=setInterval(()=>{if(n<STEPS.length-1){n++;trace(n)}},9000);
-  const prompt=`You are a market research analyst. Research this question and write a concise, sourced report.
-Question: ${q}
-Today is ${today()}. Search the web for current facts: market size signals, the main companies with their positioning, pricing and latest funding, what customers complain about in reviews, and opportunities. Only state figures you found in a source, and number sources in the order you list them.
-Reply with only JSON in this shape:
-{"title":"short report title","summary":"3 sentences","signals":[{"value":"~118K","label":"what the number measures","source":1}],"players":[{"company":"","positioning":"","price":"","funding":"","read":"one short judgement"}],"complaints":[{"theme":"short theme","share":25}],"opportunities":["one sentence each"],"sources":[{"title":"page or publisher name","url":"https://..."}]}
-Give 3-4 signals, 3-6 players, 3-5 complaint themes (share = rough % of complaints found that mention it), 3 opportunities, and every source you used. Use "–" for unknown values.`;
+function setStep(i,state,d,extra){steps[i].state=state;if(d!=null)steps[i].d=d;if(extra!=null)steps[i].extra=extra;renderTrace(false)}
+
+/* ---------- Report rendering ---------- */
+function srcRefs(arr,n){const v=(arr||[]).filter(x=>Number.isInteger(x)&&x>=1&&x<=n);return v.length?`<sup>${v.map(x=>`<a href="#src-${x}">${x}</a>`).join(",")}</sup>`:""}
+function wasFor(changes,company,field){const c=(changes||[]).find(c=>c.company===company&&c.field===field);return c?c.was:null}
+function cell(val,was,label,cls){
+  const inner=was!=null?`<mark class="was">${esc(val)}</mark><span class="was-note">was ${esc(was)}</span>`:esc(val);
+  return `<td data-l="${label}"${cls?` class="${cls}"`:""}>${inner}</td>`;
+}
+function renderReport(){
+  const c=current; if(!c){$("report").innerHTML="";return}
+  const r=c.report, n=(r.sources||[]).length, ch=c.changes||[];
+  const maxShare=Math.max(1,...(r.pains||[]).map(p=>+p.share||0));
+  const onWatch=watch.find(w=>norm(w.query)===norm(c.query));
+  const lowCount=(r.signals||[]).filter(s=>s.confidence==="low").length;
+  const sigChanged=label=>{const x=ch.find(x=>x.field==="signal"&&x.company===label);return x?x.was:null};
+  $("report").innerHTML=`
+   <div class="rhead"><div>
+     <div class="meta">${c.example?'<span class="tag ex">Example</span>':'<span class="tag live">Live report</span>'}<span>${n} sources to check</span><span>·</span><span>Run ${esc(c.runAt?new Date(c.runAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):today())}</span>${r.asOf&&!c.example?`<span>·</span><span>Knowledge covers ${esc(r.asOf)}</span>`:""}</div>
+     <h2>${esc(r.title||c.query)}</h2></div>
+     <div class="actions">
+       <button class="btn small" type="button" id="save" ${onWatch||c.example?"disabled":""}>${onWatch?"On watchlist":"Save to watchlist"}</button>
+       <button class="btn small" type="button" id="copy">Copy as Markdown</button>
+       <button class="btn small" type="button" id="dl" ${downloads?"":"hidden"}>Download .md</button>
+     </div></div>
+   ${ch.length?`<div class="banner">${ch.length} change${ch.length>1?"s":""} since the run on ${esc(fmtDate(c.prevRunAt))}. Changed values are highlighted.</div>`:""}
+   <section><h3>Summary</h3><p>${esc(r.summary)}</p></section>
+   ${(r.signals||[]).length?`<section><h3>Size signals</h3><div class="signals">${r.signals.map(s=>{const was=sigChanged(s.label);return `<div class="sig"><div class="v">${was!=null?`<mark class="was">${esc(s.value)}</mark>`:esc(s.value)}</div><div class="k">${esc(s.label)}${srcRefs(s.src,n)}</div>${was!=null?`<span class="was-note">was ${esc(was)}</span>`:""}<span class="conf ${esc(s.confidence)}">${esc(s.confidence)} confidence</span></div>`}).join("")}</div>${lowCount?`<p class="note">${lowCount} figure${lowCount>1?"s are":" is"} low confidence. Check the named source before quoting it.</p>`:""}</section>`:""}
+   ${(r.players||[]).length?`<section><h3>Key players</h3><div class="tablewrap"><table class="players"><thead><tr><th>Company</th><th>Positioning</th><th>Price</th><th>Funding</th><th>Read</th></tr></thead><tbody>${r.players.map(p=>`<tr><td data-l="Company"><b>${esc(p.name)}</b>${srcRefs(p.src,n)}${ch.some(x=>x.field==="new"&&x.company===p.name)?' <span class="flag">New</span>':""}</td><td data-l="Positioning">${esc(p.positioning)}</td>${cell(p.price,wasFor(ch,p.name,"price"),"Price","n")}${cell(p.funding,wasFor(ch,p.name,"funding"),"Funding","n")}<td data-l="Read">${esc(p.read)}</td></tr>`).join("")}</tbody></table></div></section>`:""}
+   ${(r.pains||[]).length?`<section><h3>What customers complain about</h3><div class="pains">${r.pains.map(p=>`<div class="pain"><span class="lab">${esc(p.theme)}</span><div><div class="bar"><span style="width:${Math.round((+p.share||0)/maxShare*100)}%"></span></div><span class="pc">~${esc(p.share)}% of complaints</span></div></div>`).join("")}</div><p class="note">Estimated share of negative reviews mentioning each theme.</p></section>`:""}
+   ${(r.opps||[]).length?`<section><h3>Opportunities</h3><ul class="opp">${r.opps.map(o=>`<li>${esc(o.text)}${srcRefs(o.src,n)||'<span class="flag">Unsourced</span>'}</li>`).join("")}</ul></section>`:""}
+   ${r.sales?`<section><h3>For sales</h3><div class="sales"><dl class="kv"><dt>Buyer</dt><dd>${esc(r.sales.buyer)}</dd><dt>Buying trigger</dt><dd>${esc(r.sales.trigger)}</dd></dl><div class="accts">${(r.sales.accounts||[]).map(a=>`<div class="acct"><b>${esc(a.name)}</b><span class="why">${esc(a.why)}</span><span class="angle">${esc(a.angle)}</span></div>`).join("")}</div></div></section>`:""}
+   <section><h3>Where to verify</h3><ol class="src">${(r.sources||[]).map((s,i)=>`<li id="src-${i+1}">${/^https?:\/\//.test(s.url||"")?`<a href="${esc(s.url)}" target="_blank" rel="noopener"><b>${esc(s.name)}</b></a>`:`<b>${esc(s.name)}</b>`}${s.verify?` — ${esc(s.verify)}`:""}</li>`).join("")}</ol>${(r.caveats||[]).length?`<ul class="cav" style="margin-top:10px">${r.caveats.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</section>`;
+  $("save").onclick=saveCurrent;
+  $("copy").onclick=e=>{const md=toMarkdown();const b=e.currentTarget;try{navigator.clipboard.writeText(md).then(()=>{b.textContent="Copied"},()=>showStatus("Copy was blocked here. Use Download .md instead.","err"))}catch(err){showStatus("Copy was blocked here. Use Download .md instead.","err")}};
+  $("dl").onclick=async()=>{try{await downloads.save({filename:slug(c.report.title||c.query)+".md",data:toMarkdown()})}catch(e){if(e&&e.code&&e.code!=="cancelled"&&e.code!=="declined")showStatus("The download didn't start. Try Copy as Markdown.","err")}};
+}
+function toMarkdown(){
+  const c=current,r=c.report;const L=[];
+  L.push(`# ${r.title||c.query}`,"",`_Run ${today()}${r.asOf?` · knowledge covers ${r.asOf}`:""}${c.example?" · example data":""}_`,"","## Summary",r.summary||"","");
+  if((r.signals||[]).length){L.push("## Size signals");r.signals.forEach(s=>L.push(`- **${s.value}** ${s.label} (${s.confidence} confidence${s.src&&s.src.length?`; source ${s.src.join(",")}`:""})`));L.push("")}
+  if((r.players||[]).length){L.push("## Key players","","| Company | Positioning | Price | Funding | Read |","|---|---|---|---|---|");r.players.forEach(p=>L.push(`| ${[p.name,p.positioning,p.price,p.funding,p.read].map(x=>String(x??"").replace(/\|/g,"/")).join(" | ")} |`));L.push("")}
+  if((r.pains||[]).length){L.push("## What customers complain about");r.pains.forEach(p=>L.push(`- ${p.theme}: ~${p.share}%`));L.push("")}
+  if((r.opps||[]).length){L.push("## Opportunities");r.opps.forEach(o=>L.push(`- ${o.text}`));L.push("")}
+  if(r.sales){L.push("## For sales",`- Buyer: ${r.sales.buyer}`,`- Buying trigger: ${r.sales.trigger}`);(r.sales.accounts||[]).forEach(a=>L.push(`- **${a.name}**: ${a.why}. Opener: "${a.angle}"`));L.push("")}
+  if((r.sources||[]).length){L.push("## Where to verify");r.sources.forEach((s,i)=>L.push(`${i+1}. ${s.name}${s.verify?` — ${s.verify}`:""}`));L.push("")}
+  if((r.caveats||[]).length){L.push("## Caveats");r.caveats.forEach(x=>L.push(`- ${x}`))}
+  return L.join("\n");
+}
+const slug=s=>String(s).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,60)||"report";
+const norm=s=>String(s||"").trim().toLowerCase().replace(/\s+/g," ");
+
+function showStatus(msg,kind){$("status").innerHTML=msg?`<div class="banner ${kind==="err"?"err":""}">${esc(msg)}</div>`:""}
+function errCopy(code){
+  return ({not_granted:"Live research needs your OK to use Claude. Run it again and choose Allow.",rate_limited:"You've hit your Claude usage limit for now. Try again later.",session_expired:"Your session expired. Reload the page and sign in.",prompt_too_large:"That question is too long. Shorten it and try again.",refused:"Claude declined this question. Try rephrasing it as a market or competitor question.",invalid_json:"The report came back malformed. Run it again.",empty_completion:"The report came back empty. Run it again.",upstream_error:"Claude didn't answer. Run it again in a moment.",queue_overflow:"Too many requests are queued. Wait a moment, then run it again.",sampling_disabled:"Live research is turned off for this account.",capability_disabled:"Live research is turned off for this page.",capability_removed:"Live research is no longer enabled for this page."})[code]||"The research didn't finish. Run it again.";
+}
+
+/* ---------- Live research ---------- */
+function planPrompt(q){
+  return `You are planning market research. Question: "${q}"\nToday is ${today()}.\nBreak it into 6 to 8 concrete sub-questions an analyst would answer (market size, buyers, key players and pricing, funding and recent moves, customer complaints, go-to-market). Reply with only a JSON array of short strings.`;
+}
+function reportPrompt(q,subqs){
+  return `You are a senior market analyst writing a structured brief for a business-development team.
+Research question: "${q}"
+Today is ${today()}. ${window.__aiWeb?"Search the web for current facts and use only figures you find; cite the pages you used.":"You cannot browse; write from what you know and be explicit about uncertainty."}
+Sub-questions to cover:
+${subqs.map((s,i)=>`${i+1}. ${s}`).join("\n")}
+
+Rules:
+- Name only real companies you are confident exist and operate in this market. Prefer 4-6 players. If unsure of a price or funding detail write "Unknown" rather than guessing.
+- Every figure gets a confidence: "high" (well documented), "medium" (reasonable estimate), "low" (rough or possibly outdated). Prefix estimates with "~".
+- "sources" are named, real publications, datasets, registries or page types where a reader can verify the figures (e.g. "Eurostat structural business statistics", "Vendor pricing pages"). ${window.__aiWeb?"Put the page URL you used in \"url\".":"No URLs; leave \"url\" empty."} "src" fields are 1-based indexes into "sources".
+- Each opportunity must cite the sources it rests on.
+- "asOf": the latest period your knowledge reliably covers, e.g. "early 2026".
+- "pains": 4-6 complaint themes with an estimated share (integers summing to about 100).
+- "sales.accounts": 3-5 named target companies or tightly defined account segments, with why they fit and a one-sentence opening line a rep could use.
+- Plain, direct English. No markdown inside strings.
+
+Reply with only this JSON object:
+{"title":string,"summary":string (3 sentences),"asOf":string,
+"signals":[{"value":string,"label":string,"confidence":"high"|"medium"|"low","src":[int]}] (4 items),
+"players":[{"name":string,"positioning":string,"price":string,"funding":string,"read":string,"src":[int]}],
+"pains":[{"theme":string,"share":int}],
+"opps":[{"text":string,"src":[int]}] (3 items),
+"sales":{"buyer":string,"trigger":string,"accounts":[{"name":string,"why":string,"angle":string}]},
+"sources":[{"name":string,"verify":string,"url":string}],
+"caveats":[string] (1-3 items)}`;
+}
+function verify(r){
+  const n=(r.sources||[]).length;const fix=a=>(Array.isArray(a)?a:[]).map(Number).filter(x=>Number.isInteger(x)&&x>=1&&x<=n);
+  let dropped=0,unsourced=0,low=0;
+  const conf=c=>["high","medium","low"].includes(c)?c:"low";
+  r.signals=(Array.isArray(r.signals)?r.signals:[]).filter(s=>s&&s.value&&s.label).map(s=>({...s,confidence:conf(s.confidence),src:fix(s.src)}));
+  r.signals=r.signals.filter(s=>{if(!s.src.length){dropped++;return false}return true});
+  low=r.signals.filter(s=>s.confidence==="low").length;
+  r.players=(Array.isArray(r.players)?r.players:[]).filter(p=>p&&p.name).map(p=>({...p,src:fix(p.src)}));
+  r.pains=(Array.isArray(r.pains)?r.pains:[]).filter(p=>p&&p.theme).map(p=>({theme:p.theme,share:Math.max(0,Math.min(100,Math.round(+p.share||0)))})).sort((a,b)=>b.share-a.share);
+  r.opps=(Array.isArray(r.opps)?r.opps:[]).filter(o=>o&&o.text).map(o=>({...o,src:fix(o.src)}));
+  unsourced=r.opps.filter(o=>!o.src.length).length;
+  r.caveats=Array.isArray(r.caveats)?r.caveats.filter(Boolean):[];
+  if(r.sales&&!Array.isArray(r.sales.accounts))r.sales.accounts=[];
+  return {dropped,unsourced,low};
+}
+async function research(q,opts={}){
+  if(running)return;
+  if(!sample){showStatus(liveOK===false?"Live research is switched off right now. The examples still work.":"Connecting to Claude… try again in a moment.","err");return}
+  running=true;showStatus("");$("go").disabled=true;$("stop").hidden=false;
+  ctl=new AbortController();const signal=ctl.signal;const t0=Date.now();
+  resetSteps();setStep(0,"run","Breaking the question into sub-questions");
+  $("report").innerHTML=`<div class="loading"><p class="note">Researching “${esc(q)}”. The first run asks you to allow Claude; reports usually take 30–90 seconds.</p><div class="skel" style="width:60%"></div><div class="skel" style="width:90%"></div><div class="skel" style="width:75%"></div></div>`;
   try{
-    const r=await sample.json(prompt,{signal:my.signal,webSearch:true,cache:false});
-    if(my!==ctl)return; clearInterval(timer);
-    const rep=clean(r,q); R[q]=rep; trace(STEPS.length); report(q);
+    let subqs=await sample.json(planPrompt(q),{modelTier:"quick",signal});
+    subqs=(Array.isArray(subqs)?subqs:[]).map(String).filter(Boolean).slice(0,8);
+    if(!subqs.length)subqs=["Market size and growth","Buyers and decision makers","Key players, positioning and pricing","Recent funding and moves","Customer complaints","Go-to-market opportunities"];
+    setStep(0,"done",`${subqs.length} sub-questions`,`<ol class="subqs">${subqs.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>`);
+    setStep(1,"run","Thinking…");
+    tick=setInterval(()=>{if(steps[1].state==="run"&&!steps[1].d.startsWith("Writing"))setStep(1,"run",`Thinking… ${Math.round((Date.now()-t0)/1000)}s`)},1000);
+    const r=await sample.json(reportPrompt(q,subqs),{signal,webSearch:!!window.__aiWeb,onText:({text})=>{steps[1].d=`Writing · ${text.length.toLocaleString()} characters`;setStep(1,"run")}});
+    clearInterval(tick);
+    if(!r||typeof r!=="object"||!r.summary)throw {code:"invalid_json"};
+    setStep(1,"done",`${(r.players||[]).length} players, ${(r.sources||[]).length} sources`);
+    setStep(2,"run","Checking sources and confidence");
+    const v=verify(r);
+    const vd=[v.dropped?`dropped ${v.dropped} unsourced figure${v.dropped>1?"s":""}`:"every figure sourced",v.low?`${v.low} low-confidence`:"",v.unsourced?`${v.unsourced} opportunity flagged`:""].filter(Boolean).join(", ");
+    setStep(2,"done",vd);
+    const secs=Math.round((Date.now()-t0)/1000);
+    renderTrace(true,`${subqs.length} sub-questions · ${(r.sources||[]).length} sources · ${secs}s`);
+    if(opts.onDone){await opts.onDone(r)}
+    else{current={query:q,report:r,runAt:Date.now(),example:false,changes:[]};renderReport()}
   }catch(e){
-    if(my!==ctl)return; clearInterval(timer); trace(-1);
-    const msg=e&&e.code==="cancelled"?"Stopped.":e&&e.code==="rate_limited"?"Too many reports right now. Try again in a few minutes.":e&&e.code==="invalid_json"?"The report came back in the wrong shape. Try again.":"Couldn't finish the research. Try again.";
-    $("report").innerHTML=`<p class="err">${msg}</p>`;
+    clearInterval(tick);
+    const i=steps.findIndex(s=>s.state==="run");if(i>=0)setStep(i,"fail",e&&e.code==="cancelled"?"Stopped":"Failed");
+    if(e&&e.code==="cancelled"){showStatus("Research stopped.");}
+    else showStatus(errCopy(e&&e.code),"err");
+    if(current)renderReport();else $("report").innerHTML="";
+  }finally{running=false;$("go").disabled=false;$("stop").hidden=true;ctl=null}
+}
+
+/* ---------- Diff between runs ---------- */
+function diffReports(a,b){
+  const out=[];const by=x=>Object.fromEntries((x.players||[]).map(p=>[norm(p.name),p]));
+  const A=by(a),B=by(b);
+  for(const k in B){const p=B[k],o=A[k];
+    if(!o){out.push({kind:"New player",company:p.name,field:"new",detail:p.positioning||"Added to the market map."});continue}
+    if(norm(o.price)!==norm(p.price))out.push({kind:"Pricing",company:p.name,field:"price",was:o.price,detail:`Price now ${p.price} (was ${o.price}).`});
+    if(norm(o.funding)!==norm(p.funding))out.push({kind:"Funding",company:p.name,field:"funding",was:o.funding,detail:`Funding now ${p.funding} (was ${o.funding}).`});
   }
-}
-$("samples").innerHTML=Object.keys(R).map(k=>`<button type="button">${k}</button>`).join(" ");
-
-function trace(n){$("trace").innerHTML=`<h2>Agent steps</h2>`+STEPS.map(([t,d],i)=>`<div class="stepl ${i<n?"done":i===n?"run":""}"><span class="ic" aria-hidden="true"></span><div><b>${t}</b><div class="d">${d}</div></div></div>`).join("")}
-
-function report(key){const r=R[key];
-  $("report").innerHTML=`<div class="rhead"><div><div class="meta">${r.live?"Live report":"Sample report"} · ${r.sources.length} sources · as of ${r.asof||"1 Nov 2026"}</div><h2>${r.title}</h2></div>
-   <div class="actions"><button class="btn" type="button" id="save">Add to watchlist</button><button class="btn" type="button" id="copy">Copy as text</button></div></div>
-   <section><h3>Summary</h3><p>${r.summary}</p></section>
-   <section><h3>Size signals</h3><div class="signals">${r.signals.map(([v,k,s])=>`<div class="sig"><div class="v">${v}</div><div class="k">${k}<sup>${s}</sup></div></div>`).join("")}</div></section>
-   <section><h3>Key players</h3><div class="tablewrap"><table><thead><tr><th>Company</th><th>Positioning</th><th>Price</th><th>Funding</th><th>Read</th></tr></thead><tbody>${r.players.map(p=>`<tr><td><b>${p[0]}</b></td><td>${p[1]}</td><td class="n">${p[2]}</td><td class="n">${p[3]}</td><td>${p[4]}</td></tr>`).join("")}</tbody></table></div><p class="note">Prices and funding from vendor pages and announcements<sup>3,4</sup>.</p></section>
-   <section><h3>What customers complain about</h3><div class="pains">${r.pains.map(([l,v])=>`<div class="pain"><span class="lab">${l}</span><div><div class="bar"><span style="width:${v*2}%"></span></div><span class="pc">${v}% of negative reviews</span></div></div>`).join("")}</div><p class="note">Share of negative reviews mentioning each theme<sup>5</sup>.</p></section>
-   <section><h3>Opportunities</h3><ul class="opp">${r.opps.map(o=>`<li>${o}</li>`).join("")}</ul></section>
-   <section><h3>Sources</h3><ol class="src">${r.sources.map(s=>typeof s==="string"?`<li>${esc(s)} (sample)</li>`:`<li>${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title||s.url)}</a>`:esc(s.title)}</li>`).join("")}</ol></section>`;
-  $("save").addEventListener("click",e=>{if(!W.find(w=>w.q===key))W.unshift({q:key,last:"Saved today",changes:[]});e.target.textContent="On watchlist";renderWatch()});
-  $("copy").addEventListener("click",e=>{const txt=$("report").innerText;try{navigator.clipboard.writeText(txt).then(()=>{e.target.textContent="Copied"},()=>{})}catch(err){}});
+  for(const k in A)if(!B[k])out.push({kind:"Dropped",company:A[k].name,field:"gone",detail:"No longer listed as a key player."});
+  const sa=Object.fromEntries((a.signals||[]).map(s=>[norm(s.label),s]));
+  (b.signals||[]).forEach(s=>{const o=sa[norm(s.label)];if(o&&norm(o.value)!==norm(s.value))out.push({kind:"Signal",company:s.label,field:"signal",was:o.value,detail:`${s.value} (was ${o.value}).`})});
+  const ta=(a.pains||[])[0],tb=(b.pains||[])[0];
+  if(ta&&tb&&norm(ta.theme)!==norm(tb.theme))out.push({kind:"Complaints",company:"Top theme",field:"pain",detail:`Now “${tb.theme}” (was “${ta.theme}”).`});
+  return out;
 }
 
-function run(q){clearInterval(timer);if(ctl){ctl.abort();ctl=null}const key=R[q]?q:sample?null:Object.keys(R).find(k=>q.toLowerCase().split(/\s+/).some(w=>w.length>4&&k.toLowerCase().includes(w)));
-  if(!R[q]&&q.trim().length>3&&sample){live(q.trim());return}
-  if(!key){trace(-1);$("report").innerHTML=`<p class="note">Live research isn't available in this view. Pick one of the two sample markets above.</p>`;return}
-  $("query").value=key;
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches){trace(STEPS.length);report(key);return}
-  let n=0;trace(0);$("report").innerHTML=`<p class="note">Researching… the report appears when all steps finish.</p>`;
-  timer=setInterval(()=>{n++;trace(n);if(n>=STEPS.length){clearInterval(timer);report(key)}},550);
+/* ---------- Watchlist ---------- */
+async function saveCurrent(){
+  const c=current;if(!c||c.example||watch.find(w=>norm(w.query)===norm(c.query)))return;
+  const item={query:c.query,report:c.report,runAt:c.runAt,prevRunAt:null,changes:[],createdAt:Date.now()};
+  if(coll){try{const ref=coll.doc();await ref.set(item);c.watchId=ref.id;}catch(e){showStatus(e&&e.code==="quota_exceeded"?"Your watchlist is full. Remove an item, then save again.":"Couldn't save to the watchlist. Try again.","err");return}}
+  else{item.id="local-"+Date.now();watch.unshift(item);renderWatch();}
+  renderReport();
 }
+async function rerun(w){
+  selectTab("research");$("query").value=w.query;
+  await research(w.query,{onDone:async r=>{
+    const changes=diffReports(w.report,r);
+    const upd={query:w.query,report:r,runAt:Date.now(),prevRunAt:w.runAt,changes,createdAt:w.createdAt||Date.now()};
+    current={query:w.query,report:r,runAt:upd.runAt,prevRunAt:w.runAt,example:false,changes,watchId:w.id};
+    renderReport();
+    if(coll&&!String(w.id).startsWith("local-")){try{await coll.doc(w.id).set(upd)}catch(e){showStatus("The new report is shown but couldn't be saved. Save it again from the watchlist.","err")}}
+    else{Object.assign(w,upd);renderWatch()}
+    showStatus(changes.length?`${changes.length} change${changes.length>1?"s":""} since ${fmtDate(w.runAt)}.`:"No changes to players, prices, funding or size signals since the last run.");
+  }});
+}
+let confirmDel=null;
+function renderWatch(){
+  $("wcount").textContent=watch.length?` ${watch.length}`:"";
+  const head=watchLocal?`<p class="note">${db===null&&liveOK!==null?"Saved markets stay here until you close the page.":"Loading your watchlist…"}</p>`:"";
+  if(!watch.length){$("watch").innerHTML=head+`<div class="empty"><b>No saved markets yet.</b><br>Run a report on the Research tab and choose <b>Save to watchlist</b>. Re-run it any time to see which players, prices, funding and size signals changed.</div>`;return}
+  $("watch").innerHTML=head+watch.map(w=>{const ch=w.changes||[];return `<div class="wcard"><header><h3>${esc(w.report&&w.report.title||w.query)}</h3>${ch.length?`<span class="badge">${ch.length} change${ch.length>1?"s":""} on last run</span>`:`<span class="note">${w.prevRunAt?"No changes on last run":"Saved"}</span>`}</header>
+   <div class="meta">“${esc(w.query)}” · last run ${esc(fmtDate(w.runAt))}${w.prevRunAt?` · previous ${esc(fmtDate(w.prevRunAt))}`:""}</div>
+   ${ch.slice(0,6).map(c=>`<div class="chg"><span class="t">${esc(c.kind)}</span><b>${esc(c.company)}</b><span>${esc(c.detail)}</span></div>`).join("")}
+   <div class="actions"><button class="btn small" type="button" data-open="${esc(w.id)}">Open report</button><button class="btn small primary" type="button" data-rerun="${esc(w.id)}" ${sample?"":"disabled"}>Re-run now</button>${confirmDel===w.id?`<button class="btn small danger" type="button" data-del="${esc(w.id)}">Confirm remove</button><button class="btn small" type="button" data-cancel="1">Keep</button>`:`<button class="btn small" type="button" data-askdel="${esc(w.id)}">Remove</button>`}</div></div>`}).join("");
+}
+$("watch").addEventListener("click",async e=>{
+  const b=e.target.closest("button");if(!b)return;const find=id=>watch.find(w=>String(w.id)===id);
+  if(b.dataset.open){const w=find(b.dataset.open);if(!w)return;selectTab("research");$("query").value=w.query;current={query:w.query,report:w.report,runAt:w.runAt,prevRunAt:w.prevRunAt,example:false,changes:w.changes||[],watchId:w.id};resetSteps();$("trace").innerHTML="";$("layout").classList.add("done");showStatus("");renderReport()}
+  else if(b.dataset.rerun){const w=find(b.dataset.rerun);if(w&&!running)rerun(w)}
+  else if(b.dataset.askdel){confirmDel=b.dataset.askdel;renderWatch()}
+  else if(b.dataset.cancel){confirmDel=null;renderWatch()}
+  else if(b.dataset.del){const id=b.dataset.del;confirmDel=null;
+    if(coll&&!id.startsWith("local-")){try{await coll.doc(id).delete()}catch(err){showStatus("Couldn't remove it. Try again.","err")}}
+    else{watch=watch.filter(w=>String(w.id)!==id);renderWatch()}
+    if(current&&current.watchId===id){current.watchId=null;renderReport()}}
+});
 
-function renderWatch(){$("watch").innerHTML=W.map((w,i)=>`<div class="wcard"><header><h3>${w.q}</h3><span>${w.changes.length?`<span class="badge">${w.changes.length} change${w.changes.length>1?"s":""} since last week</span>`:'<span class="note">No changes yet</span>'}</span></header>
-  <div class="meta">${w.last}${w.last==="Saved today"?" · run it again any time to see what changed":" · refreshes every Monday"}</div>
-  ${w.changes.map(([t,c,d])=>`<div class="chg"><span class="t">${t}</span><b>${c}</b><span>${d}</span></div>`).join("")}
-  <div class="actions"><button class="btn" type="button" data-open="${i}">Open full report</button></div></div>`).join("")}
+/* ---------- Tabs ---------- */
+function selectTab(v){
+  document.querySelectorAll(".views button").forEach(x=>{const on=x.dataset.v===v;x.setAttribute("aria-selected",on);x.tabIndex=on?0:-1});
+  $("research").hidden=v!=="research";$("watch").hidden=v!=="watch";if(v==="watch")renderWatch();
+  try{localStorage.setItem("mra-tab",v)}catch(e){}
+}
+const tabs=document.querySelector(".views");
+tabs.addEventListener("click",e=>{const b=e.target.closest("button");if(b)selectTab(b.dataset.v)});
+tabs.addEventListener("keydown",e=>{if(e.key!=="ArrowLeft"&&e.key!=="ArrowRight")return;const bs=[...tabs.querySelectorAll("button")];const i=bs.indexOf(document.activeElement);const n=bs[(i+(e.key==="ArrowRight"?1:-1)+bs.length)%bs.length];n.focus();selectTab(n.dataset.v)});
 
-$("qform").addEventListener("submit",e=>{e.preventDefault();run($("query").value)});
-$("samples").addEventListener("click",e=>{const b=e.target.closest("button");if(b)run(b.textContent)});
-document.querySelector(".views").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;document.querySelectorAll(".views button").forEach(x=>x.setAttribute("aria-selected",x===b));
-  $("research").hidden=b.dataset.v!=="research";$("watch").hidden=b.dataset.v!=="watch";if(b.dataset.v==="watch")renderWatch()});
-$("watch").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(!b)return;$("vres").click();const q=W[+b.dataset.open].q;clearInterval(timer);$("query").value=q;trace(STEPS.length);report(q)});
+/* ---------- Query + chips ---------- */
+function loadExample(k){
+  if(running)return;$("query").value=k;showStatus("");resetSteps();$("trace").innerHTML="";$("layout").classList.add("done");
+  current={query:k,report:EXAMPLES[k],runAt:null,example:true,changes:[]};renderReport();
+}
+function renderChips(){
+  $("chips").innerHTML="Examples:"+Object.keys(EXAMPLES).map(k=>`<button type="button" class="ex" data-ex="${esc(k)}">${esc(k)}</button>`).join("")
+   +(liveOK!==false?`<span style="margin-left:6px">Live:</span>`+LIVE_IDEAS.map(k=>`<button type="button" data-live="${esc(k)}">${esc(k)}</button>`).join(""):"");
+}
+$("chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.ex)loadExample(b.dataset.ex);else if(b.dataset.live){$("query").value=b.dataset.live;research(b.dataset.live)}});
+$("qform").addEventListener("submit",e=>{e.preventDefault();const q=$("query").value.trim();if(!q){$("query").focus();return}
+  if(EXAMPLES[q]){loadExample(q);return}research(q)});
+$("stop").addEventListener("click",()=>ctl&&ctl.abort());
 
-trace(STEPS.length);report("B2B invoicing software for marketing agencies in Europe");renderWatch();
+/* ---------- Boot ---------- */
+renderChips();loadExample("B2B invoicing software for marketing agencies in Europe");renderWatch();
+try{if(localStorage.getItem("mra-tab")==="watch")selectTab("watch")}catch(e){}
+
+(async()=>{
+  const cl=window.claude;
+  if(!cl||!cl.use){liveOK=false;onCaps();return}
+  const [s,d,u,dl]=await Promise.all(["sample","db","user","downloads"].map(n=>cl.use(n).catch(()=>null)));
+  sample=s;downloads=dl;liveOK=!!s;
+  if(d&&u){try{const uid=await u.id();if(uid){db=d;coll=d.collection("data/users/"+uid)}}catch(e){}}
+  if(!coll)db=null;
+  onCaps();
+  if(coll){
+    const timer=setTimeout(()=>{if(watchLocal){$("watch").querySelector(".note")&&($("watch").querySelector(".note").textContent="Your watchlist can't be reached yet. It will appear when the connection returns.")}},10000);
+    coll.orderBy("createdAt","desc").onSnapshot(snap=>{
+      if(!snap.metadata.fromCache)clearTimeout(timer);
+      const local=watch.filter(w=>String(w.id).startsWith("local-"));
+      watch=snap.docs.map(x=>({id:x.id,...x.data()})).concat(local);watchLocal=false;renderWatch();
+      if(current&&!current.example)renderReport();
+    },err=>{clearTimeout(timer);watchLocal=true;db=null;renderWatch()});
+  }
+})();
+function onCaps(){
+  $("modeTag").textContent=liveOK?"Live":"Examples only";$("modeTag").className="tag "+(liveOK?"live":"ex");
+  renderChips();renderWatch();if(current)renderReport();
+  if(!liveOK)showStatus("Live research is switched off right now. The examples below still work.");
+}
 })();
 </script>
 

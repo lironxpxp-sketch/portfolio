@@ -113,7 +113,7 @@ ol.q{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
     <nav class="agenda" id="agenda" aria-label="Upcoming meetings"></nav>
     <article class="brief" id="brief"></article>
   </div>
-  <p class="note" style="margin-top:14px">The calendar meetings are fictional sample data. Briefs you create are drafted by AI from your notes plus a live web search of the company, and are saved in this browser only.</p>
+  <p class="note" style="margin-top:14px">The calendar meetings are fictional sample data. Briefs you create are drafted by AI from your notes (plus a web search of the company where available), and are saved in this browser only.</p>
 </div>
 
 <script>
@@ -190,7 +190,7 @@ function brief(){
   <div class="bhead"><div><div class="meta">${esc([m.day,m.time,m.type].filter(Boolean).join(" · "))}</div><h2>${esc(m.co)}</h2><div class="meta">${esc(m.last)}${first?"":" · items marked New happened since then"}</div></div>
    <div class="bhead-side">${first?"":`<label class="toggle"><input type="checkbox" id="onlynew" ${onlyNew?"checked":""}> Only what's new since last call</label>`}
    ${gen?`<button class="btn danger" id="delbtn">${confirmDel?"Click again to remove":"Remove brief"}</button>`:""}</div></div>
-  ${gen?`<div class="draftnote">Drafted by Claude from your notes and its general knowledge, not live web research. Check company facts and news before the call.</div>`:""}
+  ${gen?`<div class="draftnote">${window.__aiWeb?"Drafted by AI from your notes and a live web search. Double-check key facts before the call.":"Drafted by Claude from your notes and its general knowledge, not live web research. Check company facts and news before the call."}</div>`:""}
   <section aria-label="30-second version"><h3>30-second version</h3><div class="tldr">
     <div><div class="k">Why this meeting</div><p>${esc(t.why||"—")}</p></div>
     <div><div class="k">Get from the call</div><p>${esc(t.goal||"—")}</p></div>
@@ -275,7 +275,7 @@ async function generate(){
   if(!sample){setStatus("AI drafting is switched off right now. Pick a sample meeting on the left to see a finished brief.",true);return}
   busy=true;ctl=new AbortController();$("gen").disabled=true;$("stop").hidden=false;setStatus("Researching and drafting… this takes 20–60 seconds.");
   try{
-    const data=await sample.json(prompt(f),{signal:ctl.signal,cache:false,webSearch:true});
+    const data=await sample.json(prompt(f),{signal:ctl.signal,cache:false,webSearch:!!window.__aiWeb});
     const m=normalize(data,f);mine.unshift(m);mine=mine.slice(0,20);save(KEY,mine);
     try{localStorage.removeItem(DRAFT)}catch(e){}
     cur=m.id;view="brief";onlyNew=false;agenda();brief();

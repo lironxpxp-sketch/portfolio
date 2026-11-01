@@ -200,7 +200,7 @@ function paintMode(){const m=$("mode");
 const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
 async function ask(prompt,label,web){
   S.ctl=new AbortController(); S.busy=label; render();
-  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:true}:{signal:S.ctl.signal}); }
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb}:{signal:S.ctl.signal}); }
   finally{ S.busy=null; S.ctl=null; }
 }
 function aiError(e){const c=e&&e.code;

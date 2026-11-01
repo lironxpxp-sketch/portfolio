@@ -1,5 +1,5 @@
 <!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Reachlist</title>
+<title>Reachlist Prototype</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Rubik:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -293,7 +293,7 @@ const brand=`<div class="brand">${MARK}<span>Reachlist</span></div>`;
 let LIVE=false, sample=null;
 function badge(){return LIVE?'<span class="sample live">Live search</span>':'<span class="sample">Sample data</span>'}
 (async()=>{try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}
-  LIVE=!!sample; if(LIVE&&(S.screen==="welcome"||S.screen==="onboard"))render();})();
+  LIVE=!!sample&&!!window.__aiWeb; /* live leads need web search, so only on the hosted site */ if(LIVE&&(S.screen==="welcome"||S.screen==="onboard"))render();})();
 function errMsg(e){const c=e&&e.code;return c==="rate_limited"?"Too many searches right now. Try again in a few minutes.":c==="invalid_json"?"The results came back in the wrong shape. Try again.":"Couldn't finish the search. Try again."}
 function composeUrl(prov,to,subj,body){
   const q=encodeURIComponent;
