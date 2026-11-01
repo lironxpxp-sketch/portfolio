@@ -28,7 +28,7 @@ const hits = new Map();
 function cors(origin) {
   return {
     "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "content-type",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
@@ -74,6 +74,9 @@ async function readSite(input) {
   const desc = meta(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i) || meta(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i);
   const ogt = meta(/<meta[^>]+property=["']og:title["'][^>]*content=["']([^"']*)["']/i);
   const ogd = meta(/<meta[^>]+property=["']og:description["'][^>]*content=["']([^"']*)["']/i);
+  const abs = (u) => { try { return u ? new URL(u, res.url || url).toString() : ""; } catch { return ""; } };
+  const ogi = abs(meta(/<meta[^>]+property=["']og:image(?::url)?["'][^>]*content=["']([^"']*)["']/i) || meta(/<meta[^>]+content=["']([^"']*)["'][^>]*property=["']og:image["']/i));
+  const icon = abs(meta(/<link[^>]+rel=["'][^"']*apple-touch-icon[^"']*["'][^>]*href=["']([^"']*)["']/i) || meta(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']*)["']/i));
   const body = dec(html
     .replace(/<(script|style|noscript|svg|template)[\s\S]*?<\/\1>/gi, " ")
     .replace(/<[^>]+>/g, " "))
@@ -84,6 +87,8 @@ async function readSite(input) {
     desc && `Meta description: ${desc}`,
     ogt && ogt !== title && `Share title: ${ogt}`,
     ogd && ogd !== desc && `Share description: ${ogd}`,
+    ogi && `Main image: ${ogi}`,
+    icon && `Logo or icon: ${icon}`,
     body && `Visible text: ${body}`,
   ].filter(Boolean);
   return parts.length > 1 ? parts.join("\n") : "";
@@ -97,6 +102,19 @@ export default {
     }
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors(origin) });
+    }
+    // Image pass-through so the site can draw a brand's own images into its ads
+    if (request.method === "GET") {
+      const target = new URL(request.url).searchParams.get("img") || "";
+      if (!/^https:\/\//i.test(target)) return reply(400, { code: "invalid_request", message: "Missing image" }, origin);
+      let img;
+      try { img = await fetch(target, { signal: AbortSignal.timeout(8000), headers: { accept: "image/*" } }); } catch { img = null; }
+      const type = img && img.headers.get("content-type") || "";
+      const size = Number(img && img.headers.get("content-length") || 0);
+      if (!img || !img.ok || !/^image\/(png|jpe?g|webp|gif|avif)/i.test(type) || size > 6_000_000) {
+        return reply(404, { code: "not_found", message: "Image not available" }, origin);
+      }
+      return new Response(img.body, { status: 200, headers: { "content-type": type, "cache-control": "public, max-age=86400", ...cors(origin) } });
     }
     if (request.method !== "POST") {
       return reply(405, { code: "invalid_request", message: "Use POST" }, origin);
