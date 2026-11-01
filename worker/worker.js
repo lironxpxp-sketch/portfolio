@@ -126,39 +126,52 @@ export default {
       : undefined;
 
     // Ask Claude. With web search, a long turn can pause; continue it up to 3 times.
-    let convo = messages, data = {}, text = "";
-    for (let round = 0; round < 4; round++) {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: MODELS[body.tier] || MODELS.default,
-          max_tokens: MAX_OUTPUT_TOKENS,
-          system: tools ? system + " You can search the web; use it to check facts and cite real pages." : system,
-          messages: convo,
-          ...(tools ? { tools } : {}),
-        }),
-      });
-      data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const busy = res.status === 429 || res.status === 529;
-        return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : "upstream_error", message: data?.error?.message || "AI service error" }, origin);
+    async function ask(force) {
+      let convo = messages, data = {}, text = "", searched = 0;
+      for (let round = 0; round < 4; round++) {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-api-key": env.ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+          },
+          body: JSON.stringify({
+            model: MODELS[body.tier] || MODELS.default,
+            max_tokens: MAX_OUTPUT_TOKENS,
+            system: tools ? system + " You can search the web; use it to check facts and cite real pages." : system,
+            messages: convo,
+            ...(tools ? { tools } : {}),
+            ...(force && round === 0 ? { tool_choice: { type: "any" } } : {}),
+          }),
+        });
+        data = await res.json().catch(() => ({}));
+        if (!res.ok) return { error: res.status, message: data?.error?.message || "AI service error" };
+        const blocks = data.content || [];
+        searched += blocks.filter((b) => b.type === "server_tool_use").length;
+        if (body.json) {
+          // keep only the text after the final search result, where the JSON lives
+          const lastTool = blocks.map((b) => b.type).lastIndexOf("web_search_tool_result");
+          text = blocks.slice(lastTool + 1).filter((b) => b.type === "text").map((b) => b.text).join("") || text;
+        } else {
+          text += blocks.filter((b) => b.type === "text").map((b) => b.text).join("");
+        }
+        if (data.stop_reason !== "pause_turn") break;
+        convo = [...convo, { role: "assistant", content: blocks }];
       }
-      const blocks = data.content || [];
-      if (body.json) {
-        // keep only the last text block group after the final tool result, where the JSON lives
-        const lastTool = blocks.map((b) => b.type).lastIndexOf("web_search_tool_result");
-        text = blocks.slice(lastTool + 1).filter((b) => b.type === "text").map((b) => b.text).join("") || text;
-      } else {
-        text += blocks.filter((b) => b.type === "text").map((b) => b.text).join("");
-      }
-      if (data.stop_reason !== "pause_turn") break;
-      convo = [...convo, { role: "assistant", content: blocks }];
+      return { text, searched, truncated: data.stop_reason === "max_tokens" };
     }
-    return reply(200, { text, truncated: data.stop_reason === "max_tokens" }, origin);
+
+    let out = await ask(false);
+    // A web-search request that came back without searching gets one forced retry
+    if (tools && !out.error && out.searched === 0) {
+      const forced = await ask(true);
+      if (!forced.error && forced.text.trim()) out = forced;
+    }
+    if (out.error) {
+      const busy = out.error === 429 || out.error === 529;
+      return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : "upstream_error", message: out.message }, origin);
+    }
+    return reply(200, { text: out.text, truncated: out.truncated, searched: out.searched }, origin);
   },
 };

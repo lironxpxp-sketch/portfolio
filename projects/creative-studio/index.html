@@ -237,7 +237,7 @@ async function analyze(){
     const prompt=`You are a senior performance marketer preparing an ad brief.
 The ${company?"company":"person or small business"} behind this website: ${host}
 ${S.paste.trim()?`Text copied from their website:\n"""\n${S.paste.slice(0,8000)}\n"""\n`:""}
-If you have a web search tool, search for this website and read what it says about its offer, audience and proof, and base the brief on that. Otherwise use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". Never invent statistics or awards.
+${window.__aiWeb?`Before answering, you must search the web for "${host}" and read what the site itself says about its offer, audience and proof. Base the brief only on what you find; the domain name and words in it (like "cafe" or "studio") are not evidence of what the business does. If the search finds nothing about the site, make sensible assumptions and set confidence to "low". `:`Use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". `}Never invent statistics or awards.
 Reply with only JSON in this shape:
 ${shape}`;
     try{
