@@ -41,7 +41,7 @@ Without this step the site still works; those two projects run in demo/template 
 2. Change `var AI_ENDPOINT = "";` to `var AI_ENDPOINT = "https://liron-ai.yourname.workers.dev";`
 3. **Commit changes**. Within a minute, Creative Studio shows "Claude connected".
 
-Guardrails built in: only your domain can call the Worker, each visitor gets 15 AI calls per 10 minutes, and prompts and answers are size-capped. The spend limit from step a.2 caps your bill.
+Guardrails built in: only your domain can call the Worker, each visitor gets 40 AI calls per 10 minutes, and prompts and answers are size-capped. The spend limit from step a.2 caps your bill.
 
 ## Updating projects
 
