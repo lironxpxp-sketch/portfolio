@@ -65,6 +65,7 @@ h1 .cur{display:inline-block;width:.08em;height:.85em;background:var(--acc);marg
 .btn{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--f);text-decoration:none;padding:12px 20px;border-radius:10px;border:1px solid var(--line2);background:var(--bg2);color:var(--fg);transition:border-color .2s,transform .2s}
 .btn:hover{border-color:var(--muted);transform:translateY(-1px)}
 .btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.mailgrp{display:inline-flex;flex-wrap:wrap;gap:8px}button.btn{cursor:pointer}
 .btn.pri:hover{box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 25%,transparent)}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:64px;border:1px solid var(--line);border-radius:14px;background:var(--bg2);overflow:hidden}
 .stat{padding:18px 20px;border-right:1px solid var(--line)}
@@ -142,6 +143,7 @@ footer a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,r
 @keyframes rise{from{opacity:.001;transform:translateY(14px)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}html{scroll-behavior:auto}}
 </style>
+<script data-goatcounter="https://lironsofer.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
 
@@ -327,11 +329,11 @@ open to my next challenge ✓</pre>
     <h2>Let's talk</h2>
     <p>About a role, a project, or one of the tools on this page. Reach me any way you like.</p>
     <div class="cta">
-      <a class="btn pri" href="mailto:lironxpxp@gmail.com">✉ lironxpxp@gmail.com</a>
-      <a class="btn" href="tel:+972526768625">☎ 052-676-8625</a>
-      <a class="btn" href="https://wa.me/972526768625" target="_blank" rel="noopener">WhatsApp ↗</a>
-      <a class="btn" href="https://www.linkedin.com/in/liron-sofer/" target="_blank" rel="noopener">LinkedIn ↗</a>
-      <a class="btn" href="https://www.instagram.com/soferliron/" target="_blank" rel="noopener">Instagram ↗</a>
+      <span class="mailgrp"><a class="btn pri" data-t="email" href="mailto:lironxpxp@gmail.com">✉ <span id="mailTxt">lironxpxp@gmail.com</span></a><button class="btn" id="copyMail" type="button">Copy email</button></span>
+      <a class="btn" data-t="phone" href="tel:+972526768625">☎ 052-676-8625</a>
+      <a class="btn" data-t="whatsapp" href="https://wa.me/972526768625" target="_blank" rel="noopener">WhatsApp ↗</a>
+      <a class="btn" data-t="linkedin" href="https://www.linkedin.com/in/liron-sofer/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="btn" data-t="instagram" href="https://www.instagram.com/soferliron/" target="_blank" rel="noopener">Instagram ↗</a>
     </div>
   </div>
 </section>
@@ -345,6 +347,33 @@ open to my next challenge ✓</pre>
 <script>
 (function(){
   document.getElementById("yr").textContent=new Date().getFullYear();
+  // Visit counting (GoatCounter, cookie-free) + personalised links: ?for=wix or #for-wix
+  function track(path,title){
+    const go=()=>{try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:path,title:title||path,event:true})}catch(e){}};
+    if(window.goatcounter&&window.goatcounter.count)go();else window.addEventListener("load",()=>setTimeout(go,400));
+  }
+  let who="";
+  try{who=new URLSearchParams(location.search).get("for")||""}catch(e){}
+  if(!who){const m=location.hash.match(/^#for-([\w-]{1,40})$/);if(m)who=m[1]}
+  if(who){who=who.replace(/[_+-]+/g," ").replace(/[^\p{L}\p{N} &.']/gu,"").trim().slice(0,40);
+    if(who===who.toLowerCase())who=who.replace(/(^|\s)\p{L}/gu,c=>c.toUpperCase());
+    if(who)track("for/"+who.toLowerCase().replace(/\s+/g,"-"),"Link opened by "+who);}
+  try{if(who)sessionStorage.setItem("pf.for",who);else who=sessionStorage.getItem("pf.for")||""}catch(e){}
+  if(who){
+    const eb=document.querySelector(".eyebrow");eb.textContent="";eb.append(document.createElement("i"),"Hi "+who+" team 👋 · glad you stopped by");
+    const h=document.querySelector("#contact h2");if(h)h.textContent="Let's talk, "+who+" team";
+    document.querySelectorAll('a[href^="mailto:"]').forEach(a=>{if(a.closest("#contact"))a.href="mailto:lironxpxp@gmail.com?subject="+encodeURIComponent("Hi Liron (from "+who+")")});
+  }
+  // Contact clicks
+  document.querySelectorAll("#contact .cta a").forEach(a=>a.addEventListener("click",()=>track("contact/"+(a.dataset.t||"link"),"Contact: "+(a.dataset.t||"link")+(who?" ("+who+")":""))));
+  // Copy email
+  const cb=document.getElementById("copyMail");
+  if(cb)cb.addEventListener("click",()=>{
+    const done=()=>{cb.textContent="Copied ✓";track("contact/copy-email","Contact: copied email"+(who?" ("+who+")":""));setTimeout(()=>cb.textContent="Copy email",2000)};
+    const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById("mailTxt"));const s=getSelection();s.removeAllRanges();s.addRange(r);cb.textContent="Press Ctrl+C"};
+    try{navigator.clipboard.writeText("lironxpxp@gmail.com").then(done,sel)}catch(e){sel()}
+  });
+
   const btns=document.querySelectorAll(".filters button"),cards=document.querySelectorAll("#grid .card");
   btns.forEach(b=>b.addEventListener("click",()=>{
     btns.forEach(x=>x.setAttribute("aria-pressed",x===b));

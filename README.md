@@ -92,3 +92,9 @@ If `worker/worker.js` changes, paste the new version into the Cloudflare Worker 
 
 
 Projects are copies of the Claude artifacts. After you change one in Claude, ask Claude to "refresh the site": it re-downloads each artifact, runs `tools/prepare_project.py` on it, and pushes the result.
+
+## Visit stats and personalised links
+
+Visits are counted with GoatCounter (free, no cookies) at **lironsofer.goatcounter.com**. Sign up at goatcounter.com with the code `lironsofer` to see the dashboard.
+
+Send a company its own link: `https://lironsofer.online/?for=wix` (use dashes for spaces: `?for=check-point`). The page greets "Hi Wix team 👋", the email button gets the subject "Hi Liron (from Wix)", and the open shows up in GoatCounter as `for/wix`. Contact clicks show up as `contact/...`.
