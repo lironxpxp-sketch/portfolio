@@ -87,37 +87,26 @@ h2{font-size:clamp(28px,4vw,44px);letter-spacing:-.025em;line-height:1.1;margin:
 .filters button:focus-visible{outline:2px solid var(--acc)}
 
 /* project cards */
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
-@media (max-width:820px){.grid{grid-template-columns:1fr}}
-.card{position:relative;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .25s,transform .25s}
-.card:hover{border-color:var(--line2);transform:translateY(-3px)}
-.card.feat{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
-@media (max-width:820px){.card.feat{grid-template-columns:1fr}}
-.shot{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--bg2);border-bottom:1px solid var(--line)}
-.card.feat .shot{aspect-ratio:auto;min-height:320px;border-bottom:0;border-right:1px solid var(--line)}
-@media (max-width:820px){.card.feat .shot{aspect-ratio:16/10;min-height:0;border-right:0;border-bottom:1px solid var(--line)}}
-.shot img{width:100%;height:100%;object-fit:cover;object-position:top left;transition:transform .6s ease}
-.card:hover .shot img{transform:scale(1.03)}
-.shot::after{content:"";position:absolute;inset:auto 0 0;height:40%;background:linear-gradient(transparent,color-mix(in srgb,var(--card) 70%,transparent))}
-.chrome{position:absolute;top:10px;left:10px;z-index:2;display:flex;gap:5px;padding:6px 8px;background:rgba(10,12,16,.7);border-radius:7px;backdrop-filter:blur(6px)}
-.chrome i{width:8px;height:8px;border-radius:50%;background:var(--line2)}
-.body{padding:22px 22px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font:500 11px var(--mono);color:var(--muted);border:1px solid var(--line2);padding:3px 9px;border-radius:999px}
-.chip.acc{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent)}
-.chip.cy{color:var(--acc2);border-color:color-mix(in srgb,var(--acc2) 40%,transparent)}
-.card h3{font-size:24px;letter-spacing:-.02em;margin:2px 0 0;line-height:1.15}
-.card.feat h3{font-size:30px}
-.one{color:var(--muted);margin:0}
-.card ul{margin:0;padding:0;list-style:none;display:grid;gap:7px;font-size:14.5px}
-.card li{display:grid;grid-template-columns:16px 1fr;gap:8px}
-.card li::before{content:"›";font-family:var(--mono);color:var(--acc)}
-.foot{margin-top:auto;padding-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
-.open{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--f);color:var(--acc-ink);background:var(--acc);text-decoration:none;padding:9px 16px;border-radius:9px}
-.open:hover{filter:brightness(1.08)}
-.sec{font:500 13px var(--mono);color:var(--muted);text-decoration:none;border-bottom:1px dashed var(--line2)}
+.grid{--cols:4;display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
+.grid>.card{flex:0 0 calc((100% - (var(--cols) - 1) * 18px) / var(--cols));min-width:0}
+@media (max-width:980px){.grid{--cols:2!important}}
+@media (max-width:600px){.grid{--cols:1!important}}
+.card{position:relative;display:flex;flex-direction:column;gap:10px;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:16px;transition:border-color .25s,transform .25s,box-shadow .25s}
+.card:hover{border-color:color-mix(in srgb,var(--c) 45%,var(--line));transform:translateY(-3px);box-shadow:0 10px 30px -12px color-mix(in srgb,var(--c) 35%,transparent)}
+.card[data-cat="gtm"]{--c:var(--acc)}.card[data-cat="prod"]{--c:var(--acc2)}
+.ico{width:58px;height:58px;display:grid;place-items:center;border-radius:15px;color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);border:1px solid color-mix(in srgb,var(--c) 28%,transparent);margin-bottom:8px}
+.ico svg{width:30px;height:30px}
+.card h3{font-size:21px;letter-spacing:-.02em;margin:0;line-height:1.2}
+.card h3 a{color:inherit;text-decoration:none}
+.stretch::after{content:"";position:absolute;inset:0;border-radius:16px}
+.stretch:focus-visible{outline:0}.card:has(.stretch:focus-visible){outline:2px solid var(--acc);outline-offset:3px}
+.one{color:var(--muted);margin:0;font-size:15.5px}
+.foot{margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+.go{font:500 13px var(--mono);color:var(--c)}
+.sec{position:relative;z-index:1;font:500 12px var(--mono);color:var(--muted);text-decoration:none;border-bottom:1px dashed var(--line2)}
 .sec:hover{color:var(--fg)}
 .card[hidden]{display:none}
+@media (max-width:600px){.card{display:grid;grid-template-columns:50px minmax(0,1fr);column-gap:16px;row-gap:6px;padding:20px}.ico{grid-row:1/4;width:50px;height:50px;margin:0;border-radius:13px}.ico svg{width:26px;height:26px}.card h3{font-size:19px}.one{font-size:15px}.foot{padding-top:6px}}
 
 /* about */
 .about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start}
@@ -164,6 +153,7 @@ footer a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,r
   <p class="lede">Some of what I build makes my workday faster. Some of it exists just because it was <b>fun to make</b>. Here's all of it, live and clickable.</p>
   <div class="cta">
     <a class="btn pri" href="#work">See what I've built ↓</a>
+    <a class="btn" href="#about">About me</a>
     <a class="btn" href="#contact">Say hi</a>
   </div>
 </header>
@@ -185,110 +175,53 @@ footer a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,r
 
   <div class="grid" id="grid">
 
-    <article class="card feat reveal" data-cat="gtm">
-      <a class="shot" href="projects/ad-copilot/" aria-hidden="true" tabindex="-1"><img src="assets/shots/ad-copilot.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip acc">Paid UA</span><span class="chip">Google Ads</span><span class="chip">Meta</span><span class="chip">TikTok</span></div>
-        <h3>Ad Performance Copilot</h3>
-        <p class="one">Drop in exports from any ad platform and get the 3–5 decisions that matter.</p>
-        <ul>
-          <li>Combines Google Ads, Meta, TikTok and AppsFlyer exports (CSV or Excel), counting overlaps once</li>
-          <li>3–5 takeaways per upload, each showing the numbers behind it</li>
-          <li>A what-if view shows your cost per result after applying the moves</li>
-          <li>Ask questions in plain English; the AI looks up the figures itself</li>
-        </ul>
-        <div class="foot"><a class="open" href="projects/ad-copilot/">Open live →</a></div>
-      </div>
+    <article class="card reveal" data-cat="gtm">
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M3 20h18"/><path d="M14 7l3-3 3 3M17 4v6" /></svg></div>
+      <h3><a class="stretch" href="projects/ad-copilot/">Ad Performance Copilot</a></h3>
+      <p class="one">Drop in exports from any ad platform and get the 3–5 decisions that matter.</p>
+      <div class="foot"><span class="go">Open live →</span></div>
     </article>
 
     <article class="card reveal" data-cat="gtm">
-      <a class="shot" href="projects/creative-studio/" aria-hidden="true" tabindex="-1"><img src="assets/shots/creative-studio.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip acc">Creative</span><span class="chip">Ad copy</span><span class="chip">AI</span></div>
-        <h3>Creative Studio</h3>
-        <p class="one">From a website URL to launch-ready ads for Meta, LinkedIn, Google and TikTok.</p>
-        <ul>
-          <li>Claude reads the brand's website; GPT writes the concepts and copy in its tone</li>
-          <li>Platform-ready copy for Meta, LinkedIn, Google and TikTok, within each limit</li>
-          <li>Every ad designed from scratch by an image model (Nano Banana), in every size</li>
-        </ul>
-        <div class="foot"><a class="open" href="projects/creative-studio/">Open live →</a></div>
-      </div>
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l10-10"/><path d="M13 7l4 4"/><path d="M18 3v3M16.5 4.5h3M20 9v2M19 10h2M9 3v2M8 4h2"/></svg></div>
+      <h3><a class="stretch" href="projects/creative-studio/">Creative Studio</a></h3>
+      <p class="one">From a website URL to launch-ready ads for Meta, LinkedIn, Google and TikTok.</p>
+      <div class="foot"><span class="go">Open live →</span></div>
     </article>
 
     <article class="card reveal" data-cat="gtm">
-      <a class="shot" href="projects/market-research/" aria-hidden="true" tabindex="-1"><img src="assets/shots/market-research.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip acc">Research</span><span class="chip">Agent</span><span class="chip">Competitive intel</span></div>
-        <h3>Market Research Agent</h3>
-        <p class="one">Enter your company's website and get research on your own market, researched live on the web.</p>
-        <ul>
-          <li>Reads your site to work out your market, then asks a few quick questions</li>
-          <li>Clusters customer complaints from reviews into clear themes</li>
-          <li>Save a market and re-run it to see which prices, players and figures changed</li>
-        </ul>
-        <div class="foot"><a class="open" href="projects/market-research/">Open live →</a></div>
-      </div>
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M8 12.5v-2M10.5 12.5V8M13 12.5v-3"/></svg></div>
+      <h3><a class="stretch" href="projects/market-research/">Market Research Agent</a></h3>
+      <p class="one">Enter your company's website and get research on your own market, live from the web.</p>
+      <div class="foot"><span class="go">Open live →</span></div>
     </article>
 
     <article class="card reveal" data-cat="gtm">
-      <a class="shot" href="projects/pre-call-brief/" aria-hidden="true" tabindex="-1"><img src="assets/shots/pre-call-brief.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip acc">Sales</span><span class="chip">Meeting prep</span><span class="chip">CRM</span></div>
-        <h3>Pre-Call Brief</h3>
-        <p class="one">A one-page dossier for every external meeting, ready an hour before it starts.</p>
-        <ul>
-          <li>The 30-second version: why this meeting, the goal, the risk</li>
-          <li>Who you're meeting, company snapshot, recent news and history</li>
-          <li>Questions to ask and answers to likely objections</li>
-        </ul>
-        <div class="foot"><a class="open" href="projects/pre-call-brief/">Open live →</a></div>
-      </div>
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg></div>
+      <h3><a class="stretch" href="projects/pre-call-brief/">Pre-Call Brief</a></h3>
+      <p class="one">A one-page dossier for every external meeting, ready an hour before it starts.</p>
+      <div class="foot"><span class="go">Open live →</span></div>
     </article>
 
     <article class="card reveal" data-cat="gtm">
-      <a class="shot" href="projects/reachlist/" aria-hidden="true" tabindex="-1"><img src="assets/shots/reachlist.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip acc">Lead gen</span><span class="chip">Outreach</span><span class="chip">Live web search</span></div>
-        <h3>Reachlist</h3>
-        <p class="one">Finds the clients who need your work, and the person there who decides.</p>
-        <ul>
-          <li>Searches the web for real companies that match your job, client types and region</li>
-          <li>Finds the decision-maker, falling back to inbox or contact form</li>
-          <li>Direct emails, LinkedIn profiles and drafts for each contact; export to CSV</li>
-        </ul>
-        <div class="foot"><a class="open" href="projects/reachlist/">Open live →</a></div>
-      </div>
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></div>
+      <h3><a class="stretch" href="projects/reachlist/">Reachlist</a></h3>
+      <p class="one">Finds the clients who need your work, and the person there who decides.</p>
+      <div class="foot"><span class="go">Open live →</span></div>
     </article>
 
     <article class="card reveal" data-cat="prod">
-      <a class="shot" href="https://unwrap.cafe/en" target="_blank" rel="noopener" aria-hidden="true" tabindex="-1"><img src="assets/shots/unwrap.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip cy">Live product</span><span class="chip">Games</span><span class="chip">Gifts</span></div>
-        <h3>Unwrap</h3>
-        <p class="one">Turn your photos into a game someone plays as a gift, with a note after every level.</p>
-        <ul>
-          <li>Memory, photo puzzle, quiz and four-in-a-row game types</li>
-          <li>Three-minute wizard, shared as a link or QR code</li>
-          <li>My first full product, from idea to launch</li>
-        </ul>
-        <div class="foot"><a class="open" href="https://unwrap.cafe/en" target="_blank" rel="noopener">Open unwrap.cafe ↗</a><a class="sec" href="projects/unwrap/">Early studio prototype</a></div>
-      </div>
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19M12 9v11.5M12 9c-1.5-3-5.5-4-5.5-1.5S10 9 12 9zM12 9c1.5-3 5.5-4 5.5-1.5S14 9 12 9z"/></svg></div>
+      <h3><a class="stretch" href="https://unwrap.cafe/en" target="_blank" rel="noopener">Unwrap</a></h3>
+      <p class="one">Turn your photos into a game someone plays as a gift, with a note after every level.</p>
+      <div class="foot"><span class="go">Open unwrap.cafe ↗</span><a class="sec" href="projects/unwrap/">Early prototype</a></div>
     </article>
 
     <article class="card reveal" data-cat="prod">
-      <a class="shot" href="projects/winning-xi/" aria-hidden="true" tabindex="-1"><img src="assets/shots/winning-xi.jpg" alt="" decoding="async"></a>
-      <div class="body">
-        <div class="chips"><span class="chip cy">For fun</span><span class="chip">Prediction model</span><span class="chip">Ligat Ha'Al</span></div>
-        <h3>Your Winning XI</h3>
-        <p class="one">Pick an Israeli Premier League club, build the XI and see how your lineup changes the result.</p>
-        <ul>
-          <li>Player ratings built from real season minutes and starts</li>
-          <li>Predicts scoreline and win/draw/loss odds from the league table</li>
-          <li>Play out the match minute by minute against the real fixture</li>
-        </ul>
-        <div class="foot"><a class="open" href="projects/winning-xi/">Open live →</a></div>
-      </div>
+      <div class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5l3.3 2.4-1.3 3.9h-4l-1.3-3.9z"/><path d="M12 7.5V3.2M15.3 9.9l4-1.6M14 13.8l2.6 3.6M10 13.8l-2.6 3.6M8.7 9.9l-4-1.6"/></svg></div>
+      <h3><a class="stretch" href="projects/winning-xi/">Your Winning XI</a></h3>
+      <p class="one">Pick an Israeli Premier League club, build the XI and see how your lineup changes the result.</p>
+      <div class="foot"><span class="go">Open live →</span></div>
     </article>
 
   </div>
@@ -379,9 +312,12 @@ open to my next challenge ✓</pre>
   btns.forEach(b=>b.addEventListener("click",()=>{
     btns.forEach(x=>x.setAttribute("aria-pressed",x===b));
     const f=b.dataset.f;
-    cards.forEach(c=>{c.hidden=!(f==="all"||c.dataset.cat===f);
-      c.classList.toggle("feat",c.querySelector("h3").textContent==="Ad Performance Copilot"&&f!=="prod");});
+    cards.forEach(c=>{c.hidden=!(f==="all"||c.dataset.cat===f)});
+    fit();
   }));
+  // Balanced rows: 7 cards -> 4+3, 5 -> 3+2, 2 -> 2
+  function fit(){const n=[...cards].filter(c=>!c.hidden).length;document.getElementById("grid").style.setProperty("--cols",n<=4?Math.max(n,2):Math.ceil(n/2))}
+  fit();
   const els=document.querySelectorAll(".reveal");
   if("IntersectionObserver" in window){
     const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.08});
