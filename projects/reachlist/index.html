@@ -1,5 +1,5 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=8"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Reachlist Prototype</title>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=9"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Reachlist</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Rubik:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -232,7 +232,15 @@ function buildLeads(p){
 
 function firstName(s){return (s||"").split(" ")[0]}
 
+function makeLinkedIn(l,p,lang){const s=l.ladder[l.chosen],fn=s.first||firstName(s.who),me=p.name||"",job=p.job||"freelancer";
+  const proof=p.proof?" "+p.proof.replace(/\.$/,"")+".":"";
+  let body=lang==="he"
+    ?`היי ${fn}, ראיתי ש${l.company} ${hebHookFor(l)}. אני ${job}${p.service?` (${p.service})`:""}.${proof} אשמח להתחבר ולהראות כמה דוגמאות שמתאימות לכם.${me?` ${me}`:""}`
+    :`Hi ${fn}, I noticed ${l.company} ${l.hook}. I'm a ${job.toLowerCase()}${p.service?` (${p.service})`:""}.${proof} Would love to connect and share a couple of examples that fit your work.${me?` ${me}`:""}`;
+  if(body.length>300)body=body.replace(proof,"");if(body.length>300)body=body.slice(0,297).replace(/\s+\S*$/,"")+"…";
+  return {subject:"",body}}
 function makeDraft(l,p,lang){
+  if(l.ladder[l.chosen].kind==="linkedin")return makeLinkedIn(l,p,lang);
   const s=l.ladder[l.chosen]; const named=s.kind==="person";
   const me=p.name||"[Your name]"; const job=p.job||"freelancer";
   const link=p.portfolio?`\n${p.portfolio}`:"";
@@ -242,7 +250,7 @@ function makeDraft(l,p,lang){
     return {subject:`${job} ל${l.company}`,
       body:`${hi}
 
-אני ${me}, ${job}${p.service?` (${p.service})`:""}. ראיתי ש${l.company} ${hebHook(l.hook)}, ונראה לי שיש לכם יותר חומר מאשר ידיים פנויות.
+אני ${me}, ${job}${p.service?` (${p.service})`:""}. ראיתי ש${l.company} ${hebHookFor(l)}, ונראה לי שיש לכם יותר חומר מאשר ידיים פנויות.
 
 ${proof?`${proof}. `:""}אשמח לעזור לכם להוציא את התוכן מהר יותר בלי להעמיס על הצוות.
 
@@ -264,6 +272,7 @@ Open to a 15-minute call this week? Some recent work:${link||" [portfolio link]"
 Thanks,
 ${me}`};
 }
+function hebHookFor(l){return l.hookHe||hebHook(l.hook)}
 function hebHook(h){
   const m={
     "posts 4–5 short videos a week across Instagram and TikTok":"מעלים 4–5 סרטונים קצרים בשבוע לאינסטגרם ולטיקטוק",
@@ -294,6 +303,26 @@ let LIVE=false, sample=null;
 function badge(){return LIVE?'<span class="sample live">Live search</span>':'<span class="sample">Sample data</span>'}
 (async()=>{try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}
   LIVE=!!sample&&!!window.__aiWeb; /* live leads need web search, so only on the hosted site */ if(LIVE&&(S.screen==="welcome"||S.screen==="onboard"))render();})();
+let CAPS={};(window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};if(S.screen==="welcome")render();}).catch(()=>{});
+let GTOKEN=null,GSEND=null;
+function loadGsi(){return window.google&&google.accounts?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://accounts.google.com/gsi/client";sc.async=true;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)})}
+function googleToken(scope){return loadGsi().then(()=>new Promise((res,rej)=>{const tc=google.accounts.oauth2.initTokenClient({client_id:CAPS.googleClientId,scope,
+  callback:t=>t&&t.access_token?res(t.access_token):rej(t),error_callback:rej});tc.requestAccessToken()}))}
+async function googleSignIn(){const tok=await googleToken("openid email profile");GTOKEN=tok;
+  const u=await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{authorization:"Bearer "+tok}}).then(r=>r.json());
+  const p=S.profile;p.google=true;p.email=u.email||"";p.name=p.name||u.name||"";p.avatar=u.picture||"";p.provider="Gmail";return u}
+function b64u(str){return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+async function gmailSend(to,subject,body){if(!GSEND)GSEND=await googleToken("https://www.googleapis.com/auth/gmail.send");
+  const enc=t=>"=?UTF-8?B?"+btoa(unescape(encodeURIComponent(t)))+"?=";
+  const raw=b64u([`To: ${to}`,`Subject: ${enc(subject)}`,"MIME-Version: 1.0","Content-Type: text/plain; charset=UTF-8","Content-Transfer-Encoding: 8bit","",body].join("\r\n"));
+  const r=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{method:"POST",headers:{authorization:"Bearer "+GSEND,"content-type":"application/json"},body:JSON.stringify({raw})});
+  if(!r.ok){if(r.status===401)GSEND=null;throw new Error("Gmail didn't send it ("+r.status+")")}}
+async function findEmail(l,quiet){const per=l.ladder.find(x=>x.kind==="person");if(!per||per.email||per.tried||!CAPS.emailFinder||!window.__aiFindEmail||!l.domain)return;
+  per.tried="busy";if(!quiet)render();
+  try{const r=await window.__aiFindEmail(l.domain,per.first,per.last);per.tried="done";
+    if(r&&r.email){per.email=r.email;per.emailSrc=`Found by Hunter${r.score?` · ${r.score}% confidence`:""}${r.status==="valid"?" · verified":""}`;if(l.ladder[l.chosen].kind!=="person"&&l.status==="new"){l.chosen=l.ladder.indexOf(per);l.draft=null}}}
+  catch(e){per.tried=e&&e.code==="rate_limited"?"limit":"done"}
+  render()}
 function errMsg(e){const c=e&&e.code;return c==="rate_limited"?"Too many searches right now. Try again in a few minutes.":c==="invalid_json"?"The results came back in the wrong shape. Try again.":"Couldn't finish the search. Try again."}
 function composeUrl(prov,to,subj,body){
   const q=encodeURIComponent;
@@ -302,6 +331,8 @@ function composeUrl(prov,to,subj,body){
 }
 const okUrl=u=>/^https?:\/\//i.test(u||"")?u:"";
 const okMail=m=>/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(m||"")?m:"";
+const liProfile=u=>/^https?:\/\/([a-z]{2,3}\.)?(www\.)?linkedin\.com\/in\/[^\/?#\s]+/i.test(u||"")?String(u).split(/[?#]/)[0]:"";
+const liSearch=(name,company)=>"https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent(name+" "+company);
 async function liveLeads(p,exclude){
   const roles=preset(p.job).roles;
   const prompt=`You find sales leads for a freelancer. Search the web for REAL companies that are likely to hire them, and for the right contact at each.
@@ -311,8 +342,11 @@ Region: ${p.region||"anywhere"}.
 Decision-maker titles to look for, best first: ${roles.join(", ")}.
 ${exclude.length?`Skip these companies, already on the list: ${exclude.join(", ")}.
 `:""}
-Find 6 companies. For each, look for a named decision-maker on the company site or a public profile, then a general email published on the site, then the contact form page. Only include an email address if it is published on a web page; never guess or construct one. Leave a field as "" if not found.
-Reply with only JSON: {"leads":[{"company":"","domain":"example.com","segment":"one of the client types","city":"","size":"e.g. 10-50 people or ''","why":"one sentence on why they fit, based on something real you found","fit":80,"language":"he|en (main language of their site)","person":{"name":"","role":"","email":"","url":"public profile or team page URL","source":"where you found them"},"inbox":"published general email or ''","form":"contact page URL or ''"}]}`;
+Find 6 companies. For each, look for a named decision-maker on the company site or LinkedIn, then a general email published on the site, then the contact form page.
+- Only include an email address if it is published on a web page; never guess or construct one.
+- "linkedin" must be that person's own LinkedIn profile URL (linkedin.com/in/...) that you actually found. Never put the company website or a company page there; leave it "" if you didn't find the profile.
+- Leave any field "" if not found.
+Reply with only JSON: {"leads":[{"company":"","domain":"example.com","segment":"one of the client types","city":"","size":"e.g. 10-50 people or ''","why":"one sentence on why they fit, based on something real you found","hook_he":"if the site is in Hebrew: a short Hebrew phrase completing 'ראיתי ש[company] ...', e.g. 'מעלים סרטונים קצרים כל שבוע'; else ''","fit":80,"language":"he|en (main language of their site)","person":{"name":"full name","first_name":"","last_name":"","role":"","email":"","linkedin":"https://www.linkedin.com/in/...","source":"where you found them"},"inbox":"published general email or ''","form":"contact page URL or ''"}]}`;
   const r=await sample.json(prompt,{webSearch:true,cache:false});
   const list=(r&&Array.isArray(r.leads)?r.leads:[]).filter(x=>x&&x.company).slice(0,8);
   if(!list.length)throw {code:"empty_completion"};
@@ -321,13 +355,16 @@ Reply with only JSON: {"leads":[{"company":"","domain":"example.com","segment":"
     const dom=String(x.domain||"").replace(/^https?:\/\//,"").replace(/\/.*$/,"");
     const per=x.person||{};
     const ladder=[];
-    if(per.name)ladder.push({kind:"person",who:String(per.name),role:String(per.role||"Decision-maker"),via:String(per.source||"public web"),email:okMail(per.email),url:okUrl(per.url),found:true});
+    if(per.name){const who=String(per.name).trim(),parts=who.split(/\s+/),first=String(per.first_name||parts[0]||"").trim(),last=String(per.last_name||parts.slice(1).join(" ")||"").trim();
+      const li=liProfile(per.linkedin)||liProfile(per.url);
+      ladder.push({kind:"person",who,first,last,role:String(per.role||"Decision-maker"),via:String(per.source||"public web"),email:okMail(per.email),emailSrc:okMail(per.email)?"Published on the web":"",found:true});
+      ladder.push({kind:"linkedin",who,first,role:String(per.role||"Decision-maker"),via:li?"LinkedIn profile":"LinkedIn search",url:li||liSearch(who,String(x.company)),isSearch:!li,email:"",found:true});}
     if(okMail(x.inbox))ladder.push({kind:"inbox",who:okMail(x.inbox),role:"General inbox",via:"Company website",email:okMail(x.inbox),found:true});
     const form=okUrl(x.form)||(dom?"https://"+dom:"");
     ladder.push({kind:"form",who:"Contact form",role:"Website form",via:form.replace(/^https?:\/\//,""),url:form,email:"",found:true});
     return {id:"R"+base+i,company:String(x.company),segment:String(x.segment||p.clients[0]||"Company"),city:String(x.city||p.region||""),domain:dom,
-      fit:Math.max(40,Math.min(99,Math.round(Number(x.fit)||75))),hook:String(x.why||"").replace(/^./,c=>c.toLowerCase()).replace(/\.$/,""),why:String(x.why||""),
-      size:String(x.size||""),local:/he/i.test(x.language||""),ladder,chosen:0,status:"new",lang:/he/i.test(x.language||"")?"he":"en",draft:null};
+      fit:Math.max(40,Math.min(99,Math.round(Number(x.fit)||75))),hook:String(x.why||"").replace(/^./,c=>c.toLowerCase()).replace(/\.$/,""),why:String(x.why||""),hookHe:String(x.hook_he||"").trim(),
+      size:String(x.size||""),local:/he/i.test(x.language||""),ladder,chosen:Math.max(0,ladder.findIndex(r=>r.kind!=="person"||r.email)),status:"new",lang:/he/i.test(x.language||"")?"he":"en",draft:null};
   }).sort((a,b)=>b.fit-a.fit);
 }
 
@@ -353,10 +390,10 @@ function welcome(){
     </ul>
     <div class="panel">
       <div class="grid2">
-        <button class="provider" data-act="signup" data-v="Gmail"><span class="dot">G</span><span><b>Continue with Google</b><br><span class="note">${LIVE?"Messages open in Gmail":"Gmail sending included"}</span></span></button>
-        <button class="provider" data-act="signup" data-v="Outlook"><span class="dot">M</span><span><b>Continue with Microsoft</b><br><span class="note">${LIVE?"Messages open in Outlook":"Outlook sending included"}</span></span></button>
+        <button class="provider" data-act="${LIVE&&CAPS.googleClientId?"google":"signup"}" data-v="Gmail"><span class="dot">G</span><span><b>Continue with Google</b><br><span class="note">${LIVE&&CAPS.googleClientId?"Sign in with your Google account":LIVE?"Messages open in Gmail":"Gmail sending included"}</span></span></button>
+        <button class="provider" data-act="signup" data-v="Outlook"><span class="dot">M</span><span><b>Continue with Microsoft</b><br><span class="note">${LIVE?"No sign-in · messages open in Outlook":"Outlook sending included"}</span></span></button>
       </div>
-      <p class="note">${LIVE?"No sign-in needed. Leads come from a live web search, and each message opens in your own Gmail or Outlook for you to send.":"Sample mode: sign-in is simulated and no email is ever sent."}</p>
+      <p class="note">${LIVE?(CAPS.googleClientId?"Google sign-in only shares your name and email address with Reachlist. Leads come from a live web search; you review every message before it goes out.":"Leads come from a live web search, and each message opens in your own Gmail or Outlook for you to send."):"Sample mode: sign-in is simulated and no email is ever sent."}</p>
     </div>
   </div></div>`;
 }
@@ -464,7 +501,7 @@ function app(){
   root.innerHTML=`<div class="app">
     <aside class="side">${brand}
       <nav class="nav" aria-label="Main">${nav.map(([k,t,c])=>`<button data-act="view" data-v="${k}" aria-current="${S.view===k?"page":"false"}">${t}<span class="count">${c}</span></button>`).join("")}</nav>
-      <div class="me"><b>${esc(S.profile.name||"You")}</b><span class="muted">${esc(S.profile.job)} · ${esc(S.profile.region)}</span><span class="muted">${LIVE?"Sends via "+esc(S.profile.provider||"Gmail"):esc(S.profile.provider)+" connected"}</span></div>
+      <div class="me"><b>${esc(S.profile.name||"You")}</b><span class="muted">${esc(S.profile.job)} · ${esc(S.profile.region)}</span><span class="muted">${S.profile.google?esc(S.profile.email):LIVE?"Sends via "+esc(S.profile.provider||"Gmail"):esc(S.profile.provider)+" connected"}</span>${S.profile.google?'<button class="btn ghost" data-act="signout" style="padding:2px 0;justify-content:flex-start">Sign out</button>':""}</div>
     </aside>
     <main class="main"><div class="main-inner">${S.view==="leads"?leadsView(counts):S.view==="outbox"?outboxView():profileView()}</div></main>
   </div>`;
@@ -476,46 +513,52 @@ function leadsView(counts){
   return `<div class="head"><div>${LIVE?'<span class="sample live">Live results</span>':'<span class="sample">Sample leads</span>'}<h2 style="margin-top:6px">${S.leads.length} ${S.leads.length===1?"company":"companies"} that fit</h2>
       <p class="muted">${esc(S.profile.clients.join(", "))} · ${esc(S.profile.region)}</p></div>
     <div class="toolbar"><div class="seg" role="group" aria-label="Filter">${[["all","All"],["new","To send"],["sent","Sent"],["skipped","Skipped"]].map(([k,t])=>`<button data-act="filter" data-v="${k}" aria-pressed="${S.filter===k}">${t} <span class="mono">${counts[k]}</span></button>`).join("")}</div>
-      <button class="btn" data-act="more">${LIVE?"Find more":"Find 10 more"}</button></div></div>
+      ${LIVE&&CAPS.emailFinder?'<button class="btn" data-act="findall">Find emails</button>':""}<button class="btn" data-act="csv">Download CSV</button><button class="btn" data-act="more">${LIVE?"Find more":"Find 10 more"}</button></div></div>
   <div class="split">
     <div class="leads">${list.length?list.map(x=>`<button class="lead" data-act="sel" data-v="${x.id}" aria-current="${l&&x.id===l.id}">
         <span class="co">${esc(x.company)}</span><span class="fit" title="Fit score">${x.fit}%</span>
         <span class="sub">${esc(x.segment)} · ${esc(x.city)} · ${esc(x.size)}</span>
-        <span class="sub">${x.ladder[x.chosen].kind==="person"?"→ "+esc(x.ladder[x.chosen].who)+", "+esc(x.ladder[x.chosen].role):"→ "+esc(x.ladder[x.chosen].role)}</span>
+        <span class="sub">${["person","linkedin"].includes(x.ladder[x.chosen].kind)?"→ "+esc(x.ladder[x.chosen].who)+", "+esc(x.ladder[x.chosen].role)+(x.ladder[x.chosen].kind==="linkedin"?" · LinkedIn":x.ladder[x.chosen].email?" · Email":""):"→ "+esc(x.ladder[x.chosen].role)}</span>
         <span class="status ${x.status}">${{new:"To send",sent:"Sent",replied:"Replied",skipped:"Skipped"}[x.status]}</span>
       </button>`).join(""):`<div class="empty">Nothing here yet.</div>`}</div>
     ${l?detailView(l):`<div class="empty">Pick a lead to see who to contact.</div>`}
   </div>`;
 }
 
+function rungHtml(r,l){
+  if(r.kind==="person")return `<span class="who"><b>${esc(r.who)}</b> · ${esc(r.role)} · Email</span><br>${r.email?`<span class="mono">${esc(r.email)}</span> <span class="via">· ${esc(r.emailSrc||"Found")}</span>`
+    :r.tried==="busy"?'<span class="via">Looking for a work email…</span>':r.tried==="limit"?'<span class="via">Email finder limit reached for now</span>':r.tried?'<span class="via">No email found. Use LinkedIn below.</span>'
+    :LIVE&&CAPS.emailFinder?`<span class="via">No published email · </span><button class="btn ghost" data-act="findone" style="padding:0;font-size:.8rem">Find email</button>`:'<span class="via">No published email. Use LinkedIn below.</span>'}`;
+  if(r.kind==="linkedin")return `<span class="who"><b>${esc(r.who)}</b> · LinkedIn</span><br><a class="via" href="${esc(r.url)}" target="_blank" rel="noopener">${r.isSearch?"Search LinkedIn for "+esc(r.who):"Open LinkedIn profile"} ↗</a>`;
+  return `<span class="who"><b>${esc(r.role)}</b> · <span class="mono">${esc(r.who)}</span></span><br><span class="via">${r.found?"Found via "+esc(r.via):"Not found publicly"}</span>`}
 function detailView(l){
+  if(LIVE&&CAPS.emailFinder)setTimeout(()=>findEmail(l,true),0);
   ensureDraft(l);
   const s=l.ladder[l.chosen]; const d=l.draft; const rtl=d.lang==="he";
-  const locked=l.status!=="new";
+  const locked=l.status!=="new", li=s.kind==="linkedin";
   return `<section class="detail" aria-label="${esc(l.company)}">
     <div class="row-end"><div><h3>${esc(l.company)}</h3><p class="muted">${esc(l.segment)}${l.city?" · "+esc(l.city):""} · ${l.domain&&LIVE?`<a class="mono" href="https://${esc(l.domain)}" target="_blank" rel="noopener">${esc(l.domain)}</a>`:`<span class="mono">${esc(l.domain)}</span>`}</p></div><span class="fit">${l.fit}% fit</span></div>
     <div class="why"><div class="label">Why they made the list</div><p>${l.why?esc(l.why):`${esc(cap(l.segment.replace(/s$/,"")))}, and the company ${esc(l.hook)}.`}</p></div>
     <div><div class="label">Who to contact</div>
       <ol class="ladder">${l.ladder.map((r,i)=>`<li class="rung ${r.found?"found":"missing"} ${i===l.chosen?"chosen":""}">
         <span class="pt"></span>
-        <span><span class="who">${r.kind==="person"?`<b>${esc(r.who)}</b> · ${esc(r.role)}`:`<b>${esc(r.role)}</b> · <span class="mono">${esc(r.who)}</span>`}</span><br>
-          <span class="via">${r.found?"Found via "+esc(r.via):"Not found publicly"}</span></span>
-        ${r.found&&!locked?`<button class="pick" data-act="rung" data-v="${i}" aria-pressed="${i===l.chosen}">${i===l.chosen?"Selected":"Use"}</button>`:"<span></span>"}
+        <span>${rungHtml(r,l)}</span>
+        ${r.found&&!locked&&!(r.kind==="person"&&!r.email)?`<button class="pick" data-act="rung" data-v="${i}" aria-pressed="${i===l.chosen}">${i===l.chosen?"Selected":"Use"}</button>`:"<span></span>"}
       </li>`).join("")}</ol>
     </div>
     <div class="compose">
       <div class="row-end"><div class="label">Message</div>
         <div class="seg" role="group" aria-label="Language">${[["he","עברית"],["en","English"]].map(([k,t])=>`<button data-act="dlang" data-v="${k}" aria-pressed="${d.lang===k}" ${locked?"disabled":""}>${t}</button>`).join("")}</div></div>
-      <div class="to"><span><span class="muted">From</span> ${esc(S.profile.email||("your "+S.profile.provider))}</span><span><span class="muted">To</span> ${s.kind==="form"?(s.url?`<a class="mono" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.via)}</a>`:`<span class="mono">${esc(s.via)}</span>`):s.email?`<span class="mono">${esc(s.email)}</span>`:s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.who)}'s public profile</a>`:esc(s.who)}</span></div>
-      <label class="label" for="d-subj">Subject</label>
-      <input id="d-subj" type="text" dir="${rtl?"rtl":"ltr"}" value="${esc(d.subject)}" ${locked?"readonly":""}>
-      <label class="label" for="d-body">Body</label>
+      <div class="to" ${li?"hidden":""}><span><span class="muted">From</span> ${esc(S.profile.email||("your "+S.profile.provider))}</span><span><span class="muted">To</span> ${s.kind==="form"?(s.url?`<a class="mono" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.via)}</a>`:`<span class="mono">${esc(s.via)}</span>`):s.email?`<span class="mono">${esc(s.email)}</span>`:s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.who)}'s public profile</a>`:esc(s.who)}</span></div>
+      ${li?`<p class="note">LinkedIn connection note. Notes are limited to 300 characters; send it with your connection request, or as a message if you're already connected.</p>`:`<label class="label" for="d-subj">Subject</label>
+      <input id="d-subj" type="text" dir="${rtl?"rtl":"ltr"}" value="${esc(d.subject)}" ${locked?"readonly":""}>`}
+      <label class="label" for="d-body">${li?`Note <span class="mono" id="licount">${d.body.length} / 300</span>`:"Body"}</label>
       <textarea id="d-body" dir="${rtl?"rtl":"ltr"}" ${locked?"readonly":""}>${esc(d.body)}</textarea>
       <div class="send-row">
         ${locked?`<span class="status ${l.status}">${l.status==="sent"?"Sent "+esc(l.sentAt):l.status==="replied"?"Replied":"Skipped"}</span>
           ${l.status==="skipped"?`<button class="btn" data-act="unskip">Move back to To send</button>`:l.status==="sent"?`<button class="btn" data-act="replied">Mark as replied</button>`:""}`
         :`<div class="toolbar"><button class="btn ghost" data-act="skip">Not a fit</button><button class="btn" data-act="regen">Rewrite</button></div>
-          ${s.kind==="form"||(LIVE&&!s.email)?`<button class="btn primary" data-act="copyform">${s.kind==="form"?"Copy for contact form":"Copy message"}</button>`:`<button class="btn primary" data-act="send">${LIVE?"Open in "+esc(S.profile.provider||"Gmail"):"Send from "+esc(S.profile.provider)}</button>`}`}
+          ${li?`<button class="btn primary" data-act="copyli">Copy note and open LinkedIn</button>`:s.kind==="form"||(LIVE&&!s.email)?`<button class="btn primary" data-act="copyform">${s.kind==="form"?"Copy for contact form":"Copy message"}</button>`:`<button class="btn primary" data-act="send">${LIVE?(S.profile.google&&CAPS.gmailSend?"Send from Gmail":"Open in "+esc(S.profile.provider||"Gmail")):"Send from "+esc(S.profile.provider)}</button>`}`}
       </div>
       ${s.kind==="form"&&!locked?`<p class="note">Contact forms can't be sent automatically. Copy the message, open the form, and Reachlist marks it as sent once you confirm.</p>`:""}
     </div>
@@ -552,6 +595,14 @@ function profileView(){
 }
 
 /* ======================= Events ======================= */
+function downloadCsv(){
+  const rows=[["Company","Website","Segment","City","Fit %","Why they fit","Contact name","Role","Contact email","Email source","LinkedIn","General inbox","Contact form","Status"]];
+  for(const l of S.leads){const per=l.ladder.find(r=>r.kind==="person")||{},li=l.ladder.find(r=>r.kind==="linkedin")||{},ib=l.ladder.find(r=>r.kind==="inbox")||{},fm=l.ladder.find(r=>r.kind==="form")||{};
+    rows.push([l.company,l.domain?"https://"+l.domain:"",l.segment,l.city,l.fit,l.why||l.hook,per.who||"",per.role||"",per.email||"",per.email?(per.emailSrc||""):"",li.url||"",ib.email||"",fm.url||"",{new:"To send",sent:"Sent",replied:"Replied",skipped:"Not a fit"}[l.status]||l.status])}
+  const csv="\ufeff"+rows.map(r=>r.map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`reachlist-${(S.profile.job||"leads").toLowerCase().replace(/[^a-z0-9]+/g,"-")}-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast(`Downloaded ${S.leads.length} companies`)}
 function cur(){return S.leads.find(x=>x.id===S.sel)}
 function stamp(){const d=new Date();return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+" "+d.toTimeString().slice(0,5)}
 function saveEdits(){const l=cur();if(!l||!l.draft||l.status!=="new")return;const s=document.getElementById("d-subj"),b=document.getElementById("d-body");if(s)l.draft.subject=s.value;if(b)l.draft.body=b.value;}
@@ -559,6 +610,10 @@ function saveEdits(){const l=cur();if(!l||!l.draft||l.status!=="new")return;cons
 root.addEventListener("click",async e=>{
   const el=e.target.closest("[data-act]"); if(!el||el.disabled)return;
   const a=el.dataset.act, v=el.dataset.v, p=S.profile;
+  if(a==="google"){try{el.disabled=true;await googleSignIn();S.screen="onboard";S.step=0;toast("Signed in as "+S.profile.email);}catch(err){el.disabled=false;toast("Google sign-in didn't finish. Try again, or continue with Outlook.");}return render();}
+  if(a==="signout"){try{if(GTOKEN&&window.google)google.accounts.oauth2.revoke(GTOKEN,()=>{})}catch(x){}GTOKEN=null;GSEND=null;Object.assign(S.profile,{google:false,email:"",avatar:""});toast("Signed out");return render();}
+  if(a==="csv"){downloadCsv();return;}
+  if(a==="findall"){if(S.findBusy)return;S.findBusy=true;el.textContent="Finding…";for(const x of S.leads){await findEmail(x,true)}S.findBusy=false;const n=S.leads.filter(x=>x.ladder.some(r=>r.kind==="person"&&r.email)).length;toast(`${n} of ${S.leads.length} companies have a direct email`);return render();}
   if(a==="signup"){p.email=LIVE?"":"you@gmail.com";if(LIVE)p.provider=v||"Gmail";S.screen="onboard";S.step=0;return render();}
   if(a==="next"){readStep();if(S.step<3){S.step++;return render();}S.screen="search";S.searchStep=0;return render();}
   if(a==="back"){readStep();S.step--;return render();}
@@ -572,16 +627,18 @@ root.addEventListener("click",async e=>{
   if(a==="more"){if(!LIVE){toast("Sample mode: the list stays the same here.");return;}if(S.moreBusy)return;S.moreBusy=true;el.textContent="Searching…";el.disabled=true;try{const add=await liveLeads(S.profile,S.leads.map(x=>x.company));S.leads=[...S.leads,...add];toast(`Added ${add.length} companies`);}catch(err){toast(errMsg(err));}S.moreBusy=false;return render();}
   if(a==="reonboard"){S.screen="onboard";S.step=0;return render();}
   const l=cur(); if(!l)return;
+  if(a==="findone"){await findEmail(l);return;}
+  if(a==="copyli"){saveEdits();const s0=l.ladder[l.chosen];const t=l.draft.body;try{await navigator.clipboard.writeText(t);toast("Note copied. Paste it into LinkedIn.");}catch{document.getElementById("d-body").select();toast("Press Ctrl+C to copy, then paste it into LinkedIn.");}window.open(s0.url,"_blank","noopener");l.status="sent";l.sentAt=stamp();setTimeout(render,900);return;}
   if(a==="rung"){saveEdits();l.chosen=+v;l.draft=null;return render();}
   if(a==="dlang"){l.draft={lang:v,...makeDraft(l,p,v)};return render();}
   if(a==="regen"){const d=makeDraft(l,p,l.draft.lang);const alt=l.draft.lang==="he"?d.body.replace("יש לך 15 דקות השבוע לשיחה קצרה?","אפשר לשלוח לך שתי דוגמאות שמתאימות לסגנון שלכם?"):d.body.replace("Open to a 15-minute call this week?","Can I send two samples that match your style?");l.draft={...l.draft,subject:d.subject,body:l.draft.body===alt?d.body:alt};toast("Rewritten with a softer ask");return render();}
   if(a==="skip"){saveEdits();l.status="skipped";toast("Marked as not a fit");return render();}
   if(a==="unskip"){l.status="new";return render();}
   if(a==="replied"){l.status="replied";toast("Marked as replied");return render();}
-  if(a==="send"){saveEdits();const sentCount=S.leads.filter(x=>x.status==="sent"||x.status==="replied").length;if(sentCount>=p.dailyLimit){toast("Daily limit reached. The rest go out tomorrow.");return;}if(LIVE){const s0=l.ladder[l.chosen];window.open(composeUrl(p.provider,s0.email,l.draft.subject,l.draft.body),"_blank","noopener");}l.status="sent";l.sentAt=stamp();toast(LIVE?"Draft opened in "+(p.provider||"Gmail")+". Hit send there.":"Sent (simulated, nothing was emailed)");const next=S.leads.find(x=>x.status==="new");if(next)S.sel=next.id;return render();}
+  if(a==="send"){saveEdits();const sentCount=S.leads.filter(x=>x.status==="sent"||x.status==="replied").length;if(sentCount>=p.dailyLimit){toast("Daily limit reached. The rest go out tomorrow.");return;}if(LIVE){const s0=l.ladder[l.chosen];if(p.google&&CAPS.gmailSend){try{el.disabled=true;el.textContent="Sending…";await gmailSend(s0.email,l.draft.subject,l.draft.body);l.status="sent";l.sentAt=stamp();toast("Sent from "+p.email);const nx=S.leads.find(x=>x.status==="new");if(nx)S.sel=nx.id;return render();}catch(err){el.disabled=false;toast("Couldn't send from Gmail, so it opened as a draft instead.");}}window.open(composeUrl(p.provider,s0.email,l.draft.subject,l.draft.body),"_blank","noopener");}l.status="sent";l.sentAt=stamp();toast(LIVE?"Draft opened in "+(p.provider||"Gmail")+". Hit send there.":"Sent (simulated, nothing was emailed)");const next=S.leads.find(x=>x.status==="new");if(next)S.sel=next.id;return render();}
   if(a==="copyform"){saveEdits();{const s0=l.ladder[l.chosen];if(LIVE&&s0.url)window.open(s0.url,"_blank","noopener");}const t=l.draft.subject+"\n\n"+l.draft.body;try{await navigator.clipboard.writeText(t);toast("Copied. Paste it into their contact form.");}catch{const b=document.getElementById("d-body");b.select();toast("Selected. Press Ctrl+C, then paste into their form.");}l.status="sent";l.sentAt=stamp();setTimeout(render,900);return;}
 });
-root.addEventListener("input",e=>{ if(e.target.id==="f-job"){ S.profile.job=e.target.value; S.profile.clients=[]; const b=root.querySelector('[data-act="next"]'); if(b)b.disabled=!e.target.value.trim(); }});
+root.addEventListener("input",e=>{ if(e.target.id==="d-body"){const c=document.getElementById("licount");if(c){const n=e.target.value.length;c.textContent=n+" / 300";c.style.color=n>300?"var(--bad)":""}} if(e.target.id==="f-job"){ S.profile.job=e.target.value; S.profile.clients=[]; const b=root.querySelector('[data-act="next"]'); if(b)b.disabled=!e.target.value.trim(); }});
 root.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="f-addclient"){e.preventDefault();root.querySelector('[data-act="addclient"]').click();}});
 
 render();

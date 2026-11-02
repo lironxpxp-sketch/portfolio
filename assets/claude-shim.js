@@ -94,6 +94,12 @@
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok || !d.image) throw fail(d.code || (r.status === 429 ? "rate_limited" : "upstream_error"), d.message); return d.image; }); },
             function () { throw fail("upstream_error", "Could not reach the AI service"); });
   };
+  // Find a person's work email (Hunter.io via the backend): resolves {email, score, status}
+  window.__aiFindEmail = function (domain, first, last) {
+    return fetch(AI_ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ findEmail: { domain: domain, first: first, last: last || "" } }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw fail(d.code || "upstream_error", d.message); return d; }); },
+            function () { throw fail("upstream_error", "Could not reach the email finder"); });
+  };
   window.claude = {
     use: function (name) {
       if (name === "sample") return Promise.resolve(AI_ENDPOINT ? sample : null);

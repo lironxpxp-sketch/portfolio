@@ -13,6 +13,9 @@
  *   GEMINI_API_KEY     (Secret, optional)  key from aistudio.google.com: Gemini, used first for web research
  *   GEMINI_MODEL       (Text, optional)    Gemini model, default gemini-3.8-flash
  *   GEMINI_IMAGE_MODEL (Text, optional)    image model, default gemini-nano-banana-2.1 (Nano Banana)
+ *   HUNTER_API_KEY     (Secret, optional)  key from hunter.io: finds work emails in Reachlist
+ *   GOOGLE_CLIENT_ID   (Text, optional)    OAuth client ID: "Sign in with Google" in Reachlist
+ *   GMAIL_SEND         (Text, optional)    set to "on" to send straight from Gmail (needs Google's app review for the public)
  */
 
 const ALLOWED_ORIGINS = [
@@ -151,7 +154,8 @@ export default {
     }
     // Image pass-through so the site can draw a brand's own images into its ads
     if (request.method === "GET" && new URL(request.url).searchParams.has("caps")) {
-      return reply(200, { images: !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY), models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
+      return reply(200, { images: !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY), emailFinder: !!env.HUNTER_API_KEY,
+        googleClientId: env.GOOGLE_CLIENT_ID || "", gmailSend: env.GMAIL_SEND === "on", models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
     }
     if (request.method === "GET") {
       const target = new URL(request.url).searchParams.get("img") || "";
@@ -183,6 +187,22 @@ export default {
     let body;
     try { body = JSON.parse(raw); } catch {
       return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin);
+    }
+
+    // Find a person's work email (Hunter.io). Only real, found addresses are returned.
+    if (body.findEmail && typeof body.findEmail === "object") {
+      if (!env.HUNTER_API_KEY) return reply(400, { code: "not_configured", message: "Email finder isn't connected" }, origin);
+      const f = body.findEmail;
+      const domain = String(f.domain || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+      const first = String(f.first || "").trim().slice(0, 60), last = String(f.last || "").trim().slice(0, 60);
+      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain) || !first) return reply(400, { code: "invalid_request", message: "Need a domain and a first name" }, origin);
+      const q = new URLSearchParams({ domain, first_name: first, ...(last ? { last_name: last } : {}) });
+      const res = await fetch(`https://api.hunter.io/v2/email-finder?${q}`, { headers: { "X-API-KEY": env.HUNTER_API_KEY } });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 429) return reply(429, { code: "rate_limited", message: "Email finder limit reached" }, origin);
+      if (!res.ok) return reply(res.status === 404 ? 200 : 502, res.status === 404 ? { email: "" } : { code: "upstream_error", message: data?.errors?.[0]?.details || "Email finder error" }, origin);
+      const d = data.data || {};
+      return reply(200, { email: d.email || "", score: Number(d.score) || 0, status: d.verification?.status || "", sources: Array.isArray(d.sources) ? d.sources.length : 0 }, origin);
     }
 
     // Finished ad image: Nano Banana (Gemini), with OpenAI's image model as backup

@@ -68,9 +68,25 @@ If one fails, the next one answers. To change the order, add a **Text** variable
 1. At **aistudio.google.com** sign in and click **Get API key → Create API key**.
 2. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `GEMINI_API_KEY`, value = the key. Deploy.
 
+### Optional: real email finding in Reachlist (Hunter.io)
+
+1. Sign up at **hunter.io** (free: 50 found emails a month; a credit is used only when an email is found).
+2. **API → API key**, copy it.
+3. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `HUNTER_API_KEY`. Deploy.
+
+### Optional: "Sign in with Google" in Reachlist
+
+1. **console.cloud.google.com** → create a project (e.g. "Reachlist").
+2. **APIs & Services → OAuth consent screen**: User type **External**, app name "Reachlist", your email as support and developer contact. Scopes: just the defaults (email, profile, openid). Save.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**: Type **Web application**. Under **Authorized JavaScript origins** add `https://lironsofer.online` and `https://www.lironsofer.online`. Create, then copy the **Client ID** (ends in `.apps.googleusercontent.com`).
+4. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Text**, name `GOOGLE_CLIENT_ID`, value = the Client ID. Deploy.
+5. Publish the consent screen (**OAuth consent screen → Publish app**) so anyone can sign in. Sign-in with name and email doesn't need Google's review.
+
+Sending straight from Gmail (instead of opening a draft) needs the Gmail API enabled and the `gmail.send` scope, which Google reviews before the public can use it (about 2–4 weeks). Until then it works for you and up to 100 test users you add on the consent screen. To turn it on, add a **Text** variable `GMAIL_SEND` = `on`.
+
 ## Updating projects
 
-Master copies for the site live in `sources/`: Ad Performance Copilot (`ad-copilot.html`, tests: `node sources/ad-copilot.test.js`), Creative Studio and Market Research Agent. Build a project page with `python3 tools/prepare_project.py sources/<file>.html <slug>`. The other projects come from their Claude artifacts.
+Master copies for the site live in `sources/`: Ad Performance Copilot (`ad-copilot.html`, tests: `node sources/ad-copilot.test.js`), Creative Studio, Market Research Agent and Reachlist. Build a project page with `python3 tools/prepare_project.py sources/<file>.html <slug>`. The other projects come from their Claude artifacts.
 
 If `worker/worker.js` changes, paste the new version into the Cloudflare Worker again (Edit code → paste → Deploy).
 
