@@ -359,15 +359,24 @@ const narr={ok:'speechSynthesis' in window,on:true,speaking:false,voice:null,
   if(!this.ok||!this.on||audio.muted||!text)return;
   if(!this.voice)this.pick();
   if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);if(this.voice){u.voice=this.voice;u.lang=this.voice.lang}else u.lang='en-US';
-  u.rate=RM?.95:1.0;u.pitch=1.03;
-  u.onstart=()=>{this.speaking=true;audio.duck(true)};
-  u.onend=u.onerror=()=>{if(this.cur===u){this.speaking=false;audio.duck(false)}};
-  this.cur=u;this.speaking=true;audio.duck(true);speechSynthesis.speak(u);
+  const parts=(text.match(/[^.!?]+[.!?]*/g)||[text]).map(x=>x.trim()).filter(Boolean);
+  const words=text.split(/\s+/).length;
+  this.until=performance.now()+(words/2.3+2)*1000;   // safety: never wait longer than the line should take
+  const token={};this.cur=token;
+  parts.forEach((txt,k)=>{
+   const u=new SpeechSynthesisUtterance(txt);if(this.voice){u.voice=this.voice;u.lang=this.voice.lang}else u.lang='en-US';
+   u.rate=RM?.95:1.0;u.pitch=1.03;
+   const done=()=>{if(this.cur===token){this.speaking=false;audio.duck(false)}};
+   if(k===parts.length-1)u.onend=done;
+   u.onerror=done;
+   speechSynthesis.speak(u);
+  });
+  this.speaking=true;audio.duck(true);
  },
+ busy(){if(this.speaking&&performance.now()>this.until){this.speaking=false;audio.duck(false)}return this.speaking},
  stop(){if(!this.ok)return;this.cur=null;speechSynthesis.cancel();this.speaking=false;audio.duck(false)},
- pause(){this.ok&&speechSynthesis.pause()},
- resume(){this.ok&&speechSynthesis.resume()}
+ pause(){if(!this.ok)return;this.pausedAt=performance.now();speechSynthesis.pause()},
+ resume(){if(!this.ok)return;if(this.pausedAt){this.until+=performance.now()-this.pausedAt;this.pausedAt=0}speechSynthesis.resume()}
 };
 if(narr.ok){narr.pick();speechSynthesis.onvoiceschanged=()=>narr.pick()}
 
@@ -414,7 +423,7 @@ function frame(ts){
   const dt=last?Math.min(.1,(ts-last)/1000):0;last=ts;
   if(playing){const prev=t;let nt=t+dt;
     const sc=scenes[cur],holdAt=sc.start+sc.dur-(sc.erase||0)-.3;
-    if(narr.speaking&&nt>holdAt&&holdT<16){holdT+=dt;nt=Math.max(t,holdAt)}
+    if(narr.busy()&&nt>holdAt&&holdT<16){holdT+=dt;nt=Math.max(t,holdAt)}
     t=nt;
     if(t>=TOTAL){t=TOTAL;playing=false;ended=true;audio.end();audio.scratch(0);setPlayIcon()}
     update(prev);
