@@ -13,7 +13,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Bump when assets/claude-shim.js changes, so browsers don't keep an old copy
-SHIM_VERSION = "6"
+SHIM_VERSION = "9"
 
 HEAD = ('<script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script>'
         '<script src="../../assets/claude-shim.js?v=' + SHIM_VERSION + '"></script>')
@@ -24,25 +24,7 @@ BACK = '''<a href="../../index.html" class="pf-back" aria-label="Back to portfol
 
 # Small per-project copy fixes for running outside claude.ai
 TWEAKS = {
-    # Market Research Agent: add live web search and real source links on the hosted site
-    "market-research": [
-        ("Today is ${today()}. You cannot browse; write from what you know and be explicit about uncertainty.",
-         "Today is ${today()}. ${window.__aiWeb?\"Search the web for current facts and use only figures you find; cite the pages you used.\":\"You cannot browse; write from what you know and be explicit about uncertainty.\"}"),
-        ("(e.g. \"Eurostat structural business statistics\", \"Vendor pricing pages\"). No URLs.",
-         "(e.g. \"Eurostat structural business statistics\", \"Vendor pricing pages\"). ${window.__aiWeb?\"Put the page URL you used in \\\"url\\\".\":\"No URLs; leave \\\"url\\\" empty.\"}"),
-        ('"sources":[{"name":string,"verify":string}]', '"sources":[{"name":string,"verify":string,"url":string}]'),
-        ("{signal,onText:({text})=>", "{signal,webSearch:!!window.__aiWeb,onText:({text})=>"),
-        ('<li id="src-${i+1}"><b>${esc(s.name)}</b>',
-         '<li id="src-${i+1}">${/^https?:\\/\\//.test(s.url||"")?`<a href="${esc(s.url)}" target="_blank" rel="noopener"><b>${esc(s.name)}</b></a>`:`<b>${esc(s.name)}</b>`}'),
-        ("Reports are written by Claude from what it knows, not from a live web crawl. Figures carry a confidence level and a named source to check before you rely on them.",
-         "Reports search the live web and link the pages they used. Figures carry a confidence level, so check low-confidence ones before you rely on them."),
-        ("Live research isn't available in this view. Open the page on claude.ai while signed in to run your own questions. The examples below still work.",
-         "Live research is switched off right now. The examples below still work."),
-        ("Live research isn't available in this view. Open the page on claude.ai while signed in. The examples still work.",
-         "Live research is switched off right now. The examples still work."),
-        ("Sign in on claude.ai to keep your watchlist between visits. Items saved now last until you close the page.",
-         "Saved markets stay here until you close the page."),
-    ],
+    # Market Research Agent: master copy lives in sources/market-research.html (site changes already built in)
     # Ad Performance Copilot: visitors without their own API key use the site's backend
     "ad-copilot": [
         ('let KEY="";try{KEY=localStorage.getItem("adcopilot.key")||""}catch(e){}',

@@ -7,11 +7,15 @@
  * Settings (Cloudflare dashboard → your Worker → Settings → Variables):
  *   ANTHROPIC_API_KEY  (Secret)  your key from console.anthropic.com
  *   ROUTES             (Text, optional)    JSON to change which AI handles which job, e.g. {"copy":["openai","claude"]}
- *   OPENAI_API_KEY     (Secret, optional)  key from platform.openai.com: GPT writing and AI photos
+ *   OPENAI_API_KEY     (Secret, optional)  key from platform.openai.com: GPT writing (and backup images)
  *   OPENAI_MODEL       (Text, optional)    OpenAI text model, default gpt-5.5
  *   OPENAI_IMAGE_MODEL (Text, optional)    OpenAI image model, default gpt-image-2.5-flare
  *   GEMINI_API_KEY     (Secret, optional)  key from aistudio.google.com: Gemini, used first for web research
  *   GEMINI_MODEL       (Text, optional)    Gemini model, default gemini-3.8-flash
+ *   GEMINI_IMAGE_MODEL (Text, optional)    image model, default gemini-nano-banana-2.1 (Nano Banana)
+ *   HUNTER_API_KEY     (Secret, optional)  key from hunter.io: finds work emails in Reachlist
+ *   GOOGLE_CLIENT_ID   (Text, optional)    OAuth client ID: "Sign in with Google" in Reachlist
+ *   GMAIL_SEND         (Text, optional)    set to "on" to send straight from Gmail (needs Google's app review for the public)
  */
 
 const ALLOWED_ORIGINS = [
@@ -27,11 +31,14 @@ const MODELS = {
 
 // Which AI handles which job, best first. Override with a ROUTES variable (JSON) in Cloudflare.
 const ROUTES = {
-  research: ["gemini", "openai", "claude"],  // live web research and reading websites (Google Search first)
+  research: ["gemini", "openai", "claude"],  // live web research (Google Search first)
+  site: ["claude", "openai", "gemini"],      // Creative Studio: reading a brand's website
+  creative: ["openai", "claude", "gemini"],  // Creative Studio: concepts, tone and ad copy
   copy: ["claude", "openai", "gemini"],      // concepts, ad copy, briefs
   art: ["claude", "openai", "gemini"],       // art-directed ad illustrations (SVG)
 };
 
+const MAX_PROMPT_CHARS = 60_000; // site text added to a prompt is capped to this
 const MAX_BODY_BYTES = 60_000;   // largest prompt accepted
 const MAX_OUTPUT_TOKENS = 6000;  // longest answer
 const PER_IP_LIMIT = 40;         // AI calls per visitor...
@@ -39,7 +46,7 @@ const PER_IP_WINDOW_MS = 10 * 60 * 1000; // ...per 10 minutes (best effort)
 
 const hits = new Map();
 const imageHits = new Map();
-const PER_IP_IMAGES = 6; // AI photos per visitor per 10 minutes
+const PER_IP_IMAGES = 40; // ad images per visitor per 10 minutes
 
 function cors(origin) {
   return {
@@ -69,7 +76,7 @@ function overLimit(ip, map = hits, limit = PER_IP_LIMIT) {
 
 // Read a website's own page (title, description, headings, visible text) so new
 // sites that search engines haven't indexed yet can still be understood.
-async function readSite(input) {
+async function readSite(input, deep = false) {
   let url;
   try { url = new URL(/^https?:\/\//i.test(input) ? input : "https://" + input); } catch { return ""; }
   const host = url.hostname.toLowerCase();
@@ -107,7 +114,33 @@ async function readSite(input) {
     icon && `Logo or icon: ${icon}`,
     body && `Visible text: ${body}`,
   ].filter(Boolean);
-  return parts.length > 1 ? parts.join("\n") : "";
+  if (parts.length <= 1) return "";
+  if (deep) {
+    // Read further: the site's own About / Product / Pricing / Solutions pages
+    const base = new URL(res.url || url);
+    const seen = new Set([base.pathname.replace(/\/$/, "")]);
+    const links = [];
+    for (const m of html.matchAll(/<a[^>]+href=["']([^"'#]+)["']/gi)) {
+      let u; try { u = new URL(m[1], base); } catch { continue; }
+      const path = u.pathname.replace(/\/$/, "");
+      if (u.hostname !== base.hostname || seen.has(path) || !/(about|company|who-we|product|platform|solution|feature|pricing|plans|customer|case-stud|use-case|service|how-it-works)/i.test(path)) continue;
+      seen.add(path); links.push(u.toString());
+    }
+    for (const p of ["/about", "/pricing", "/product"]) { const u = new URL(p, base).toString(); if (!seen.has(p)) { seen.add(p); links.push(u); } }
+    const pages = await Promise.all(links.slice(0, 5).map(async (u) => {
+      try {
+        const r = await fetch(u, { headers: { "user-agent": "Mozilla/5.0 (compatible; LironSoferPortfolio/1.0)", accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(6000) });
+        if (!r.ok || !/html/i.test(r.headers.get("content-type") || "")) return "";
+        const h = (await r.text()).slice(0, 300000);
+        const t = (h.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "";
+        const txt = dec(h.replace(/<(script|style|noscript|svg|template|nav|footer)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim().slice(0, 2500);
+        return txt.length > 80 ? `--- Page ${r.url}${t ? ` (${dec(t).trim()})` : ""}\n${txt}` : "";
+      } catch { return ""; }
+    }));
+    const more = pages.filter(Boolean);
+    if (more.length) parts.push("More pages from the same site:\n" + more.join("\n"));
+  }
+  return parts.join("\n");
 }
 
 export default {
@@ -121,7 +154,8 @@ export default {
     }
     // Image pass-through so the site can draw a brand's own images into its ads
     if (request.method === "GET" && new URL(request.url).searchParams.has("caps")) {
-      return reply(200, { images: !!env.OPENAI_API_KEY, models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
+      return reply(200, { images: !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY), emailFinder: !!env.HUNTER_API_KEY,
+        googleClientId: env.GOOGLE_CLIENT_ID || "", gmailSend: env.GMAIL_SEND === "on", models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
     }
     if (request.method === "GET") {
       const target = new URL(request.url).searchParams.get("img") || "";
@@ -140,7 +174,8 @@ export default {
     }
 
     const raw = await request.text();
-    if (raw.length > MAX_BODY_BYTES) {
+    const isImage = raw.startsWith('{"image"');
+    if (raw.length > (isImage ? 9_000_000 : MAX_BODY_BYTES)) {
       return reply(413, { code: "prompt_too_large", message: "Prompt is too long" }, origin);
     }
 
@@ -154,25 +189,67 @@ export default {
       return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin);
     }
 
-    // AI photo for an ad (OpenAI image model)
-    if (body.image && typeof body.image === "object") {
-      if (!env.OPENAI_API_KEY) return reply(400, { code: "not_configured", message: "AI photos aren't connected yet" }, origin);
-      if (overLimit(ip, imageHits, PER_IP_IMAGES)) return reply(429, { code: "rate_limited", message: "Photo limit reached. Try again in a few minutes." }, origin);
-      const size = ["1024x1024", "1024x1536", "1536x1024"].includes(body.image.size) ? body.image.size : "1024x1024";
-      const prompt = String(body.image.prompt || "").slice(0, 3000);
-      if (!prompt.trim()) return reply(400, { code: "invalid_request", message: "Missing prompt" }, origin);
-      const res = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${env.OPENAI_API_KEY}` },
-        body: JSON.stringify({ model: env.OPENAI_IMAGE_MODEL || "gpt-image-2.5-flare", prompt, size, quality: "medium", output_format: "jpeg", n: 1 }),
-      });
+    // Find a person's work email (Hunter.io). Only real, found addresses are returned.
+    if (body.findEmail && typeof body.findEmail === "object") {
+      if (!env.HUNTER_API_KEY) return reply(400, { code: "not_configured", message: "Email finder isn't connected" }, origin);
+      const f = body.findEmail;
+      const domain = String(f.domain || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+      const first = String(f.first || "").trim().slice(0, 60), last = String(f.last || "").trim().slice(0, 60);
+      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain) || !first) return reply(400, { code: "invalid_request", message: "Need a domain and a first name" }, origin);
+      const q = new URLSearchParams({ domain, first_name: first, ...(last ? { last_name: last } : {}) });
+      const res = await fetch(`https://api.hunter.io/v2/email-finder?${q}`, { headers: { "X-API-KEY": env.HUNTER_API_KEY } });
       const data = await res.json().catch(() => ({}));
-      const b64 = data?.data?.[0]?.b64_json;
-      if (!res.ok || !b64) {
-        const busy = res.status === 429;
-        return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : (res.status === 400 ? "refused" : "upstream_error"), message: data?.error?.message || "Image error" }, origin);
+      if (res.status === 429) return reply(429, { code: "rate_limited", message: "Email finder limit reached" }, origin);
+      if (!res.ok) return reply(res.status === 404 ? 200 : 502, res.status === 404 ? { email: "" } : { code: "upstream_error", message: data?.errors?.[0]?.details || "Email finder error" }, origin);
+      const d = data.data || {};
+      return reply(200, { email: d.email || "", score: Number(d.score) || 0, status: d.verification?.status || "", sources: Array.isArray(d.sources) ? d.sources.length : 0 }, origin);
+    }
+
+    // Finished ad image: Nano Banana (Gemini), with OpenAI's image model as backup
+    if (body.image && typeof body.image === "object") {
+      if (!env.GEMINI_API_KEY && !env.OPENAI_API_KEY) return reply(400, { code: "not_configured", message: "Images aren't connected yet" }, origin);
+      if (overLimit(ip, imageHits, PER_IP_IMAGES)) return reply(429, { code: "rate_limited", message: "Image limit reached. Try again in a few minutes." }, origin);
+      const prompt = String(body.image.prompt || "").slice(0, 6000);
+      if (!prompt.trim()) return reply(400, { code: "invalid_request", message: "Missing prompt" }, origin);
+      const ASPECTS = ["1:1", "4:5", "5:4", "9:16", "16:9", "21:9", "8:1", "1:4", "3:4", "4:3", "2:3", "3:2"];
+      const aspect = ASPECTS.includes(body.image.aspect) ? body.image.aspect : "1:1";
+      const refs = (Array.isArray(body.image.refs) ? body.image.refs : []).slice(0, 2)
+        .map((u) => String(u).match(/^data:(image\/(?:png|jpe?g|webp));base64,([A-Za-z0-9+/=]+)$/)).filter(Boolean)
+        .map((m) => ({ mime: m[1], data: m[2] }));
+      let out = null, lastErr = null;
+      if (env.GEMINI_API_KEY) {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/${env.GEMINI_IMAGE_MODEL || "gemini-nano-banana-2.1"}:generateContent`, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": env.GEMINI_API_KEY },
+          body: JSON.stringify({
+            contents: [{ parts: [...refs.map((r) => ({ inlineData: { mimeType: r.mime, data: r.data } })), { text: prompt }] }],
+            generationConfig: { responseModalities: ["TEXT", "IMAGE"], imageConfig: { aspectRatio: aspect, imageSize: "1K" } },
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        const part = (data?.candidates?.[0]?.content?.parts || []).find((x) => x.inlineData || x.inline_data);
+        const inl = part && (part.inlineData || part.inline_data);
+        if (res.ok && inl?.data) out = `data:${inl.mimeType || inl.mime_type || "image/png"};base64,${inl.data}`;
+        else lastErr = { status: res.status, message: data?.error?.message || (data?.candidates?.[0]?.finishReason ? "The image model declined this prompt" : "Image error"), refused: res.ok };
       }
-      return reply(200, { image: `data:image/jpeg;base64,${b64}` }, origin);
+      if (!out && env.OPENAI_API_KEY) {
+        const [aw, ah] = aspect.split(":").map(Number);
+        const size = aw / ah > 1.2 ? "1536x1024" : aw / ah < 0.83 ? "1024x1536" : "1024x1024";
+        const res = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${env.OPENAI_API_KEY}` },
+          body: JSON.stringify({ model: env.OPENAI_IMAGE_MODEL || "gpt-image-2.5-flare", prompt, size, quality: "medium", output_format: "jpeg", n: 1 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        const b64 = data?.data?.[0]?.b64_json;
+        if (res.ok && b64) out = `data:image/jpeg;base64,${b64}`;
+        else lastErr = { status: res.status, message: data?.error?.message || "Image error", refused: res.status === 400 };
+      }
+      if (!out) {
+        const busy = lastErr && lastErr.status === 429;
+        return reply(busy ? 429 : 502, { code: busy ? "rate_limited" : lastErr && lastErr.refused ? "refused" : "upstream_error", message: lastErr ? lastErr.message : "Image error" }, origin);
+      }
+      return reply(200, { image: out }, origin);
     }
 
     // Tool-using projects (Ad Performance Copilot) send a full Messages API request
@@ -216,10 +293,10 @@ export default {
     // If the page asked about a specific website, read that site directly and add it to the question
     let siteText = "";
     if (typeof body.siteUrl === "string" && body.siteUrl.trim()) {
-      siteText = await readSite(body.siteUrl.trim());
+      siteText = await readSite(body.siteUrl.trim(), !!body.deep);
       if (siteText) {
         const last = messages[messages.length - 1];
-        last.content += `\n\nThe website's own page, fetched just now (treat this as the main evidence about the business):\n"""\n${siteText}\n"""`;
+        last.content += `\n\nThe website's own pages, fetched just now (treat this as the main evidence about the business):\n"""\n${siteText.slice(0, MAX_PROMPT_CHARS)}\n"""`;
       }
     }
 

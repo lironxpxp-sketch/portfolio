@@ -1,0 +1,647 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Reachlist</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Rubik:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell — sidebar nav on desktop, top bar on phone; onboarding takes the full screen before the shell appears */
+:root{
+  --bg:#f3f4f8; --surface:#ffffff; --sunk:#eceef4; --fg:#151823; --muted:#5d6377; --line:#dcdfe8;
+  --accent:#2a46d6; --accent-ink:#ffffff; --accent-soft:#e4e8fb; --amber:#c27a00; --amber-soft:#fbf0d9;
+  --ok:#24804a; --ok-soft:#dff1e6; --bad:#b23b2e;
+  --f-display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Rubik",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1117; --surface:#171a23; --sunk:#1e2230; --fg:#e8eaf2; --muted:#9aa0b5; --line:#2a2f3f;
+  --accent:#7d93ff; --accent-ink:#0f1117; --accent-soft:#222a4d; --amber:#f0b545; --amber-soft:#3a2f17;
+  --ok:#6fcf93; --ok-soft:#173726; --bad:#f08376; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1117; --surface:#171a23; --sunk:#1e2230; --fg:#e8eaf2; --muted:#9aa0b5; --line:#2a2f3f;
+  --accent:#7d93ff; --accent-ink:#0f1117; --accent-soft:#222a4d; --amber:#f0b545; --amber-soft:#3a2f17;
+  --ok:#6fcf93; --ok-soft:#173726; --bad:#f08376; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:800;line-height:1.1}
+h2{font-size:1.45rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.label{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=email],input[type=url],textarea,select{font:inherit;width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
+textarea{resize:vertical;min-height:90px}
+.field{display:grid;gap:6px}
+.field label{font-weight:500}
+.sample.live{color:var(--ok);background:var(--ok-soft)}
+.sample{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);background:var(--amber-soft);padding:3px 9px;border-radius:999px}
+
+/* ---------- Onboarding ---------- */
+.onb{min-height:100%;display:grid;place-items:start center;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.onb-card{width:100%;max-width:620px;display:grid;gap:22px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:1.15rem}
+.mark{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center}
+.mark svg{width:16px;height:16px}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:4px;border-radius:4px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;display:grid;gap:18px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.9rem}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--fg)}
+.chip[aria-pressed="true"]::before{content:"✓ ";color:var(--accent);font-weight:600}
+.row-end{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.provider{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);text-align:start}
+.provider[aria-pressed="true"]{border-color:var(--ok);background:var(--ok-soft)}
+.provider .dot{width:34px;height:34px;border-radius:9px;background:var(--sunk);display:grid;place-items:center;font-weight:600;flex:none}
+.hero-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.hero-list li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start}
+.hero-list .n{width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:.8rem;font-weight:600}
+
+/* ---------- Searching ---------- */
+.search-log{display:grid;gap:12px}
+.log-line{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;color:var(--muted)}
+.log-line.done{color:var(--fg)}
+.log-line .st{width:16px;height:16px;border-radius:50%;border:2px solid var(--line)}
+.log-line.done .st{background:var(--ok);border-color:var(--ok)}
+.log-line.run .st{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100%}
+.side{border-right:1px solid var(--line);background:var(--surface);padding:20px 14px;display:flex;flex-direction:column;gap:22px;position:sticky;top:0;height:100vh;box-sizing:border-box}
+.nav{display:grid;gap:4px}
+.nav button{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:9px;border:0;background:transparent;text-align:start;color:var(--muted);font-weight:500}
+.nav button[aria-current="page"]{background:var(--accent-soft);color:var(--fg)}
+.nav .count{font-family:var(--f-mono);font-size:.78rem}
+.me{margin-top:auto;display:grid;gap:4px;font-size:.85rem;padding:12px;border-radius:10px;background:var(--sunk)}
+.me b{font-weight:600}
+.main{padding-block:26px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
+.main-inner{max-width:1080px;margin:0 auto;display:grid;gap:20px}
+.head{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:7px 12px;font-size:.88rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--fg);font-weight:500}
+
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:16px;align-items:start}
+.leads{display:grid;gap:8px}
+.lead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);text-align:start;width:100%}
+.lead[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.lead .co{font-weight:600}
+.lead .sub{color:var(--muted);font-size:.86rem;grid-column:1/-1}
+.fit{font-family:var(--f-mono);font-size:.8rem;padding:2px 8px;border-radius:7px;background:var(--amber-soft);color:var(--amber);align-self:start}
+.status{font-size:.74rem;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid currentColor;justify-self:start}
+.status.new{color:var(--muted)} .status.sent{color:var(--accent)} .status.replied{color:var(--ok)} .status.skipped{color:var(--bad)}
+
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:grid;gap:20px;position:sticky;top:16px}
+.why{background:var(--sunk);border-radius:10px;padding:12px 14px}
+.ladder{display:grid;gap:0;margin:0;padding:0;list-style:none}
+.rung{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;align-items:start;padding:10px 0;position:relative}
+.rung::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--line)}
+.rung:first-child::before{top:18px}.rung:last-child::before{bottom:calc(100% - 18px)}
+.rung .pt{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line);margin:4px 0 0 3px;position:relative;z-index:1}
+.rung.found .pt{border-color:var(--ok)}
+.rung.chosen .pt{background:var(--accent);border-color:var(--accent)}
+.rung.missing{color:var(--muted)}
+.rung.missing .who{text-decoration:line-through;text-decoration-color:var(--line)}
+.rung .via{font-size:.8rem;color:var(--muted)}
+.rung .pick{font-size:.8rem;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.rung.chosen .pick{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.compose{display:grid;gap:10px}
+.compose .to{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.9rem}
+.compose textarea{min-height:230px;line-height:1.55}
+.compose input{font-weight:500}
+.send-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.note{font-size:.82rem;color:var(--muted)}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{text-align:start;padding:11px 14px;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:top}
+th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat b{display:block;font-family:var(--f-display);font-size:1.7rem;font-weight:800}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:.9rem;max-width:calc(100% - 32px);box-sizing:border-box;z-index:20}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--muted)}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;gap:12px;padding:10px 16px;border-right:0;border-bottom:1px solid var(--line);z-index:5;overflow-x:auto}
+  .side .brand span{display:none}
+  .nav{display:flex;gap:4px}
+  .nav button{white-space:nowrap;padding:7px 10px}
+  .me{display:none}
+  .split{grid-template-columns:1fr}
+  .detail{position:static}
+}
+@media (prefers-reduced-motion:reduce){.log-line.run .st{animation:none}}
+</style>
+
+<div id="root"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ======================= Sample knowledge ======================= */
+const PRESETS = {
+  "video editor": {
+    clients:["Production studios","Social media agencies","Ad agencies","Brands with in-house content","YouTube creators","Event production companies"],
+    roles:["Head of Production","Executive Producer","Creative Director","CEO / Founder"],
+    proof:"Edited 40+ branded videos and reels in the last year"
+  },
+  "web designer": {
+    clients:["Early-stage startups","Small local businesses","Marketing agencies","E-commerce stores","Real estate firms"],
+    roles:["Head of Marketing","Founder / CEO","Product Lead","Marketing Manager"],
+    proof:"Launched 25 sites with an average 30% conversion lift"
+  },
+  "photographer": {
+    clients:["Restaurants and cafés","Hotels","Real estate agencies","Fashion brands","Event venues"],
+    roles:["Marketing Manager","Owner","Brand Manager","Events Manager"],
+    proof:"Shot campaigns for 30+ hospitality brands"
+  },
+  "copywriter": {
+    clients:["Tech startups","Marketing agencies","SaaS companies","E-commerce brands"],
+    roles:["Head of Content","VP Marketing","Founder / CEO","Content Lead"],
+    proof:"Wrote landing pages that lifted sign-ups by 22% on average"
+  }
+};
+const GENERIC = {clients:["Small businesses","Agencies","Startups","Mid-size companies"],roles:["Founder / CEO","Head of Marketing","Operations Manager"],proof:""};
+const preset = job => PRESETS[(job||"").trim().toLowerCase()] || GENERIC;
+
+const NAME_PARTS = {
+  a:["Blue Hour","Northlight","Tchelet","Kav Yashar","Mirror Lake","Paper Plane","Hatzot","Second Frame","Orbit","Sabra","Lighthouse","Midtown"],
+  b:["Studio","Media","Group","Creative","Collective","House","Labs","& Co."]
+};
+const PEOPLE = ["Noa Levi","Yoav Peretz","Maya Shapiro","Itai Ben-David","Shira Katz","Omer Golan","Tamar Friedman","Eitan Mizrahi","Lior Avraham","Dana Cohen","Amit Rosen","Yael Barak"];
+const CITIES = {
+  israel:["Tel Aviv","Ramat Gan","Herzliya","Haifa","Jerusalem","Petah Tikva","Ra'anana","Kfar Saba"],
+  other:["Downtown","Midtown","Harbor District","Old Town","North Side"]
+};
+const HOOKS = [
+  "posts 4–5 short videos a week across Instagram and TikTok",
+  "recently announced three new brand clients",
+  "is hiring for a content role, which suggests more output than the team can handle",
+  "ran a campaign last month built around long-form interviews",
+  "has an active YouTube channel with a steady upload schedule",
+  "opened a second office this year"
+];
+
+/* deterministic pseudo-random so the sample set is stable per profile */
+function rng(seed){let s=0;for(const c of seed)s=(s*31+c.charCodeAt(0))>>>0;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)}
+
+function buildLeads(p){
+  const r=rng((p.job||"")+(p.region||"")+p.clients.join());
+  const pick=a=>a[Math.floor(r()*a.length)];
+  const isIL=/israel|ישראל|tel aviv|il\b/i.test(p.region||"");
+  const cities=isIL?CITIES.israel:CITIES.other;
+  const roles=preset(p.job).roles;
+  const used=new Set(); const out=[];
+  for(let i=0;i<9;i++){
+    let name; do{name=pick(NAME_PARTS.a)+" "+pick(NAME_PARTS.b)}while(used.has(name)); used.add(name);
+    const seg=p.clients[i%p.clients.length]||"Companies";
+    const domain=name.toLowerCase().replace(/&|\./g,"").replace(/\s+/g,"")+".example";
+    const person=PEOPLE[(i*5+3)%PEOPLE.length];
+    const depth = i%4===3 ? 2 : i%5===4 ? 3 : i%3===2 ? 1 : 0; // how far down the ladder we had to go
+    const ladder=[
+      {kind:"person", who:`${person}`, role:roles[0], via:"LinkedIn (public profile) + company team page", email:`${person.split(" ")[0].toLowerCase()}@${domain}`, found:depth===0},
+      {kind:"person", who:PEOPLE[(i*7+1)%PEOPLE.length], role:roles[roles.length-1], via:"Company 'About' page", email:`${PEOPLE[(i*7+1)%PEOPLE.length].split(" ")[0].toLowerCase()}@${domain}`, found:depth<=1},
+      {kind:"inbox", who:`hello@${domain}`, role:"General inbox", via:"Website footer", email:`hello@${domain}`, found:depth<=2},
+      {kind:"form", who:"Contact form", role:"Website form", via:`${domain}/contact`, email:"", found:true}
+    ];
+    ladder.forEach((s,k)=>{ if(k<depth) s.found=false; });
+    const chosen=ladder.findIndex(s=>s.found);
+    const fit=Math.max(62,Math.round(96-i*3.6-r()*4));
+    out.push({id:"L"+i,company:name,segment:seg,city:pick(cities),domain,fit,hook:pick(HOOKS),
+      size:pick(["8–15 people","15–40 people","40–100 people"]),local:isIL,ladder,chosen,status:"new",lang:isIL?"he":"en",draft:null});
+  }
+  return out.sort((a,b)=>b.fit-a.fit);
+}
+
+function firstName(s){return (s||"").split(" ")[0]}
+
+function makeLinkedIn(l,p,lang){const s=l.ladder[l.chosen],fn=s.first||firstName(s.who),me=p.name||"",job=p.job||"freelancer";
+  const proof=p.proof?" "+p.proof.replace(/\.$/,"")+".":"";
+  let body=lang==="he"
+    ?`היי ${fn}, ראיתי ש${l.company} ${hebHookFor(l)}. אני ${job}${p.service?` (${p.service})`:""}.${proof} אשמח להתחבר ולהראות כמה דוגמאות שמתאימות לכם.${me?` ${me}`:""}`
+    :`Hi ${fn}, I noticed ${l.company} ${l.hook}. I'm a ${job.toLowerCase()}${p.service?` (${p.service})`:""}.${proof} Would love to connect and share a couple of examples that fit your work.${me?` ${me}`:""}`;
+  if(body.length>300)body=body.replace(proof,"");if(body.length>300)body=body.slice(0,297).replace(/\s+\S*$/,"")+"…";
+  return {subject:"",body}}
+function makeDraft(l,p,lang){
+  if(l.ladder[l.chosen].kind==="linkedin")return makeLinkedIn(l,p,lang);
+  const s=l.ladder[l.chosen]; const named=s.kind==="person";
+  const me=p.name||"[Your name]"; const job=p.job||"freelancer";
+  const link=p.portfolio?`\n${p.portfolio}`:"";
+  const proof=p.proof?p.proof.replace(/\.$/,""):"";
+  if(lang==="he"){
+    const hi=named?`היי ${firstName(s.who)},`:`היי צוות ${l.company},`;
+    return {subject:`${job} ל${l.company}`,
+      body:`${hi}
+
+אני ${me}, ${job}${p.service?` (${p.service})`:""}. ראיתי ש${l.company} ${hebHookFor(l)}, ונראה לי שיש לכם יותר חומר מאשר ידיים פנויות.
+
+${proof?`${proof}. `:""}אשמח לעזור לכם להוציא את התוכן מהר יותר בלי להעמיס על הצוות.
+
+יש לך 15 דקות השבוע לשיחה קצרה? מצרף עבודות:${link||" [קישור לתיק עבודות]"}
+
+תודה,
+${me}`};
+  }
+  const hi=named?`Hi ${firstName(s.who)},`:`Hi ${l.company} team,`;
+  return {subject:`${cap(job)} for ${l.company}`,
+    body:`${hi}
+
+I'm ${me}, a ${job}${p.service?` (${p.service})`:""}. I noticed ${l.company} ${l.hook}, so I suspect there's more to produce than hands to produce it.
+
+${proof?`${proof}. `:""}I can take work off your team's plate and keep turnaround fast.
+
+Open to a 15-minute call this week? Some recent work:${link||" [portfolio link]"}
+
+Thanks,
+${me}`};
+}
+function hebHookFor(l){return l.hookHe||hebHook(l.hook)}
+function hebHook(h){
+  const m={
+    "posts 4–5 short videos a week across Instagram and TikTok":"מעלים 4–5 סרטונים קצרים בשבוע לאינסטגרם ולטיקטוק",
+    "recently announced three new brand clients":"הודיעו לאחרונה על שלושה לקוחות חדשים",
+    "is hiring for a content role, which suggests more output than the team can handle":"מגייסים לתפקיד תוכן",
+    "ran a campaign last month built around long-form interviews":"הריצו בחודש שעבר קמפיין שמבוסס על ראיונות ארוכים",
+    "has an active YouTube channel with a steady upload schedule":"מחזיקים ערוץ יוטיוב פעיל עם העלאות קבועות",
+    "opened a second office this year":"פתחו השנה משרד שני"};
+  return m[h]||h;
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ======================= State ======================= */
+const S={
+  screen:"welcome", step:0,
+  profile:{name:"",email:"",job:"Video editor",service:"short-form and commercial editing",portfolio:"",proof:"",clients:[],region:"Israel",languages:"Match the company",provider:"",dailyLimit:20},
+  leads:[], sel:null, filter:"all", view:"leads", searchStep:0
+};
+const root=document.getElementById("root");
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2600)}
+
+const MARK=`<span class="mark" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 12 L8 3 L13 12" fill="none" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="12" r="1.6" fill="var(--accent-ink)"/></svg></span>`;
+const brand=`<div class="brand">${MARK}<span>Reachlist</span></div>`;
+
+/* ======================= Live mode ======================= */
+let LIVE=false, sample=null;
+function badge(){return LIVE?'<span class="sample live">Live search</span>':'<span class="sample">Sample data</span>'}
+(async()=>{try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}
+  LIVE=!!sample&&!!window.__aiWeb; /* live leads need web search, so only on the hosted site */ if(LIVE&&(S.screen==="welcome"||S.screen==="onboard"))render();})();
+let CAPS={};(window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};if(S.screen==="welcome")render();}).catch(()=>{});
+let GTOKEN=null,GSEND=null;
+function loadGsi(){return window.google&&google.accounts?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://accounts.google.com/gsi/client";sc.async=true;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)})}
+function googleToken(scope){return loadGsi().then(()=>new Promise((res,rej)=>{const tc=google.accounts.oauth2.initTokenClient({client_id:CAPS.googleClientId,scope,
+  callback:t=>t&&t.access_token?res(t.access_token):rej(t),error_callback:rej});tc.requestAccessToken()}))}
+async function googleSignIn(){const tok=await googleToken("openid email profile");GTOKEN=tok;
+  const u=await fetch("https://www.googleapis.com/oauth2/v3/userinfo",{headers:{authorization:"Bearer "+tok}}).then(r=>r.json());
+  const p=S.profile;p.google=true;p.email=u.email||"";p.name=p.name||u.name||"";p.avatar=u.picture||"";p.provider="Gmail";return u}
+function b64u(str){return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+async function gmailSend(to,subject,body){if(!GSEND)GSEND=await googleToken("https://www.googleapis.com/auth/gmail.send");
+  const enc=t=>"=?UTF-8?B?"+btoa(unescape(encodeURIComponent(t)))+"?=";
+  const raw=b64u([`To: ${to}`,`Subject: ${enc(subject)}`,"MIME-Version: 1.0","Content-Type: text/plain; charset=UTF-8","Content-Transfer-Encoding: 8bit","",body].join("\r\n"));
+  const r=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{method:"POST",headers:{authorization:"Bearer "+GSEND,"content-type":"application/json"},body:JSON.stringify({raw})});
+  if(!r.ok){if(r.status===401)GSEND=null;throw new Error("Gmail didn't send it ("+r.status+")")}}
+async function findEmail(l,quiet){const per=l.ladder.find(x=>x.kind==="person");if(!per||per.email||per.tried||!CAPS.emailFinder||!window.__aiFindEmail||!l.domain)return;
+  per.tried="busy";if(!quiet)render();
+  try{const r=await window.__aiFindEmail(l.domain,per.first,per.last);per.tried="done";
+    if(r&&r.email){per.email=r.email;per.emailSrc=`Found by Hunter${r.score?` · ${r.score}% confidence`:""}${r.status==="valid"?" · verified":""}`;if(l.ladder[l.chosen].kind!=="person"&&l.status==="new"){l.chosen=l.ladder.indexOf(per);l.draft=null}}}
+  catch(e){per.tried=e&&e.code==="rate_limited"?"limit":"done"}
+  render()}
+function errMsg(e){const c=e&&e.code;return c==="rate_limited"?"Too many searches right now. Try again in a few minutes.":c==="invalid_json"?"The results came back in the wrong shape. Try again.":"Couldn't finish the search. Try again."}
+function composeUrl(prov,to,subj,body){
+  const q=encodeURIComponent;
+  return prov==="Outlook"?`https://outlook.office.com/mail/deeplink/compose?to=${q(to||"")}&subject=${q(subj)}&body=${q(body)}`
+    :`https://mail.google.com/mail/?view=cm&fs=1&to=${q(to||"")}&su=${q(subj)}&body=${q(body)}`;
+}
+const okUrl=u=>/^https?:\/\//i.test(u||"")?u:"";
+const okMail=m=>/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(m||"")?m:"";
+const liProfile=u=>/^https?:\/\/([a-z]{2,3}\.)?(www\.)?linkedin\.com\/in\/[^\/?#\s]+/i.test(u||"")?String(u).split(/[?#]/)[0]:"";
+const liSearch=(name,company)=>"https://www.linkedin.com/search/results/people/?keywords="+encodeURIComponent(name+" "+company);
+async function liveLeads(p,exclude){
+  const roles=preset(p.job).roles;
+  const prompt=`You find sales leads for a freelancer. Search the web for REAL companies that are likely to hire them, and for the right contact at each.
+Freelancer: ${p.job||"freelancer"}${p.service?` offering ${p.service}`:""}.
+Client types they want: ${p.clients.join(", ")||"any that fit"}.
+Region: ${p.region||"anywhere"}.
+Decision-maker titles to look for, best first: ${roles.join(", ")}.
+${exclude.length?`Skip these companies, already on the list: ${exclude.join(", ")}.
+`:""}
+Find 6 companies. For each, look for a named decision-maker on the company site or LinkedIn, then a general email published on the site, then the contact form page.
+- Only include an email address if it is published on a web page; never guess or construct one.
+- "linkedin" must be that person's own LinkedIn profile URL (linkedin.com/in/...) that you actually found. Never put the company website or a company page there; leave it "" if you didn't find the profile.
+- Leave any field "" if not found.
+Reply with only JSON: {"leads":[{"company":"","domain":"example.com","segment":"one of the client types","city":"","size":"e.g. 10-50 people or ''","why":"one sentence on why they fit, based on something real you found","hook_he":"if the site is in Hebrew: a short Hebrew phrase completing 'ראיתי ש[company] ...', e.g. 'מעלים סרטונים קצרים כל שבוע'; else ''","fit":80,"language":"he|en (main language of their site)","person":{"name":"full name","first_name":"","last_name":"","role":"","email":"","linkedin":"https://www.linkedin.com/in/...","source":"where you found them"},"inbox":"published general email or ''","form":"contact page URL or ''"}]}`;
+  const r=await sample.json(prompt,{webSearch:true,cache:false});
+  const list=(r&&Array.isArray(r.leads)?r.leads:[]).filter(x=>x&&x.company).slice(0,8);
+  if(!list.length)throw {code:"empty_completion"};
+  const base=Date.now().toString(36);
+  return list.map((x,i)=>{
+    const dom=String(x.domain||"").replace(/^https?:\/\//,"").replace(/\/.*$/,"");
+    const per=x.person||{};
+    const ladder=[];
+    if(per.name){const who=String(per.name).trim(),parts=who.split(/\s+/),first=String(per.first_name||parts[0]||"").trim(),last=String(per.last_name||parts.slice(1).join(" ")||"").trim();
+      const li=liProfile(per.linkedin)||liProfile(per.url);
+      ladder.push({kind:"person",who,first,last,role:String(per.role||"Decision-maker"),via:String(per.source||"public web"),email:okMail(per.email),emailSrc:okMail(per.email)?"Published on the web":"",found:true});
+      ladder.push({kind:"linkedin",who,first,role:String(per.role||"Decision-maker"),via:li?"LinkedIn profile":"LinkedIn search",url:li||liSearch(who,String(x.company)),isSearch:!li,email:"",found:true});}
+    if(okMail(x.inbox))ladder.push({kind:"inbox",who:okMail(x.inbox),role:"General inbox",via:"Company website",email:okMail(x.inbox),found:true});
+    const form=okUrl(x.form)||(dom?"https://"+dom:"");
+    ladder.push({kind:"form",who:"Contact form",role:"Website form",via:form.replace(/^https?:\/\//,""),url:form,email:"",found:true});
+    return {id:"R"+base+i,company:String(x.company),segment:String(x.segment||p.clients[0]||"Company"),city:String(x.city||p.region||""),domain:dom,
+      fit:Math.max(40,Math.min(99,Math.round(Number(x.fit)||75))),hook:String(x.why||"").replace(/^./,c=>c.toLowerCase()).replace(/\.$/,""),why:String(x.why||""),hookHe:String(x.hook_he||"").trim(),
+      size:String(x.size||""),local:/he/i.test(x.language||""),ladder,chosen:Math.max(0,ladder.findIndex(r=>r.kind!=="person"||r.email)),status:"new",lang:/he/i.test(x.language||"")?"he":"en",draft:null};
+  }).sort((a,b)=>b.fit-a.fit);
+}
+
+/* ======================= Screens ======================= */
+function render(){
+  const s=S.screen;
+  if(s==="welcome") return welcome();
+  if(s==="onboard") return onboard();
+  if(s==="search") return searching();
+  return app();
+}
+
+function welcome(){
+  root.innerHTML=`<div class="onb"><div class="onb-card">
+    <div class="row-end">${brand}${badge()}</div>
+    <h1>Find the clients who need your work, and the person who decides.</h1>
+    <p class="muted">Tell Reachlist what you do. It finds companies that fit, works out who to contact at each one, and drafts a message you send from your own email.</p>
+    <ul class="hero-list">
+      <li><span class="n">1</span><span><b>Your profile.</b> Your job, the kinds of clients you serve, and where.</span></li>
+      <li><span class="n">2</span><span><b>Matching companies.</b> Ranked by fit, with the reason each one made the list.</span></li>
+      <li><span class="n">3</span><span><b>The right person.</b> Decision-maker first; general inbox or contact form only when no one is findable.</span></li>
+      <li><span class="n">4</span><span><b>A message in their language.</b> You review and send it from Gmail or Outlook.</span></li>
+    </ul>
+    <div class="panel">
+      <div class="grid2">
+        <button class="provider" data-act="${LIVE&&CAPS.googleClientId?"google":"signup"}" data-v="Gmail"><span class="dot">G</span><span><b>Continue with Google</b><br><span class="note">${LIVE&&CAPS.googleClientId?"Sign in with your Google account":LIVE?"Messages open in Gmail":"Gmail sending included"}</span></span></button>
+        <button class="provider" data-act="signup" data-v="Outlook"><span class="dot">M</span><span><b>Continue with Microsoft</b><br><span class="note">${LIVE?"No sign-in · messages open in Outlook":"Outlook sending included"}</span></span></button>
+      </div>
+      <p class="note">${LIVE?(CAPS.googleClientId?"Google sign-in only shares your name and email address with Reachlist. Leads come from a live web search; you review every message before it goes out.":"Leads come from a live web search, and each message opens in your own Gmail or Outlook for you to send."):"Sample mode: sign-in is simulated and no email is ever sent."}</p>
+    </div>
+  </div></div>`;
+}
+
+function onboard(){
+  const p=S.profile, st=S.step;
+  const bar=`<div class="steps" aria-label="Step ${st+1} of 4">${[0,1,2,3].map(i=>`<i class="${i<=st?"on":""}"></i>`).join("")}</div>`;
+  let body="";
+  if(st===0){
+    body=`<div><div class="label">Step 1 of 4</div><h2>What do you do?</h2></div>
+    <div class="grid2">
+      <div class="field"><label for="f-name">Your name</label><input id="f-name" type="text" value="${esc(p.name)}" placeholder="Liron Cohen"></div>
+      <div class="field"><label for="f-job">Job title</label><input id="f-job" type="text" list="jobs" value="${esc(p.job)}" placeholder="Video editor"><datalist id="jobs">${Object.keys(PRESETS).map(k=>`<option value="${cap(k)}">`).join("")}</datalist></div>
+    </div>
+    <div class="field"><label for="f-service">What you offer, in a few words</label><input id="f-service" type="text" value="${esc(p.service)}" placeholder="short-form and commercial editing"></div>
+    <div class="grid2">
+      <div class="field"><label for="f-portfolio">Portfolio link</label><input id="f-portfolio" type="url" value="${esc(p.portfolio)}" placeholder="https://vimeo.com/you"></div>
+      <div class="field"><label for="f-proof">One line of proof</label><input id="f-proof" type="text" value="${esc(p.proof)}" placeholder="${esc(preset(p.job).proof||"Worked with 20+ clients")}"></div>
+    </div>`;
+  }
+  if(st===1){
+    const sugg=[...new Set([...preset(p.job).clients,...p.clients])];
+    if(!p.clients.length) p.clients=sugg.slice(0,3);
+    body=`<div><div class="label">Step 2 of 4</div><h2>Who hires a ${esc((p.job||"freelancer").toLowerCase())}?</h2>
+      <p class="muted">Suggested from your job title. Pick the ones you want, or add your own.</p></div>
+    <div class="chips">${sugg.map(c=>`<button class="chip" data-act="client" data-v="${esc(c)}" aria-pressed="${p.clients.includes(c)}">${esc(c)}</button>`).join("")}</div>
+    <div class="field"><label for="f-addclient">Add a client type</label>
+      <div style="display:flex;gap:8px"><input id="f-addclient" type="text" placeholder="Wedding planners"><button class="btn" data-act="addclient">Add</button></div></div>
+    <div><div class="label">People Reachlist will look for</div><p>${preset(p.job).roles.map(esc).join(" → ")}</p></div>`;
+  }
+  if(st===2){
+    body=`<div><div class="label">Step 3 of 4</div><h2>Where are your clients?</h2></div>
+    <div class="field"><label for="f-region">Country, region or cities</label><input id="f-region" type="text" value="${esc(p.region)}" placeholder="Israel"></div>
+    <div class="field"><span class="label" id="lang-l">Message language</span>
+      <div class="seg" role="group" aria-labelledby="lang-l">${["Match the company","Hebrew","English"].map(v=>`<button data-act="lang" data-v="${v}" aria-pressed="${p.languages===v}">${v}</button>`).join("")}</div></div>`;
+  }
+  if(st===3){
+    body=`<div><div class="label">Step 4 of 4</div><h2>Send from your own email</h2>
+      <p class="muted">Messages go out from your address, so replies land in your inbox. Nothing sends without your click.</p></div>
+    <div class="grid2">
+      <button class="provider" data-act="provider" data-v="Gmail" aria-pressed="${p.provider==="Gmail"}"><span class="dot">G</span><span><b>${p.provider==="Gmail"?(LIVE?"Gmail selected":"Gmail connected"):(LIVE?"Use Gmail":"Connect Gmail")}</b><br><span class="note">${LIVE?"Opens a ready draft in Gmail":p.provider==="Gmail"?esc(p.email):"Send only, no inbox reading"}</span></span></button>
+      <button class="provider" data-act="provider" data-v="Outlook" aria-pressed="${p.provider==="Outlook"}"><span class="dot">O</span><span><b>${p.provider==="Outlook"?(LIVE?"Outlook selected":"Outlook connected"):(LIVE?"Use Outlook":"Connect Outlook")}</b><br><span class="note">${LIVE?"Opens a ready draft in Outlook":p.provider==="Outlook"?esc(p.email):"Send only, no inbox reading"}</span></span></button>
+    </div>
+    <div class="field"><label for="f-limit">Daily sending limit</label>
+      <select id="f-limit">${[10,20,30,50].map(n=>`<option ${p.dailyLimit==n?"selected":""}>${n}</option>`).join("")}</select>
+      <span class="note">Small, personal batches keep your address out of spam folders.</span></div>`;
+  }
+  const canNext = st===0 ? !!(p.job) : st===1 ? p.clients.length>0 : st===2 ? !!p.region : !!p.provider;
+  root.innerHTML=`<div class="onb"><div class="onb-card">
+    <div class="row-end">${brand}${badge()}</div>
+    ${bar}
+    <div class="panel">${body}
+      <div class="row-end">
+        <button class="btn ghost" data-act="back" ${st===0?"hidden":""}>Back</button>
+        <button class="btn primary" data-act="next" ${canNext?"":"disabled"}>${st===3?"Find my leads":"Continue"}</button>
+      </div>
+    </div>
+  </div></div>`;
+}
+
+function readStep(){
+  const v=id=>document.getElementById(id)?.value?.trim();
+  const p=S.profile;
+  if(S.step===0){p.name=v("f-name")||"";p.job=v("f-job")||"";p.service=v("f-service")||"";p.portfolio=v("f-portfolio")||"";p.proof=v("f-proof")||"";}
+  if(S.step===2){p.region=v("f-region")||"";}
+  if(S.step===3){p.dailyLimit=+v("f-limit")||20;}
+}
+
+const SEARCH_STEPS=p=>[
+  `Reading your profile: ${p.job||"freelancer"} in ${p.region}`,
+  `Finding ${p.clients.slice(0,2).join(" and ").toLowerCase()}${p.clients.length>2?" and more":""}`,
+  "Checking each company's site and recent activity for fit",
+  `Looking for the ${preset(p.job).roles[0].toLowerCase()} at each one`,
+  "Falling back to general inboxes and contact forms where needed",
+  "Drafting messages"
+];
+function searching(){
+  const steps=SEARCH_STEPS(S.profile);
+  root.innerHTML=`<div class="onb"><div class="onb-card">
+    <div class="row-end">${brand}${badge()}</div>
+    <div class="panel"><h2>Building your first list</h2>${LIVE?'<p class="note">Searching the web for real companies and contacts. This takes one to two minutes.</p>':""}
+      <div class="search-log">${steps.map((t,i)=>`<div class="log-line ${i<S.searchStep?"done":i===S.searchStep?"run":""}"><span class="st"></span><span>${esc(t)}</span><span class="mono note">${i<S.searchStep?"done":""}</span></div>`).join("")}</div>
+    </div></div></div>`;
+  if(LIVE){
+    if(!S.live){S.live=liveLeads(S.profile,[]).then(ls=>{S.leads=ls;S.sel=ls[0]&&ls[0].id;S.screen="app";S.live=null;render();})
+      .catch(err=>{S.live=null;S.screen="onboard";S.step=3;render();toast(errMsg(err));});}
+    if(S.searchStep<steps.length-1)setTimeout(()=>{if(S.screen==="search"&&S.live){S.searchStep++;render();}},12000);
+    return;
+  }
+  if(S.searchStep<steps.length){
+    setTimeout(()=>{S.searchStep++;render();}, matchMedia("(prefers-reduced-motion: reduce)").matches?150:650);
+  } else {
+    S.leads=buildLeads(S.profile); S.sel=S.leads[0].id; S.screen="app"; setTimeout(render,400);
+  }
+}
+
+/* ---------- App ---------- */
+function langFor(l){const p=S.profile.languages;return p==="Hebrew"?"he":p==="English"?"en":l.lang}
+function ensureDraft(l){if(!l.draft){const lang=langFor(l);l.draft={lang,...makeDraft(l,S.profile,lang)};}}
+
+function app(){
+  const counts={all:S.leads.length,new:0,sent:0,replied:0,skipped:0};
+  S.leads.forEach(l=>counts[l.status]++);
+  const nav=[["leads","Leads",counts.new],["outbox","Outbox",counts.sent+counts.replied],["profile","Profile",""]];
+  root.innerHTML=`<div class="app">
+    <aside class="side">${brand}
+      <nav class="nav" aria-label="Main">${nav.map(([k,t,c])=>`<button data-act="view" data-v="${k}" aria-current="${S.view===k?"page":"false"}">${t}<span class="count">${c}</span></button>`).join("")}</nav>
+      <div class="me"><b>${esc(S.profile.name||"You")}</b><span class="muted">${esc(S.profile.job)} · ${esc(S.profile.region)}</span><span class="muted">${S.profile.google?esc(S.profile.email):LIVE?"Sends via "+esc(S.profile.provider||"Gmail"):esc(S.profile.provider)+" connected"}</span>${S.profile.google?'<button class="btn ghost" data-act="signout" style="padding:2px 0;justify-content:flex-start">Sign out</button>':""}</div>
+    </aside>
+    <main class="main"><div class="main-inner">${S.view==="leads"?leadsView(counts):S.view==="outbox"?outboxView():profileView()}</div></main>
+  </div>`;
+}
+
+function leadsView(counts){
+  const list=S.leads.filter(l=>S.filter==="all"||l.status===S.filter);
+  const l=S.leads.find(x=>x.id===S.sel)||list[0];
+  return `<div class="head"><div>${LIVE?'<span class="sample live">Live results</span>':'<span class="sample">Sample leads</span>'}<h2 style="margin-top:6px">${S.leads.length} ${S.leads.length===1?"company":"companies"} that fit</h2>
+      <p class="muted">${esc(S.profile.clients.join(", "))} · ${esc(S.profile.region)}</p></div>
+    <div class="toolbar"><div class="seg" role="group" aria-label="Filter">${[["all","All"],["new","To send"],["sent","Sent"],["skipped","Skipped"]].map(([k,t])=>`<button data-act="filter" data-v="${k}" aria-pressed="${S.filter===k}">${t} <span class="mono">${counts[k]}</span></button>`).join("")}</div>
+      ${LIVE&&CAPS.emailFinder?'<button class="btn" data-act="findall">Find emails</button>':""}<button class="btn" data-act="csv">Download CSV</button><button class="btn" data-act="more">${LIVE?"Find more":"Find 10 more"}</button></div></div>
+  <div class="split">
+    <div class="leads">${list.length?list.map(x=>`<button class="lead" data-act="sel" data-v="${x.id}" aria-current="${l&&x.id===l.id}">
+        <span class="co">${esc(x.company)}</span><span class="fit" title="Fit score">${x.fit}%</span>
+        <span class="sub">${esc(x.segment)} · ${esc(x.city)} · ${esc(x.size)}</span>
+        <span class="sub">${["person","linkedin"].includes(x.ladder[x.chosen].kind)?"→ "+esc(x.ladder[x.chosen].who)+", "+esc(x.ladder[x.chosen].role)+(x.ladder[x.chosen].kind==="linkedin"?" · LinkedIn":x.ladder[x.chosen].email?" · Email":""):"→ "+esc(x.ladder[x.chosen].role)}</span>
+        <span class="status ${x.status}">${{new:"To send",sent:"Sent",replied:"Replied",skipped:"Skipped"}[x.status]}</span>
+      </button>`).join(""):`<div class="empty">Nothing here yet.</div>`}</div>
+    ${l?detailView(l):`<div class="empty">Pick a lead to see who to contact.</div>`}
+  </div>`;
+}
+
+function rungHtml(r,l){
+  if(r.kind==="person")return `<span class="who"><b>${esc(r.who)}</b> · ${esc(r.role)} · Email</span><br>${r.email?`<span class="mono">${esc(r.email)}</span> <span class="via">· ${esc(r.emailSrc||"Found")}</span>`
+    :r.tried==="busy"?'<span class="via">Looking for a work email…</span>':r.tried==="limit"?'<span class="via">Email finder limit reached for now</span>':r.tried?'<span class="via">No email found. Use LinkedIn below.</span>'
+    :LIVE&&CAPS.emailFinder?`<span class="via">No published email · </span><button class="btn ghost" data-act="findone" style="padding:0;font-size:.8rem">Find email</button>`:'<span class="via">No published email. Use LinkedIn below.</span>'}`;
+  if(r.kind==="linkedin")return `<span class="who"><b>${esc(r.who)}</b> · LinkedIn</span><br><a class="via" href="${esc(r.url)}" target="_blank" rel="noopener">${r.isSearch?"Search LinkedIn for "+esc(r.who):"Open LinkedIn profile"} ↗</a>`;
+  return `<span class="who"><b>${esc(r.role)}</b> · <span class="mono">${esc(r.who)}</span></span><br><span class="via">${r.found?"Found via "+esc(r.via):"Not found publicly"}</span>`}
+function detailView(l){
+  if(LIVE&&CAPS.emailFinder)setTimeout(()=>findEmail(l,true),0);
+  ensureDraft(l);
+  const s=l.ladder[l.chosen]; const d=l.draft; const rtl=d.lang==="he";
+  const locked=l.status!=="new", li=s.kind==="linkedin";
+  return `<section class="detail" aria-label="${esc(l.company)}">
+    <div class="row-end"><div><h3>${esc(l.company)}</h3><p class="muted">${esc(l.segment)}${l.city?" · "+esc(l.city):""} · ${l.domain&&LIVE?`<a class="mono" href="https://${esc(l.domain)}" target="_blank" rel="noopener">${esc(l.domain)}</a>`:`<span class="mono">${esc(l.domain)}</span>`}</p></div><span class="fit">${l.fit}% fit</span></div>
+    <div class="why"><div class="label">Why they made the list</div><p>${l.why?esc(l.why):`${esc(cap(l.segment.replace(/s$/,"")))}, and the company ${esc(l.hook)}.`}</p></div>
+    <div><div class="label">Who to contact</div>
+      <ol class="ladder">${l.ladder.map((r,i)=>`<li class="rung ${r.found?"found":"missing"} ${i===l.chosen?"chosen":""}">
+        <span class="pt"></span>
+        <span>${rungHtml(r,l)}</span>
+        ${r.found&&!locked&&!(r.kind==="person"&&!r.email)?`<button class="pick" data-act="rung" data-v="${i}" aria-pressed="${i===l.chosen}">${i===l.chosen?"Selected":"Use"}</button>`:"<span></span>"}
+      </li>`).join("")}</ol>
+    </div>
+    <div class="compose">
+      <div class="row-end"><div class="label">Message</div>
+        <div class="seg" role="group" aria-label="Language">${[["he","עברית"],["en","English"]].map(([k,t])=>`<button data-act="dlang" data-v="${k}" aria-pressed="${d.lang===k}" ${locked?"disabled":""}>${t}</button>`).join("")}</div></div>
+      <div class="to" ${li?"hidden":""}><span><span class="muted">From</span> ${esc(S.profile.email||("your "+S.profile.provider))}</span><span><span class="muted">To</span> ${s.kind==="form"?(s.url?`<a class="mono" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.via)}</a>`:`<span class="mono">${esc(s.via)}</span>`):s.email?`<span class="mono">${esc(s.email)}</span>`:s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.who)}'s public profile</a>`:esc(s.who)}</span></div>
+      ${li?`<p class="note">LinkedIn connection note. Notes are limited to 300 characters; send it with your connection request, or as a message if you're already connected.</p>`:`<label class="label" for="d-subj">Subject</label>
+      <input id="d-subj" type="text" dir="${rtl?"rtl":"ltr"}" value="${esc(d.subject)}" ${locked?"readonly":""}>`}
+      <label class="label" for="d-body">${li?`Note <span class="mono" id="licount">${d.body.length} / 300</span>`:"Body"}</label>
+      <textarea id="d-body" dir="${rtl?"rtl":"ltr"}" ${locked?"readonly":""}>${esc(d.body)}</textarea>
+      <div class="send-row">
+        ${locked?`<span class="status ${l.status}">${l.status==="sent"?"Sent "+esc(l.sentAt):l.status==="replied"?"Replied":"Skipped"}</span>
+          ${l.status==="skipped"?`<button class="btn" data-act="unskip">Move back to To send</button>`:l.status==="sent"?`<button class="btn" data-act="replied">Mark as replied</button>`:""}`
+        :`<div class="toolbar"><button class="btn ghost" data-act="skip">Not a fit</button><button class="btn" data-act="regen">Rewrite</button></div>
+          ${li?`<button class="btn primary" data-act="copyli">Copy note and open LinkedIn</button>`:s.kind==="form"||(LIVE&&!s.email)?`<button class="btn primary" data-act="copyform">${s.kind==="form"?"Copy for contact form":"Copy message"}</button>`:`<button class="btn primary" data-act="send">${LIVE?(S.profile.google&&CAPS.gmailSend?"Send from Gmail":"Open in "+esc(S.profile.provider||"Gmail")):"Send from "+esc(S.profile.provider)}</button>`}`}
+      </div>
+      ${s.kind==="form"&&!locked?`<p class="note">Contact forms can't be sent automatically. Copy the message, open the form, and Reachlist marks it as sent once you confirm.</p>`:""}
+    </div>
+  </section>`;
+}
+
+function outboxView(){
+  const rows=S.leads.filter(l=>l.status==="sent"||l.status==="replied");
+  const replied=rows.filter(l=>l.status==="replied").length;
+  return `<div class="head"><div><h2>Outbox</h2><p class="muted">Everything sent from ${esc(S.profile.email)}. Daily limit: ${S.profile.dailyLimit}.</p></div></div>
+  <div class="stats">
+    <div class="stat"><span class="label">Sent</span><b class="mono">${rows.length}</b></div>
+    <div class="stat"><span class="label">Replied</span><b class="mono">${replied}</b></div>
+    <div class="stat"><span class="label">Left today</span><b class="mono">${Math.max(0,S.profile.dailyLimit-rows.length)}</b></div>
+  </div>
+  ${rows.length?`<div class="table-wrap"><table><thead><tr><th>Company</th><th>Sent to</th><th>Subject</th><th>When</th><th>Status</th></tr></thead><tbody>
+    ${rows.map(l=>{const s=l.ladder[l.chosen];return `<tr><td>${esc(l.company)}</td><td>${s.kind==="person"?esc(s.who)+"<br><span class='note'>"+esc(s.role)+"</span>":esc(s.role)}</td><td dir="auto">${esc(l.draft.subject)}</td><td class="mono">${esc(l.sentAt)}</td><td><span class="status ${l.status}">${l.status==="sent"?"Awaiting reply":"Replied"}</span></td></tr>`}).join("")}
+  </tbody></table></div>`:`<div class="empty">Nothing sent yet. Open a lead and send its message.</div>`}`;
+}
+
+function profileView(){
+  const p=S.profile;
+  return `<div class="head"><div><h2>Your profile</h2><p class="muted">Reachlist uses this to pick companies and write every message.</p></div>
+    <button class="btn" data-act="reonboard">Edit profile</button></div>
+  <div class="stats">
+    <div class="stat"><span class="label">Job</span><p>${esc(p.job)}</p></div>
+    <div class="stat"><span class="label">Offer</span><p>${esc(p.service||"—")}</p></div>
+    <div class="stat"><span class="label">Region</span><p>${esc(p.region)}</p></div>
+    <div class="stat"><span class="label">Language</span><p>${esc(p.languages)}</p></div>
+  </div>
+  <div class="panel"><div class="label">Client types</div><div class="chips">${p.clients.map(c=>`<span class="chip">${esc(c)}</span>`).join("")}</div>
+    <div class="label">People to target, in order</div><p>${preset(p.job).roles.map(esc).join(" → ")} → general inbox → contact form</p>
+    <div class="label">Sending</div><p>${esc(p.provider)} · <span class="mono">${esc(p.email)}</span> · up to ${p.dailyLimit} a day</p></div>`;
+}
+
+/* ======================= Events ======================= */
+function downloadCsv(){
+  const rows=[["Company","Website","Segment","City","Fit %","Why they fit","Contact name","Role","Contact email","Email source","LinkedIn","General inbox","Contact form","Status"]];
+  for(const l of S.leads){const per=l.ladder.find(r=>r.kind==="person")||{},li=l.ladder.find(r=>r.kind==="linkedin")||{},ib=l.ladder.find(r=>r.kind==="inbox")||{},fm=l.ladder.find(r=>r.kind==="form")||{};
+    rows.push([l.company,l.domain?"https://"+l.domain:"",l.segment,l.city,l.fit,l.why||l.hook,per.who||"",per.role||"",per.email||"",per.email?(per.emailSrc||""):"",li.url||"",ib.email||"",fm.url||"",{new:"To send",sent:"Sent",replied:"Replied",skipped:"Not a fit"}[l.status]||l.status])}
+  const csv="\ufeff"+rows.map(r=>r.map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`reachlist-${(S.profile.job||"leads").toLowerCase().replace(/[^a-z0-9]+/g,"-")}-${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast(`Downloaded ${S.leads.length} companies`)}
+function cur(){return S.leads.find(x=>x.id===S.sel)}
+function stamp(){const d=new Date();return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+" "+d.toTimeString().slice(0,5)}
+function saveEdits(){const l=cur();if(!l||!l.draft||l.status!=="new")return;const s=document.getElementById("d-subj"),b=document.getElementById("d-body");if(s)l.draft.subject=s.value;if(b)l.draft.body=b.value;}
+
+root.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-act]"); if(!el||el.disabled)return;
+  const a=el.dataset.act, v=el.dataset.v, p=S.profile;
+  if(a==="google"){try{el.disabled=true;await googleSignIn();S.screen="onboard";S.step=0;toast("Signed in as "+S.profile.email);}catch(err){el.disabled=false;toast("Google sign-in didn't finish. Try again, or continue with Outlook.");}return render();}
+  if(a==="signout"){try{if(GTOKEN&&window.google)google.accounts.oauth2.revoke(GTOKEN,()=>{})}catch(x){}GTOKEN=null;GSEND=null;Object.assign(S.profile,{google:false,email:"",avatar:""});toast("Signed out");return render();}
+  if(a==="csv"){downloadCsv();return;}
+  if(a==="findall"){if(S.findBusy)return;S.findBusy=true;el.textContent="Finding…";for(const x of S.leads){await findEmail(x,true)}S.findBusy=false;const n=S.leads.filter(x=>x.ladder.some(r=>r.kind==="person"&&r.email)).length;toast(`${n} of ${S.leads.length} companies have a direct email`);return render();}
+  if(a==="signup"){p.email=LIVE?"":"you@gmail.com";if(LIVE)p.provider=v||"Gmail";S.screen="onboard";S.step=0;return render();}
+  if(a==="next"){readStep();if(S.step<3){S.step++;return render();}S.screen="search";S.searchStep=0;return render();}
+  if(a==="back"){readStep();S.step--;return render();}
+  if(a==="client"){p.clients=p.clients.includes(v)?p.clients.filter(c=>c!==v):[...p.clients,v];return render();}
+  if(a==="addclient"){const i=document.getElementById("f-addclient");const t=i.value.trim();if(t&&!p.clients.includes(t))p.clients.push(t);return render();}
+  if(a==="lang"){p.languages=v;return render();}
+  if(a==="provider"){readStep();p.provider=v;p.email=LIVE?"your "+v:(v==="Gmail"?"you@gmail.com":"you@outlook.com");toast(LIVE?`Messages will open in ${v}`:`${v} connected (simulated)`);return render();}
+  if(a==="view"){saveEdits();S.view=v;return render();}
+  if(a==="filter"){saveEdits();S.filter=v;return render();}
+  if(a==="sel"){saveEdits();S.sel=v;render();if(matchMedia("(max-width:860px)").matches)document.querySelector(".detail")?.scrollIntoView({behavior:"smooth"});return;}
+  if(a==="more"){if(!LIVE){toast("Sample mode: the list stays the same here.");return;}if(S.moreBusy)return;S.moreBusy=true;el.textContent="Searching…";el.disabled=true;try{const add=await liveLeads(S.profile,S.leads.map(x=>x.company));S.leads=[...S.leads,...add];toast(`Added ${add.length} companies`);}catch(err){toast(errMsg(err));}S.moreBusy=false;return render();}
+  if(a==="reonboard"){S.screen="onboard";S.step=0;return render();}
+  const l=cur(); if(!l)return;
+  if(a==="findone"){await findEmail(l);return;}
+  if(a==="copyli"){saveEdits();const s0=l.ladder[l.chosen];const t=l.draft.body;try{await navigator.clipboard.writeText(t);toast("Note copied. Paste it into LinkedIn.");}catch{document.getElementById("d-body").select();toast("Press Ctrl+C to copy, then paste it into LinkedIn.");}window.open(s0.url,"_blank","noopener");l.status="sent";l.sentAt=stamp();setTimeout(render,900);return;}
+  if(a==="rung"){saveEdits();l.chosen=+v;l.draft=null;return render();}
+  if(a==="dlang"){l.draft={lang:v,...makeDraft(l,p,v)};return render();}
+  if(a==="regen"){const d=makeDraft(l,p,l.draft.lang);const alt=l.draft.lang==="he"?d.body.replace("יש לך 15 דקות השבוע לשיחה קצרה?","אפשר לשלוח לך שתי דוגמאות שמתאימות לסגנון שלכם?"):d.body.replace("Open to a 15-minute call this week?","Can I send two samples that match your style?");l.draft={...l.draft,subject:d.subject,body:l.draft.body===alt?d.body:alt};toast("Rewritten with a softer ask");return render();}
+  if(a==="skip"){saveEdits();l.status="skipped";toast("Marked as not a fit");return render();}
+  if(a==="unskip"){l.status="new";return render();}
+  if(a==="replied"){l.status="replied";toast("Marked as replied");return render();}
+  if(a==="send"){saveEdits();const sentCount=S.leads.filter(x=>x.status==="sent"||x.status==="replied").length;if(sentCount>=p.dailyLimit){toast("Daily limit reached. The rest go out tomorrow.");return;}if(LIVE){const s0=l.ladder[l.chosen];if(p.google&&CAPS.gmailSend){try{el.disabled=true;el.textContent="Sending…";await gmailSend(s0.email,l.draft.subject,l.draft.body);l.status="sent";l.sentAt=stamp();toast("Sent from "+p.email);const nx=S.leads.find(x=>x.status==="new");if(nx)S.sel=nx.id;return render();}catch(err){el.disabled=false;toast("Couldn't send from Gmail, so it opened as a draft instead.");}}window.open(composeUrl(p.provider,s0.email,l.draft.subject,l.draft.body),"_blank","noopener");}l.status="sent";l.sentAt=stamp();toast(LIVE?"Draft opened in "+(p.provider||"Gmail")+". Hit send there.":"Sent (simulated, nothing was emailed)");const next=S.leads.find(x=>x.status==="new");if(next)S.sel=next.id;return render();}
+  if(a==="copyform"){saveEdits();{const s0=l.ladder[l.chosen];if(LIVE&&s0.url)window.open(s0.url,"_blank","noopener");}const t=l.draft.subject+"\n\n"+l.draft.body;try{await navigator.clipboard.writeText(t);toast("Copied. Paste it into their contact form.");}catch{const b=document.getElementById("d-body");b.select();toast("Selected. Press Ctrl+C, then paste into their form.");}l.status="sent";l.sentAt=stamp();setTimeout(render,900);return;}
+});
+root.addEventListener("input",e=>{ if(e.target.id==="d-body"){const c=document.getElementById("licount");if(c){const n=e.target.value.length;c.textContent=n+" / 300";c.style.color=n>300?"var(--bad)":""}} if(e.target.id==="f-job"){ S.profile.job=e.target.value; S.profile.clients=[]; const b=root.querySelector('[data-act="next"]'); if(b)b.disabled=!e.target.value.trim(); }});
+root.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="f-addclient"){e.preventDefault();root.querySelector('[data-act="addclient"]').click();}});
+
+render();
+</script>
+
+</body></html>

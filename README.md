@@ -49,27 +49,44 @@ The Worker picks the AI for each job and skips any that isn't connected:
 
 | Job | Order tried |
 |---|---|
-| Web research, reading websites | Gemini → GPT → Claude |
-| Concepts, ad copy, briefs | Claude → GPT → Gemini |
-| Ad artwork (illustrations) | Claude → GPT → Gemini |
-| AI photos | OpenAI image model |
+| Creative Studio: reading the brand's website | Claude → GPT → Gemini |
+| Creative Studio: concepts, tone and ad copy | GPT → Claude → Gemini |
+| Creative Studio: finished ad images | Nano Banana (Gemini) → OpenAI image model |
+| Web research in the other tools | Gemini → GPT → Claude |
+| Other writing | Claude → GPT → Gemini |
 
 If one fails, the next one answers. To change the order, add a **Text** variable `ROUTES`, e.g. `{"copy":["openai","claude"]}`.
 
-### Optional: connect GPT (OpenAI) and AI photos
+### Optional: connect GPT (OpenAI)
 
 1. At **platform.openai.com** sign in, add billing credit, and set a monthly limit under **Settings → Limits**.
 2. **API keys → Create new secret key**. Copy it (starts with `sk-`).
 3. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `OPENAI_API_KEY`, value = the key. Deploy.
 
-### Optional: connect Gemini (Google)
+### Optional: connect Gemini (Google): research and Nano Banana images
 
 1. At **aistudio.google.com** sign in and click **Get API key → Create API key**.
 2. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `GEMINI_API_KEY`, value = the key. Deploy.
 
+### Optional: real email finding in Reachlist (Hunter.io)
+
+1. Sign up at **hunter.io** (free: 50 found emails a month; a credit is used only when an email is found).
+2. **API → API key**, copy it.
+3. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `HUNTER_API_KEY`. Deploy.
+
+### Optional: "Sign in with Google" in Reachlist
+
+1. **console.cloud.google.com** → create a project (e.g. "Reachlist").
+2. **APIs & Services → OAuth consent screen**: User type **External**, app name "Reachlist", your email as support and developer contact. Scopes: just the defaults (email, profile, openid). Save.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**: Type **Web application**. Under **Authorized JavaScript origins** add `https://lironsofer.online` and `https://www.lironsofer.online`. Create, then copy the **Client ID** (ends in `.apps.googleusercontent.com`).
+4. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Text**, name `GOOGLE_CLIENT_ID`, value = the Client ID. Deploy.
+5. Publish the consent screen (**OAuth consent screen → Publish app**) so anyone can sign in. Sign-in with name and email doesn't need Google's review.
+
+Sending straight from Gmail (instead of opening a draft) needs the Gmail API enabled and the `gmail.send` scope, which Google reviews before the public can use it (about 2–4 weeks). Until then it works for you and up to 100 test users you add on the consent screen. To turn it on, add a **Text** variable `GMAIL_SEND` = `on`.
+
 ## Updating projects
 
-Ad Performance Copilot's master copy is `sources/ad-copilot.html` (run its tests with `node sources/ad-copilot.test.js`). The other projects come from their Claude artifacts.
+Master copies for the site live in `sources/`: Ad Performance Copilot (`ad-copilot.html`, tests: `node sources/ad-copilot.test.js`), Creative Studio, Market Research Agent and Reachlist. Build a project page with `python3 tools/prepare_project.py sources/<file>.html <slug>`. The other projects come from their Claude artifacts.
 
 If `worker/worker.js` changes, paste the new version into the Cloudflare Worker again (Edit code → paste → Deploy).
 

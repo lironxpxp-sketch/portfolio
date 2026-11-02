@@ -5,7 +5,7 @@
  * don't exist, so this file provides them:
  *   sample    -> your Cloudflare Worker, which calls the Anthropic API
  *               (pass {webSearch:true} to let it search the live web, and
- *               {task:"research"|"copy"|"art"} so the backend picks the right AI)
+ *               {task:"research"|"site"|"creative"|"copy"} so the backend picks the right AI)
  *   downloads -> a normal browser download
  *   anything else -> null (the project falls back to its built-in demo data)
  *
@@ -45,7 +45,7 @@
       res = await fetch(AI_ENDPOINT, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: messages, json: !!wantJSON, tier: opts.modelTier || "default", webSearch: !!opts.webSearch, siteUrl: opts.siteUrl || "", task: opts.task || "" }),
+        body: JSON.stringify({ messages: messages, json: !!wantJSON, tier: opts.modelTier || "default", webSearch: !!opts.webSearch, siteUrl: opts.siteUrl || "", deep: !!opts.deep, task: opts.task || "" }),
         signal: opts.signal
       });
     } catch (e) {
@@ -88,11 +88,17 @@
   window.__aiEndpoint = AI_ENDPOINT; // for tools that send their own full requests (Ad Copilot)
   // What the backend offers (e.g. AI photos), fetched once
   window.__aiCaps = AI_ENDPOINT ? fetch(AI_ENDPOINT + "?caps=1").then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }) : Promise.resolve({});
-  // Generate an ad photo: resolves to a data: URL, rejects with {code, message}
-  window.__aiImage = function (prompt, size) {
-    return fetch(AI_ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: { prompt: prompt, size: size || "1024x1024" } }) })
+  // Generate a finished ad image (Nano Banana): resolves to a data: URL, rejects with {code, message}
+  window.__aiImage = function (prompt, aspect, refs) {
+    return fetch(AI_ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ image: { prompt: prompt, aspect: aspect || "1:1", refs: refs || [] } }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok || !d.image) throw fail(d.code || (r.status === 429 ? "rate_limited" : "upstream_error"), d.message); return d.image; }); },
             function () { throw fail("upstream_error", "Could not reach the AI service"); });
+  };
+  // Find a person's work email (Hunter.io via the backend): resolves {email, score, status}
+  window.__aiFindEmail = function (domain, first, last) {
+    return fetch(AI_ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ findEmail: { domain: domain, first: first, last: last || "" } }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw fail(d.code || "upstream_error", d.message); return d; }); },
+            function () { throw fail("upstream_error", "Could not reach the email finder"); });
   };
   window.claude = {
     use: function (name) {
