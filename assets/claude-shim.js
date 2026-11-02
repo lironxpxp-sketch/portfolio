@@ -45,7 +45,7 @@
       res = await fetch(AI_ENDPOINT, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ messages: messages, json: !!wantJSON, tier: opts.modelTier || "default", webSearch: !!opts.webSearch, siteUrl: opts.siteUrl || "", task: opts.task || "" }),
+        body: JSON.stringify({ messages: messages, json: !!wantJSON, tier: opts.modelTier || "default", webSearch: !!opts.webSearch, siteUrl: opts.siteUrl || "", deep: !!opts.deep, task: opts.task || "" }),
         signal: opts.signal
       });
     } catch (e) {

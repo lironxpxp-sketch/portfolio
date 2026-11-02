@@ -70,7 +70,7 @@ If one fails, the next one answers. To change the order, add a **Text** variable
 
 ## Updating projects
 
-Ad Performance Copilot's master copy is `sources/ad-copilot.html` (run its tests with `node sources/ad-copilot.test.js`). The other projects come from their Claude artifacts.
+Master copies for the site live in `sources/`: Ad Performance Copilot (`ad-copilot.html`, tests: `node sources/ad-copilot.test.js`), Creative Studio and Market Research Agent. Build a project page with `python3 tools/prepare_project.py sources/<file>.html <slug>`. The other projects come from their Claude artifacts.
 
 If `worker/worker.js` changes, paste the new version into the Cloudflare Worker again (Edit code → paste → Deploy).
 

@@ -1,4 +1,4 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=7"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=8"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Market Research Agent</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Albert+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400&display=swap">
@@ -39,6 +39,25 @@ form.q input{flex:1 1 300px;min-width:0;font:16px var(--f-body);padding:11px 14p
 .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
 .chips button{border:1px dashed var(--line);background:none;color:var(--accent);font:13px var(--f-body);padding:4px 10px;border-radius:999px;cursor:pointer}
 .chips button.ex{border-style:solid}
+.co{display:flex;flex-direction:column;gap:6px}
+.co label{font:600 12px var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.corow{display:flex;gap:8px;flex-wrap:wrap}
+.corow input{flex:1 1 280px;min-width:0;font:16px var(--f-body);padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.cocard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.cocard h2{font:600 22px/1.2 var(--f-display);margin:0}
+.cocard .k{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.cofacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px 20px}
+.cofacts div{min-width:0;overflow-wrap:anywhere}
+.mkt{width:100%;font:500 17px var(--f-body);padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+fieldset.qq{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0;display:flex;flex-direction:column;gap:8px}
+fieldset.qq legend{font-weight:600;padding:0 4px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px}
+.opts input{accent-color:var(--accent)}
+.opts label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.opts label:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+details.alt summary{cursor:pointer;color:var(--muted);font-size:13px;margin:4px 0 10px}
+details.alt[open] summary{margin-bottom:10px}
 .banner{font-size:13px;padding:10px 14px;border-radius:10px;background:var(--chg-bg);color:var(--chg)}
 .banner.err{background:var(--bad-bg);color:var(--bad)}
 .layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start}
@@ -135,7 +154,7 @@ ul.cav{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
   <div class="top">
     <div>
       <h1>Market Research Agent <span class="tag live" id="modeTag">Live</span></h1>
-      <div class="sub">Ask about any market or competitor set. Claude plans the research, writes a structured report with confidence levels and where to verify each figure, then you can save it and re-run it to see what changed.</div>
+      <div class="sub">Add your company's website. The agent works out what you sell and to whom, asks a few quick questions if anything is unclear, then researches your market: size, competitors, what customers complain about, and where your opportunities are.</div>
     </div>
     <div class="views" role="tablist" aria-label="Views">
       <button role="tab" aria-selected="true" aria-controls="research" id="tab-research" data-v="research">Research</button>
@@ -144,12 +163,19 @@ ul.cav{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
   </div>
 
   <section id="research" role="tabpanel" aria-labelledby="tab-research" class="panel">
+    <form class="co" id="coform" novalidate>
+      <label for="cosite">Your company website</label>
+      <div class="corow"><input id="cosite" type="text" inputmode="url" autocomplete="url" placeholder="e.g. yourcompany.com"><button class="btn primary" type="submit" id="cogo">Analyze my company</button></div>
+    </form>
+    <div id="coflow" aria-live="polite"></div>
+    <details class="alt" id="altq"><summary>Or research any market directly</summary>
     <form class="q" id="qform">
       <input id="query" type="text" placeholder="e.g. Cybersecurity training platforms for SMBs in the UK" aria-label="Research question" autocomplete="off">
       <button class="btn primary" type="submit" id="go">Research</button>
       <button class="btn" type="button" id="stop" hidden>Stop</button>
     </form>
     <div class="chips" id="chips">Try:</div>
+    </details>
     <div id="status" role="status" aria-live="polite"></div>
     <div class="layout" id="layout">
       <aside class="trace" id="trace" aria-label="Research steps"></aside>
@@ -275,12 +301,19 @@ function errCopy(code){
 }
 
 /* ---------- Live research ---------- */
-function planPrompt(q){
-  return `You are planning market research. Question: "${q}"\nToday is ${today()}.\nBreak it into 6 to 8 concrete sub-questions an analyst would answer (market size, buyers, key players and pricing, funding and recent moves, customer complaints, go-to-market). Reply with only a JSON array of short strings.`;
+function ctxText(c){if(!c)return"";const P=c.profile;
+  return `\nThis research is for one specific company. Tailor everything to it: size the market it actually serves, include its direct competitors, and write opportunities and sales targets for THIS company, not generic ones.
+Company: ${P.company}${c.site?` (${c.site})`:""}
+What it sells: ${P.product}
+Customers: ${P.customers}
+Where it sells: ${P.geography}
+Business model: ${P.model}${P.competitors&&P.competitors.length?`\nCompetitors it is known to face: ${P.competitors.join(", ")}`:""}${c.answers&&c.answers.length?`\nThe company's answers to clarifying questions:\n${c.answers.map(a=>`- ${a.q} ${a.a}`).join("\n")}`:""}\n`}
+function planPrompt(q,c){
+  return `You are planning market research. Question: "${q}"\nToday is ${today()}.${ctxText(c)}\nBreak it into 6 to 8 concrete sub-questions an analyst would answer (market size, buyers, key players and pricing, funding and recent moves, customer complaints, go-to-market). Reply with only a JSON array of short strings.`;
 }
-function reportPrompt(q,subqs){
+function reportPrompt(q,subqs,c){
   return `You are a senior market analyst writing a structured brief for a business-development team.
-Research question: "${q}"
+Research question: "${q}"${ctxText(c)}
 Today is ${today()}. ${window.__aiWeb?"Search the web for current facts and use only figures you find; cite the pages you used.":"You cannot browse; write from what you know and be explicit about uncertainty."}
 Sub-questions to cover:
 ${subqs.map((s,i)=>`${i+1}. ${s}`).join("\n")}
@@ -328,13 +361,13 @@ async function research(q,opts={}){
   resetSteps();setStep(0,"run","Breaking the question into sub-questions");
   $("report").innerHTML=`<div class="loading"><p class="note">Researching “${esc(q)}”. The first run asks you to allow Claude; reports usually take 30–90 seconds.</p><div class="skel" style="width:60%"></div><div class="skel" style="width:90%"></div><div class="skel" style="width:75%"></div></div>`;
   try{
-    let subqs=await sample.json(planPrompt(q),{modelTier:"quick",signal});
+    let subqs=await sample.json(planPrompt(q,opts.context),{modelTier:"quick",signal});
     subqs=(Array.isArray(subqs)?subqs:[]).map(String).filter(Boolean).slice(0,8);
     if(!subqs.length)subqs=["Market size and growth","Buyers and decision makers","Key players, positioning and pricing","Recent funding and moves","Customer complaints","Go-to-market opportunities"];
     setStep(0,"done",`${subqs.length} sub-questions`,`<ol class="subqs">${subqs.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>`);
     setStep(1,"run","Thinking…");
     tick=setInterval(()=>{if(steps[1].state==="run"&&!steps[1].d.startsWith("Writing"))setStep(1,"run",`Thinking… ${Math.round((Date.now()-t0)/1000)}s`)},1000);
-    const r=await sample.json(reportPrompt(q,subqs),{signal,webSearch:!!window.__aiWeb,onText:({text})=>{steps[1].d=`Writing · ${text.length.toLocaleString()} characters`;setStep(1,"run")}});
+    const r=await sample.json(reportPrompt(q,subqs,opts.context),{signal,webSearch:!!window.__aiWeb,onText:({text})=>{steps[1].d=`Writing · ${text.length.toLocaleString()} characters`;setStep(1,"run")}});
     clearInterval(tick);
     if(!r||typeof r!=="object"||!r.summary)throw {code:"invalid_json"};
     setStep(1,"done",`${(r.players||[]).length} players, ${(r.sources||[]).length} sources`);
@@ -437,6 +470,65 @@ $("chips").addEventListener("click",e=>{const b=e.target.closest("button");if(!b
 $("qform").addEventListener("submit",e=>{e.preventDefault();const q=$("query").value.trim();if(!q){$("query").focus();return}
   if(EXAMPLES[q]){loadExample(q);return}research(q)});
 $("stop").addEventListener("click",()=>ctl&&ctl.abort());
+
+/* ---------- Company-first flow: website -> profile -> questions -> research ---------- */
+const CO={state:"idle",site:"",linkedin:"",profile:null,answers:{},ctl:null,note:""};
+function normSite(u){u=String(u||"").trim();if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;try{const x=new URL(u);return x.hostname.replace(/^www\./,"")+(x.pathname!=="/"?x.pathname:"")}catch(e){return""}}
+function profilePrompt(){return `You are a senior market analyst onboarding a new client. Work out exactly what this company does and which market it competes in.
+Company website: ${CO.site}${CO.linkedin?`\nLinkedIn company page: ${CO.linkedin} (search the web for this page and the company)`:""}
+Today is ${today()}. The website's own pages are included below when available; use them as the main evidence. ${window.__aiWeb?"Also search the web for the company to confirm what it sells and to whom.":""}
+Rules:
+- "market" is one line naming the market the way an analyst would: what it is, for whom, and where. Examples: "B2B cybersecurity ad-fraud tool for ad agencies, worldwide", "B2B invoicing software for marketing agencies in Europe".
+- Only state facts you found or can clearly infer. Never invent customers, numbers or competitors.
+- "enough" is false only if you could not tell what the company sells or to whom.
+- "questions": 0 to 4 questions, only about things that would change the research and that the website does not answer (for example target customer size, main region, buyer role, sales model). Each question has 3 to 5 short, mutually exclusive answer options. Do not ask anything the site already answers.
+Reply with only JSON:
+{"company":"name","market":"one line","product":"what they sell, one sentence","customers":"who buys it","geography":"where they sell","model":"B2B|B2C|B2B2C|Marketplace|Other","competitors":["up to 5 names you are confident about"],"confidence":"high|medium|low","enough":true,"questions":[{"id":"q1","question":"...","options":["...","...","..."]}]}`}
+async function analyzeCompany(){
+  if(!sample){showStatus(liveOK===false?"Live research is switched off right now. The examples still work.":"Connecting… try again in a moment.","err");return}
+  CO.state="reading";CO.note="";renderCo();CO.ctl=new AbortController();
+  try{const r=await sample.json(profilePrompt(),{signal:CO.ctl.signal,task:"site",webSearch:!!window.__aiWeb,siteUrl:CO.site,deep:true,cache:false});
+    const P={company:String(r.company||CO.site),market:String(r.market||""),product:String(r.product||""),customers:String(r.customers||""),geography:String(r.geography||""),model:String(r.model||""),
+      competitors:(Array.isArray(r.competitors)?r.competitors:[]).map(String).filter(Boolean).slice(0,5),confidence:["high","medium","low"].includes(r.confidence)?r.confidence:"low",enough:r.enough!==false&&!!r.market,
+      questions:(Array.isArray(r.questions)?r.questions:[]).filter(q=>q&&q.question&&Array.isArray(q.options)&&q.options.length>=2).slice(0,4).map((q,i)=>({id:"q"+i,question:String(q.question),options:q.options.map(String).slice(0,5)}))};
+    CO.profile=P;CO.answers={};CO.state=!P.enough&&!CO.linkedin?"needLinkedin":"profile";
+  }catch(e){CO.state=e&&e.code==="cancelled"?"idle":"error";CO.note=e&&e.code==="cancelled"?"":errCopy(e&&e.code)}
+  CO.ctl=null;renderCo()}
+function renderCo(){const el=$("coflow"),P=CO.profile;$("cogo").disabled=CO.state==="reading";
+  if(CO.state==="idle"){el.innerHTML="";return}
+  if(CO.state==="reading"){el.innerHTML=`<div class="cocard"><div class="stepl run"><span class="ic" aria-hidden="true"></span><div><b>Reading ${esc(CO.site)}</b><div class="d">Going through the website${CO.linkedin?" and LinkedIn page":""} to understand what you sell and to whom. About 20–60 seconds.</div></div></div><div><button class="btn small" type="button" data-co="stop">Stop</button></div></div>`;return}
+  if(CO.state==="error"){el.innerHTML=`<div class="banner err">${esc(CO.note||"Couldn't read the website. Try again.")}</div>`;return}
+  if(CO.state==="needLinkedin"){el.innerHTML=`<div class="cocard"><h2>We couldn't learn enough from ${esc(CO.site)}</h2>
+    <p class="note" style="margin:0">The website doesn't say clearly what you sell or who it's for. Add your company's LinkedIn page and we'll read that too.</p>
+    <div class="corow"><input id="coli" type="text" inputmode="url" placeholder="linkedin.com/company/your-company" aria-label="LinkedIn company page"><button class="btn primary" type="button" data-co="li">Continue</button></div>
+    <div><button class="btn small" type="button" data-co="skipli">Skip and use what you found</button></div></div>`;return}
+  const qs=P.questions,done=qs.filter(q=>CO.answers[q.id]).length;
+  el.innerHTML=`<div class="cocard">
+    <div><div class="k">${P.confidence==="low"?"Our best read of":"What we found about"} ${esc(P.company)}</div><h2>Your market</h2></div>
+    <div><label class="k" for="comkt">Market to research (edit if it's off)</label><input class="mkt" id="comkt" value="${esc(P.market)}"></div>
+    <div class="cofacts">
+      <div><div class="k">What you sell</div>${esc(P.product||"Unknown")}</div>
+      <div><div class="k">Who buys it</div>${esc(P.customers||"Unknown")}</div>
+      <div><div class="k">Where</div>${esc(P.geography||"Unknown")}</div>
+      <div><div class="k">Model</div>${esc(P.model||"Unknown")}</div>
+      ${P.competitors.length?`<div><div class="k">Known competitors</div>${esc(P.competitors.join(", "))}</div>`:""}
+    </div>
+    ${qs.length?`<div><div class="k">A few quick questions (${done} of ${qs.length} answered)</div><p class="note" style="margin:2px 0 10px">Your answers make the research specific to you.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">${qs.map(q=>`<fieldset class="qq"><legend>${esc(q.question)}</legend><div class="opts">${[...q.options,"Not sure"].map((o,j)=>`<label><input type="radio" name="${q.id}" value="${esc(o)}" ${CO.answers[q.id]===o?"checked":""}>${esc(o)}</label>`).join("")}</div></fieldset>`).join("")}</div></div>`:""}
+    <div class="actions"><button class="btn primary" type="button" data-co="run">Run market research</button><button class="btn small" type="button" data-co="redo">Read the site again</button></div>
+  </div>`}
+$("coform").addEventListener("submit",e=>{e.preventDefault();const s=normSite($("cosite").value);if(!s){showStatus("Enter your company's website, like yourcompany.com.","err");$("cosite").focus();return}
+  showStatus("");CO.site=s;CO.linkedin="";CO.profile=null;analyzeCompany()});
+$("coflow").addEventListener("change",e=>{const r=e.target;if(r.type==="radio"){CO.answers[r.name]=r.value;const k=$("coflow").querySelector(".k");renderCo()}});
+$("coflow").addEventListener("input",e=>{if(e.target.id==="comkt"&&CO.profile)CO.profile.market=e.target.value});
+$("coflow").addEventListener("click",e=>{const b=e.target.closest("[data-co]");if(!b)return;const a=b.dataset.co;
+  if(a==="stop"&&CO.ctl)CO.ctl.abort();
+  if(a==="li"){const v=$("coli").value.trim();if(!/linkedin\.com\//i.test(v)){$("coli").focus();return}CO.linkedin=v.replace(/^(?!https?:)/,"https://");analyzeCompany()}
+  if(a==="skipli"){CO.state="profile";renderCo()}
+  if(a==="redo")analyzeCompany();
+  if(a==="run"){const P=CO.profile,m=String(P.market||"").trim();if(!m){$("comkt").focus();return}
+    const answers=P.questions.map(q=>({q:q.question,a:CO.answers[q.id]||"Not sure"}));
+    $("query").value=m;research(m,{context:{profile:P,site:CO.site,answers}});$("layout").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}});
 
 /* ---------- Boot ---------- */
 renderChips();loadExample("B2B invoicing software for marketing agencies in Europe");renderWatch();

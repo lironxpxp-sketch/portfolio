@@ -35,6 +35,7 @@ const ROUTES = {
   art: ["claude", "openai", "gemini"],       // art-directed ad illustrations (SVG)
 };
 
+const MAX_PROMPT_CHARS = 60_000; // site text added to a prompt is capped to this
 const MAX_BODY_BYTES = 60_000;   // largest prompt accepted
 const MAX_OUTPUT_TOKENS = 6000;  // longest answer
 const PER_IP_LIMIT = 40;         // AI calls per visitor...
@@ -72,7 +73,7 @@ function overLimit(ip, map = hits, limit = PER_IP_LIMIT) {
 
 // Read a website's own page (title, description, headings, visible text) so new
 // sites that search engines haven't indexed yet can still be understood.
-async function readSite(input) {
+async function readSite(input, deep = false) {
   let url;
   try { url = new URL(/^https?:\/\//i.test(input) ? input : "https://" + input); } catch { return ""; }
   const host = url.hostname.toLowerCase();
@@ -110,7 +111,33 @@ async function readSite(input) {
     icon && `Logo or icon: ${icon}`,
     body && `Visible text: ${body}`,
   ].filter(Boolean);
-  return parts.length > 1 ? parts.join("\n") : "";
+  if (parts.length <= 1) return "";
+  if (deep) {
+    // Read further: the site's own About / Product / Pricing / Solutions pages
+    const base = new URL(res.url || url);
+    const seen = new Set([base.pathname.replace(/\/$/, "")]);
+    const links = [];
+    for (const m of html.matchAll(/<a[^>]+href=["']([^"'#]+)["']/gi)) {
+      let u; try { u = new URL(m[1], base); } catch { continue; }
+      const path = u.pathname.replace(/\/$/, "");
+      if (u.hostname !== base.hostname || seen.has(path) || !/(about|company|who-we|product|platform|solution|feature|pricing|plans|customer|case-stud|use-case|service|how-it-works)/i.test(path)) continue;
+      seen.add(path); links.push(u.toString());
+    }
+    for (const p of ["/about", "/pricing", "/product"]) { const u = new URL(p, base).toString(); if (!seen.has(p)) { seen.add(p); links.push(u); } }
+    const pages = await Promise.all(links.slice(0, 5).map(async (u) => {
+      try {
+        const r = await fetch(u, { headers: { "user-agent": "Mozilla/5.0 (compatible; LironSoferPortfolio/1.0)", accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(6000) });
+        if (!r.ok || !/html/i.test(r.headers.get("content-type") || "")) return "";
+        const h = (await r.text()).slice(0, 300000);
+        const t = (h.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "";
+        const txt = dec(h.replace(/<(script|style|noscript|svg|template|nav|footer)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim().slice(0, 2500);
+        return txt.length > 80 ? `--- Page ${r.url}${t ? ` (${dec(t).trim()})` : ""}\n${txt}` : "";
+      } catch { return ""; }
+    }));
+    const more = pages.filter(Boolean);
+    if (more.length) parts.push("More pages from the same site:\n" + more.join("\n"));
+  }
+  return parts.join("\n");
 }
 
 export default {
@@ -246,10 +273,10 @@ export default {
     // If the page asked about a specific website, read that site directly and add it to the question
     let siteText = "";
     if (typeof body.siteUrl === "string" && body.siteUrl.trim()) {
-      siteText = await readSite(body.siteUrl.trim());
+      siteText = await readSite(body.siteUrl.trim(), !!body.deep);
       if (siteText) {
         const last = messages[messages.length - 1];
-        last.content += `\n\nThe website's own page, fetched just now (treat this as the main evidence about the business):\n"""\n${siteText}\n"""`;
+        last.content += `\n\nThe website's own pages, fetched just now (treat this as the main evidence about the business):\n"""\n${siteText.slice(0, MAX_PROMPT_CHARS)}\n"""`;
       }
     }
 
