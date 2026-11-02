@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liron Sofer · My story in one line</title>
+<meta name="description" content="My career so far, drawn in one line: a one-minute animated story with voiceover and music.">
+<meta property="og:title" content="Liron Sofer · My story in one line">
+<meta property="og:description" content="A one-minute animated story of my career, from the IDF Spokesperson Unit to my next challenge.">
+<meta property="og:url" content="https://lironsofer.online/cv/">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://lironsofer.online/cv/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c6f432'/%3E%3Cpath d='M9 11l6 5-6 5M17 21h7' stroke='%230a0c10' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Figtree:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script data-goatcounter="https://lironsofer.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+html,body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.back{font-family:var(--mono);font-size:.8rem;color:var(--ink-dim);text-decoration:none}.back:hover{color:var(--amber)}
+
+/* Layout: one cinema stage, caption plate under it, transport bar, then the chapter list as the readable text version */
+:root{
+  color-scheme: dark;
+  --page:#0A1218;
+  --ink:#F4EEE2;
+  --ink-dim:#9AA8AE;
+  --amber:#F5B041;
+  --rule:#1F2E38;
+  --stage:#15283A;
+  --display:"Kalam", "Comic Sans MS", cursive;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+body{background:var(--page);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:18px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+header h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3vw,2rem);margin:0;line-height:1.1}
+header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)}
+
+.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:var(--stage);border-radius:4px;overflow:hidden;transition:background-color 1.2s ease}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.line{fill:none;stroke:var(--ink);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.acc{fill:none;stroke:var(--amber);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.acc.thin{stroke:var(--ink);stroke-width:3.5;opacity:.85}
+.lab{fill:var(--ink);font-family:var(--display);font-size:30px}
+.lab.small{font-family:var(--mono);font-size:22px;fill:var(--ink-dim);letter-spacing:.04em}
+.lab.big{fill:var(--amber);font-family:var(--mono);font-weight:500;font-size:84px}
+.lab.title{font-family:var(--display);font-weight:700;font-size:104px}
+.lab.amberTxt{fill:var(--amber);font-family:var(--mono);font-size:44px}
+
+.overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,18,24,.35)}
+.playbig{font:600 1.05rem var(--body);color:#0A1218;background:var(--amber);border:0;border-radius:999px;padding:14px 26px;cursor:pointer;display:flex;gap:10px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.playbig:hover{filter:brightness(1.06)}
+.playbig:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+
+.caption{display:grid;gap:4px;min-height:7.5em}
+.caption .tag{font-family:var(--mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.caption h2{font-family:var(--display);font-weight:700;font-size:clamp(1.35rem,2.6vw,1.9rem);line-height:1.15;margin:0;text-wrap:balance}
+.caption p{margin:0;max-width:65ch;color:var(--ink);opacity:.9}
+.caption .links{display:flex;gap:10px 22px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:.9rem}
+.caption .links a{color:var(--amber);text-underline-offset:4px}
+.fade{animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.transport{display:flex;align-items:center;gap:12px}
+.iconbtn{flex:none;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--rule);background:transparent;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.iconbtn:hover{border-color:var(--ink-dim)}
+.iconbtn svg{width:18px;height:18px}
+.bar{flex:1;min-width:0;display:flex;gap:3px;height:20px;align-items:center}
+.seg{flex:var(--w);height:6px;background:var(--rule);border:0;padding:0;border-radius:2px;position:relative;cursor:pointer;overflow:hidden}
+.seg i{position:absolute;inset:0;width:0;background:var(--amber)}
+.seg:hover{background:#2c3e4a}
+.pill{flex:none;font:500 .78rem var(--mono);letter-spacing:.04em;color:var(--ink);background:transparent;border:1.5px solid var(--rule);border-radius:999px;padding:10px 14px;cursor:pointer}
+.pill[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
+.pill:disabled{opacity:.5;cursor:default}
+@media (max-width:520px){.time{display:none}}
+.time{flex:none;font-family:var(--mono);font-size:.8rem;color:var(--ink-dim);font-variant-numeric:tabular-nums}
+
+.chapters{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 18px;border-top:1px solid var(--rule);padding-top:14px}
+.chapters button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px;padding:8px 6px;border-radius:4px;width:100%;box-sizing:border-box}
+.chapters button:hover{background:#111D25}
+.chapters button:focus-visible{outline:3px solid var(--amber)}
+.chapters .n{font-family:var(--mono);font-size:.75rem;color:var(--ink-dim);padding-top:3px;font-variant-numeric:tabular-nums}
+.chapters .t{min-width:0;font-size:.93rem}
+.chapters .t small{display:block;font-family:var(--mono);font-size:.72rem;color:var(--ink-dim)}
+.chapters button[aria-current="true"] .n,.chapters button[aria-current="true"] .t{color:var(--amber)}
+@media (prefers-reduced-motion: reduce){.fade{animation:none}.stage{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Liron Sofer</h1>
+    <a class="back" href="/">← lironsofer.online</a>
+  </header>
+
+  <div class="stage" id="stage">
+    <svg id="svg" viewBox="0 0 1600 900" role="img" aria-label="Line-drawn animation of Liron Sofer's career">
+      <defs>
+        <filter id="wob" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="3"/>
+          <feDisplacementMap in="SourceGraphic" scale="5"/>
+        </filter>
+      </defs>
+      <g id="gLab"></g>
+      <g id="gAcc" filter="url(#wob)"></g>
+      <g id="gMain" filter="url(#wob)"></g>
+    </svg>
+    <div class="overlay" id="overlay">
+      <button class="playbig" id="startBtn" type="button">
+        <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>
+        Play with voice &amp; music
+      </button>
+    </div>
+  </div>
+
+  <div class="caption" id="caption" aria-live="polite"></div>
+
+  <div class="transport">
+    <button class="iconbtn" id="playBtn" type="button" aria-label="Play"></button>
+    <div class="bar" id="bar"></div>
+    <span class="time" id="time">0:00</span>
+    <button class="pill" id="voiceBtn" type="button" aria-pressed="true">Voice on</button>
+    <button class="iconbtn" id="muteBtn" type="button" aria-label="Mute"></button>
+  </div>
+
+
+  <ol class="chapters" id="chapters"></ol>
+</div>
+
+<script>
+(function(){
+const NS='http://www.w3.org/2000/svg';
+const G=700;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- drawing helpers ---------- */
+function fig(x,s=1,o={}){
+  const g=o.g??G, sh=g-160*s, aL=o.aL||[-32,55], aR=o.aR||[32,55];
+  const pL=o.aLabs?o.aLabs:[x+aL[0]*s, sh+aL[1]*s];
+  const pR=o.aRabs?o.aRabs:[x+aR[0]*s, sh+aR[1]*s];
+  const r=25*s;
+  return `L ${x-22*s} ${g} L ${x} ${g-90*s} L ${x} ${sh} L ${pL[0]} ${pL[1]} L ${x} ${sh} L ${pR[0]} ${pR[1]} ${o.handR||''} L ${x} ${sh} L ${x} ${g-172*s} A ${r} ${r} 0 1 1 ${x} ${g-172*s-2*r} A ${r} ${r} 0 1 1 ${x} ${g-172*s} L ${x} ${g-90*s} L ${x+22*s} ${g}`;
+}
+const P=(...s)=>`M -20 ${G} ${s.join(' ')} L 1620 ${G}`;
+const circ=(cx,cy,r)=>`M ${cx} ${cy-r} A ${r} ${r} 0 1 1 ${cx} ${cy+r} A ${r} ${r} 0 1 1 ${cx} ${cy-r}`;
+function penta(cx,cy,r){let d='';for(let i=0;i<=5;i++){const a=-Math.PI/2+i*2*Math.PI/5;d+=(i?'L':'M')+` ${(cx+r*Math.cos(a)).toFixed(1)} ${(cy+r*Math.sin(a)).toFixed(1)} `}
+  for(let i=0;i<5;i++){const a=-Math.PI/2+i*2*Math.PI/5;d+=`M ${(cx+r*Math.cos(a)).toFixed(1)} ${(cy+r*Math.sin(a)).toFixed(1)} L ${(cx+r*2.6*Math.cos(a)).toFixed(1)} ${(cy+r*2.6*Math.sin(a)).toFixed(1)} `}return d;}
+
+/* ---------- the story ---------- */
+const scenes=[
+ {key:'intro',tag:'Liron Sofer',title:'A career, drawn in one line',body:'From communications to high-tech, strategy and building my own way. About 90 seconds.',
+  short:'Hello',yr:'',bg:'#15283A',dur:7,draw:3,erase:1.2,chord:[50,57,64,66,69],
+  main:P(fig(800,1.3,{aR:[48,-62]})),
+  labels:[{t:'Liron Sofer',x:800,y:250,cls:'title',at:1.6,anchor:'middle'}]},
+ {key:'idf',tag:'01 · Where it started',title:'IDF Spokesperson Unit',body:'Supporting international communications and public affairs. Learning to tell one clear story to the whole world.',
+  short:'IDF Spokesperson Unit',yr:'',bg:'#1C2E40',dur:10,draw:3.5,erase:1.2,chord:[47,54,62,66,69],
+  main:P(fig(540,1.2,{aR:[60,-10],handR:'L 620 470 L 740 420 L 740 560 L 620 520 L 620 470 L 612 496'})),
+  acc:[{d:'M 785 450 Q 815 490 785 530',at:3.6},{d:'M 825 420 Q 870 490 825 560',at:3.9},{d:'M 865 390 Q 925 490 865 590',at:4.2},
+       {d:circ(1170,470,120)+' M 1050 470 L 1290 470 M 1170 350 Q 1100 470 1170 590 Q 1240 470 1170 350 M 1065 410 L 1275 410 M 1065 530 L 1275 530',at:4.6,thin:1,len:1.4}],
+  labels:[{t:'international communications',x:1170,y:640,cls:'small',at:5.4,anchor:'middle'}]},
+ {key:'president',tag:'02 · 2014–2015',title:'Vice Spokesperson, Office of the President of Israel',body:'Speaking for the President’s office to Israeli and international media.',
+  short:'Vice Spokesperson, President’s Office',yr:'2014–15',bg:'#212C48',dur:10,draw:3.8,erase:1.2,chord:[43,50,59,62,66],
+  main:P('L 700 700 L 725 545 L 695 545 L 695 525 L 800 525 L 800 440 L 765 495 L 800 440 L 835 495 L 800 440 L 800 428 A 25 25 0 1 1 800 378 A 25 25 0 1 1 800 428 L 800 525 L 905 525 L 905 545 L 875 545 L 900 700'),
+  acc:[{d:'M 852 525 L 834 482 '+circ(830,472,10),at:3.9},
+       {d:circ(800,620,36)+' '+circ(800,620,16),at:4.2,thin:1},
+       {d:'M 520 700 L 520 370 M 520 378 L 640 378 L 640 456 L 520 456 M 520 392 L 640 392 M 520 442 L 640 442 M 580 404 L 593 426 L 567 426 Z M 580 430 L 567 408 L 593 408 Z',at:4.5,thin:1,len:1.2}],
+  labels:[]},
+ {key:'climb',tag:'03 · 2016–2023',title:'Into high-tech, one step at a time',body:'Media Manager, Senior Partnerships Manager, Team Lead, Director, GM. Taptica, Creative Clicks and Glispa. As Team Lead, I grew new partners’ first-month revenue by 52%.',
+  short:'High-tech: Media Manager to GM',yr:'2016–23',bg:'#173938',dur:14,draw:5.5,erase:1.2,chord:[45,52,61,64,66],
+  main:P('L 260 700 L 260 630 L 460 630 L 460 560 L 660 560 L 660 490 L 860 490 L 860 420 L 1060 420 L 1060 350',fig(1180,1,{g:350,aR:[42,-58]}),'L 1300 350 L 1300 700'),
+  labels:[
+   {t:['Media','Manager'],x:360,y:668,at:1.0,anchor:'middle'},{t:'2016',x:360,y:745,cls:'small',at:1.0,anchor:'middle'},
+   {t:['Senior','Partnerships'],x:560,y:600,at:1.9,anchor:'middle'},{t:'2016–18',x:560,y:745,cls:'small',at:1.9,anchor:'middle'},
+   {t:['Team','Lead'],x:760,y:530,at:2.8,anchor:'middle'},{t:'2018–20',x:760,y:745,cls:'small',at:2.8,anchor:'middle'},
+   {t:'Director',x:960,y:460,at:3.7,anchor:'middle'},{t:'2020–22',x:960,y:745,cls:'small',at:3.7,anchor:'middle'},
+   {t:'GM',x:1180,y:395,at:4.6,anchor:'middle'},{t:'2022–23',x:1180,y:745,cls:'small',at:4.6,anchor:'middle'},
+   {t:'+52%',x:260,y:250,cls:'big',at:6.0,chime:1},{t:'first-month revenue from new partners',x:262,y:296,cls:'small',at:6.2}]},
+ {key:'ceo',tag:'04 · 2023–2024',title:'Strategy, side by side with the CEO',body:'A personal strategic role under the CEO of Protected Media (by Mediaocean), a cybersecurity company. Market analysis, go-to-market and growth across international markets.',
+  short:'Strategic role under the CEO',yr:'2023–24',bg:'#2A2743',dur:10,draw:3.8,erase:1.2,chord:[40,47,55,62,66],
+  main:P(fig(560,1.15,{aR:[40,30]}),fig(700,1.3,{aL:[-40,30]}),'L 1120 700 Q 1000 640 1000 520 L 1000 420 Q 1060 420 1120 380 Q 1180 420 1240 420 L 1240 520 Q 1240 640 1120 700'),
+  acc:[{d:'M 1065 545 L 1105 588 L 1182 492',at:4.0}],
+  labels:[{t:'me',x:560,y:400,cls:'small',at:4.2,anchor:'middle'},{t:'CEO',x:700,y:370,cls:'small',at:4.2,anchor:'middle'},
+          {t:'cybersecurity',x:1120,y:760,cls:'small',at:4.5,anchor:'middle'}]},
+ {key:'oct7',tag:'05 · October 7, 2023',title:'Six months of reserve duty',body:'When the war began, I put everything down and served six months of reserve duty (Miluim). Those months made me rethink what really matters, and how I can do meaningful things for myself and for the world.',
+  short:'October 7: six months of Miluim',yr:'Oct 2023',bg:'#0B1117',dur:9,draw:4.2,erase:1.4,chord:[35,42,50,54],quiet:1,
+  main:P(...[0,1,2,3,4,5].map(i=>{const x=575+i*90;return `L ${x} 700 L ${x} 585 L ${x} 700`})),
+  labels:[{t:'6 months',x:800,y:770,cls:'small',at:4.6,anchor:'middle'}]},
+ {key:'own',tag:'06 · 2024–now',title:'CEO & CRO, Kaduregel Shefel',body:'So I changed direction and went independent. I took a football media and commerce brand from unprofitable to over 700K ILS a year, and advised 20+ startups along the way.',
+  short:'Independent: CEO & CRO, Kaduregel Shefel',yr:'2024–now',bg:'#1C3A29',dur:11,draw:4.2,erase:1.2,chord:[43,50,57,59,66],
+  main:P('L 550 700 A 75 75 0 1 1 550 550 A 75 75 0 1 1 550 700','L 820 700 L 900 640 L 990 665 L 1080 560 L 1170 590 L 1300 420 L 1263 428 L 1300 420 L 1294 457 L 1300 420 L 1300 700'),
+  acc:[{d:penta(550,625,24),at:4.3,thin:1}],
+  labels:[{t:'Kaduregel Shefel',x:550,y:515,at:4.4,anchor:'middle'},
+          {t:'700K+',x:260,y:250,cls:'big',at:5.0,chime:1},{t:'ILS a year, from unprofitable',x:262,y:296,cls:'small',at:5.2},
+          {t:'20+ startups advised',x:1340,y:250,cls:'amberTxt',at:6.4,anchor:'end',chime:1}]},
+ {key:'me',tag:'07 · Always',title:'Who I am',body:'A coder, a gamer, an analyst and a mother.',
+  short:'Coder, gamer, analyst, mother',yr:'',bg:'#3A2B22',dur:12,draw:5.5,erase:1.2,chord:[50,54,57,61,66],
+  main:P('L 200 700 L 220 670 L 400 670 L 400 520 L 220 520 L 220 670 L 400 670 L 420 700',
+         'L 650 700 L 650 610 L 610 610 Q 585 645 560 625 Q 538 565 585 525 L 715 525 Q 762 565 740 625 Q 715 645 690 610 L 650 610 L 650 700',
+         'L 860 700 L 860 630 L 900 630 L 900 700 L 925 700 L 925 575 L 965 575 L 965 700 L 990 700 L 990 515 L 1030 515 L 1030 700',
+         fig(1200,1.05,{aRabs:[1262,612]}),fig(1320,.6,{aLabs:[1262,612]})),
+  acc:[{d:'M 290 570 L 268 595 L 290 620 M 318 625 L 336 565 M 362 570 L 384 595 L 362 620',at:1.6},
+       {d:'M 593 568 L 627 568 M 610 551 L 610 585 '+circ(692,560,7)+' '+circ(714,580,7),at:3.0},
+       {d:'M 845 600 L 915 555 L 975 497 L 1050 462 M 1022 460 L 1050 462 L 1040 488',at:4.1},
+       {d:'M 1262 470 C 1250 452 1226 462 1240 482 L 1262 504 L 1284 482 C 1298 462 1274 452 1262 470',at:5.6}],
+  labels:[{t:'coder',x:310,y:765,at:1.4,anchor:'middle'},{t:'gamer',x:650,y:765,at:2.8,anchor:'middle'},
+          {t:'analyst',x:945,y:765,at:3.9,anchor:'middle'},{t:'mother',x:1255,y:765,at:5.2,anchor:'middle'}]},
+ {key:'next',tag:'08 · Next',title:'My next challenge',body:'A high-tech company with a product I truly connect with. Let’s talk.',
+  short:'Next: a product I believe in',yr:'Next',bg:'#15283A',dur:10,draw:3.8,erase:0,chord:[50,57,62,64,66,69],links:1,
+  main:P(fig(560,1.15,{aL:[-28,58],aR:[36,48]}),'L 1100 700 L 1100 400 L 1260 400 L 1260 700'),
+  acc:[{d:'M 1100 400 L 1172 428 L 1172 712 L 1100 700',at:3.9},
+       {d:'M 1290 430 L 1370 390 M 1300 520 L 1390 520 M 1290 620 L 1370 660',at:4.4}],
+  labels:[{t:'Let’s talk.',x:800,y:220,cls:'title',at:5.0,anchor:'middle',chime:1},
+          {t:'lironsofer.online  ·  linkedin.com/in/liron-sofer',x:800,y:290,cls:'small',at:5.6,anchor:'middle'}]}
+];
+/* voiceover script + musical energy per chapter */
+const VO=[
+ "Hi, I'm Liron. This is my career, drawn in one line.",
+ "It started in the IDF Spokesperson Unit, telling Israel's story to the world.",
+ "Then I became Vice Spokesperson to the President of Israel.",
+ "In 2016, I moved into high-tech. Media manager, senior, team lead, director, and then GM. I grew new partners' first-month revenue by fifty-two percent.",
+ "Next, I worked side by side with the CEO of a cybersecurity company, shaping strategy and growth.",
+ "Then came October seventh. I put everything down, and served six months of reserve duty. Those months made me rethink what really matters, and how I can do meaningful things, for myself and for the world.",
+ "So I changed direction. I went independent, as CEO and CRO of Kaduregel Shefel, and turned it from unprofitable to over seven hundred thousand shekels a year.",
+ "I'm a coder. A gamer. An analyst. And a mother.",
+ "Now I'm looking for my next challenge, at a company whose product I truly believe in. Let's talk."
+];
+const MOOD=[[1,'anthem'],[2,'anthem'],[2,'anthem'],[3,'climb'],[3,'anthem'],[0,'hope'],[4,'anthem'],[3,'anthem'],[4,'finale']];
+scenes.forEach((s,i)=>{s.vo=VO[i];s.energy=MOOD[i][0];s.prog=MOOD[i][1]});
+const SPEED=.62;
+scenes.forEach((s,i)=>{const last=i===scenes.length-1;
+  s.draw*=SPEED;(s.acc||[]).forEach(a=>{a.at*=SPEED;a.len=(a.len||.8)*.8});(s.labels||[]).forEach(L=>L.at*=SPEED);
+  s.erase=last?0:.8;
+  const lastAt=Math.max(s.draw,...(s.acc||[]).map(a=>a.at+a.len),...(s.labels||[]).map(L=>L.at+.6));
+  s.dur=Math.round((lastAt+(last?3.5:1.8)+s.erase)*10)/10;});
+let acc=0;scenes.forEach(s=>{s.start=acc;acc+=s.dur});
+const TOTAL=acc;
+
+/* ---------- DOM refs ---------- */
+const $=id=>document.getElementById(id);
+const stage=$('stage'),gMain=$('gMain'),gAcc=$('gAcc'),gLab=$('gLab'),turb=$('turb');
+const caption=$('caption'),bar=$('bar'),timeEl=$('time'),chapters=$('chapters');
+const playBtn=$('playBtn'),muteBtn=$('muteBtn'),overlay=$('overlay');
+const ICON={play:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>',
+ pause:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3h3.5v14H5zM11.5 3H15v14h-3.5z" fill="currentColor"/></svg>',
+ replay:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4V1L5.5 5 10 9V6a5 5 0 1 1-5 5H3a7 7 0 1 0 7-7z" fill="currentColor"/></svg>',
+ sound:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-3.5v11L6 12H3z" fill="currentColor"/><path d="M13 7a4 4 0 0 1 0 6M15.5 4.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+ muted:'<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-3.5v11L6 12H3z" fill="currentColor"/><path d="M13 7.5l5 5M18 7.5l-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'};
+const mk=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e};
+const fmt=t=>{t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+
+/* progress bar + chapter list */
+const segs=scenes.map((s,i)=>{const b=document.createElement('button');b.className='seg';b.type='button';b.style.setProperty('--w',s.dur);
+  b.setAttribute('aria-label','Go to chapter: '+s.short);b.innerHTML='<i></i>';b.onclick=()=>seek(i);bar.appendChild(b);return b.firstChild});
+const chapBtns=scenes.map((s,i)=>{const li=document.createElement('li');const b=document.createElement('button');b.type='button';
+  b.innerHTML=`<span class="n">${fmt(s.start)}</span><span class="t">${s.short}${s.yr?`<small>${s.yr}</small>`:''}</span>`;
+  b.onclick=()=>seek(i);li.appendChild(b);chapters.appendChild(li);return b});
+
+/* ---------- audio: an uplifting track generated live, no files ---------- */
+const C=(r,n)=>({r,n});
+const D_=C(38,[62,66,69]),A_=C(45,[61,64,69]),Bm=C(47,[62,66,71]),G_=C(43,[62,67,71]);
+const PROGS={anthem:[D_,A_,Bm,G_],climb:[G_,A_,Bm,D_],hope:[Bm,G_,D_,A_],finale:[G_,A_,D_,D_]};
+const audio={ctx:null,muted:false,energy:1,prog:null,running:false,step:0,next:0,
+ init(){
+  if(this.ctx)return;
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  const c=this.ctx=new AC();
+  const comp=c.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(c.destination);
+  this.master=c.createGain();this.master.gain.value=.9;this.master.connect(comp);
+  this.bus=c.createGain();this.bus.connect(this.master);
+  this.music=c.createGain();this.music.connect(this.bus);
+  this.drums=c.createGain();this.drums.connect(this.bus);
+  const conv=c.createConvolver();const n=c.sampleRate*2.2,ir=c.createBuffer(2,n,c.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3.5)}
+  conv.buffer=ir;const rv=c.createGain();rv.gain.value=.25;this.music.connect(conv);conv.connect(rv);rv.connect(this.bus);
+  const nb=this.nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const src=c.createBufferSource();src.buffer=nb;src.loop=true;
+  const bp=c.createBiquadFilter();bp.type='bandpass';bp.frequency.value=3200;bp.Q.value=.7;
+  this.scr=c.createGain();this.scr.gain.value=0;src.connect(bp);bp.connect(this.scr);this.scr.connect(this.master);src.start();
+  setInterval(()=>this.tick(),25);
+ },
+ f:m=>440*Math.pow(2,(m-69)/12),
+ setScene(sc){
+  if(!this.ctx)return;
+  this.energy=sc.energy;this.prog=PROGS[sc.prog];
+  if(!this.running){this.running=true;this.step=0;this.next=this.ctx.currentTime+.06}
+ },
+ pluck(t,fr,v,dec,type,cut,dest){const c=this.ctx,o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();
+  o.type=type;o.frequency.value=fr;lp.type='lowpass';lp.frequency.value=cut;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0008,t+dec);
+  o.connect(lp);lp.connect(g);g.connect(dest||this.music);o.start(t);o.stop(t+dec+.05)},
+ pad(t,ch,len,soft){const c=this.ctx;
+  ch.n.forEach(m=>{const g=c.createGain(),lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=soft?900:2200;
+   const lvl=soft?.05:.022,att=soft?.5:.03;
+   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lvl,t+att);g.gain.setValueAtTime(lvl,t+len-.05);g.gain.linearRampToValueAtTime(0,t+len+.3);
+   lp.connect(g);g.connect(this.music);
+   [-8,8].forEach(det=>{const o=c.createOscillator();o.type=soft?'sine':'sawtooth';o.frequency.value=this.f(m);o.detune.value=det;o.connect(lp);o.start(t);o.stop(t+len+.35)})});
+ },
+ kick(t,v){const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(42,t+.14);
+  g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.38);o.connect(g);g.connect(this.drums);o.start(t);o.stop(t+.4)},
+ noise(t,dur,type,freq,v){const c=this.ctx,s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=this.nb;
+  fl.type=type;fl.frequency.value=freq;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(fl);fl.connect(g);g.connect(this.drums);s.start(t,Math.random()*1.5);s.stop(t+dur+.02)},
+ tick(){
+  if(!this.ctx||this.ctx.state!=='running'||!this.running||!this.prog)return;
+  const sd=60/112/4,pat=[0,1,2,1,0,2,1,2];
+  while(this.next<this.ctx.currentTime+.12){
+   const t=this.next,s=this.step%16,ch=this.prog[Math.floor(this.step/16)%4],e=this.energy;
+   if(s===0)this.pad(t,ch,sd*16,e===0);
+   if(e===0){ if(s===0)this.kick(t,.32); if(s===3)this.kick(t,.2); }
+   else{
+    if(e>=2?s%4===0:(s===0||s===8))this.kick(t,.55);
+    if(e>=2&&s%4===2)this.noise(t,.05,'highpass',7000,.08);
+    if(e>=4&&s%2===1)this.noise(t,.03,'highpass',9500,.04);
+    if(e>=3&&(s===4||s===12))this.noise(t,.17,'bandpass',1600,.22);
+    if(e>=3&&s%2===0)this.pluck(t,this.f(s%4===2?ch.r+12:ch.r),.12,.22,'sawtooth',520,this.drums);
+    if(s%(e>=4?1:2)===0)this.pluck(t,this.f(ch.n[pat[(s>>(e>=4?0:1))%8]]+12),e>=4?.035:.045,.35,'triangle',3400);
+   }
+   this.next+=sd;this.step++;
+  }
+ },
+ scratch(level){if(!this.ctx)return;this.scr.gain.setTargetAtTime(level*(.45+.55*Math.random())*.03,this.ctx.currentTime,.03)},
+ chime(){if(!this.ctx||this.ctx.state!=='running')return;const t=this.ctx.currentTime;[[1,.06],[2.76,.022],[5.4,.01]].forEach(([r,v])=>this.pluck(t,this.f(81)*r,v,1.8,'sine',9000))},
+ duck(on){if(this.ctx)this.bus.gain.setTargetAtTime(on?.42:1,this.ctx.currentTime,.12)},
+ end(){if(!this.ctx||!this.running)return;this.running=false;const t=this.ctx.currentTime+.05;
+  this.pad(t,D_,2.6,false);this.pluck(t,this.f(26),.18,2.5,'sine',300,this.drums);this.kick(t,.6);this.noise(t,2.2,'highpass',5000,.09)},
+ pause(){this.ctx&&this.ctx.state==='running'&&this.ctx.suspend()},
+ resume(){if(!this.ctx)return;if(this.ctx.state!=='running')this.ctx.resume();},
+ setMute(m){this.muted=m;if(this.ctx)this.master.gain.setTargetAtTime(m?0:.9,this.ctx.currentTime,.05)}
+};
+
+/* ---------- voiceover: the browser's own speech voice ---------- */
+const narr={ok:'speechSynthesis' in window,on:true,speaking:false,voice:null,
+ list(){if(!this.ok)return[];return speechSynthesis.getVoices().filter(v=>/^(en|he)/i.test(v.lang))},
+ rank(v){const n=v.name;const top=[/\bJenny\b/i,/\bAria\b/i,/\bAva\b.*(natural|online)/i,/\bMichelle\b/i,/\bEmma\b.*(natural|online)/i,/Samantha/i,/\bAva\b/i,/Allison/i,/Google US English/i,/\bZira\b/i];
+  let r=top.findIndex(p=>p.test(n));if(r<0)r=50;if(/en-GB|UK|British|Daniel|Arthur|Oliver|George|Ryan|Thomas/i.test(n+v.lang))r+=100;if(/^he/i.test(v.lang))r+=60;if(/\b(male|Guy|Davis|Andrew|Brian|Christopher|Eric|Roger|Steffan|Aaron|Fred|Alex)\b/i.test(n))r+=80;return r},
+ pick(){if(!this.ok)return;const vs=this.list();if(!vs.length)return;
+  this.voice=vs.slice().sort((a,b)=>this.rank(a)-this.rank(b))[0]},
+ speak(text){
+  if(!this.ok||!this.on||audio.muted||!text)return;
+  if(!this.voice)this.pick();
+  if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);if(this.voice){u.voice=this.voice;u.lang=this.voice.lang}else u.lang='en-US';
+  u.rate=RM?.95:1.0;u.pitch=1.03;
+  u.onstart=()=>{this.speaking=true;audio.duck(true)};
+  u.onend=u.onerror=()=>{if(this.cur===u){this.speaking=false;audio.duck(false)}};
+  this.cur=u;this.speaking=true;audio.duck(true);speechSynthesis.speak(u);
+ },
+ stop(){if(!this.ok)return;this.cur=null;speechSynthesis.cancel();this.speaking=false;audio.duck(false)},
+ pause(){this.ok&&speechSynthesis.pause()},
+ resume(){this.ok&&speechSynthesis.resume()}
+};
+if(narr.ok){narr.pick();speechSynthesis.onvoiceschanged=()=>narr.pick()}
+
+/* ---------- scene building + rendering ---------- */
+let cur=-1,built=null,t=0,playing=false,started=false,last=0,ended=false,holdT=0;
+function build(i){
+  const sc=scenes[i];gMain.innerHTML='';gAcc.innerHTML='';gLab.innerHTML='';
+  const m=mk('path',{d:sc.main,class:'line'},gMain);const len=m.getTotalLength();m.style.strokeDasharray=len;
+  const accs=(sc.acc||[]).map(a=>{const p=mk('path',{d:a.d,class:'acc'+(a.thin?' thin':'')},gAcc);const l=p.getTotalLength();p.style.strokeDasharray=l;p.style.strokeDashoffset=l;return {el:p,l,at:a.at,len:a.len||.8}});
+  const labs=(sc.labels||[]).map(L=>{const tx=mk('text',{x:L.x,y:L.y,class:'lab'+(L.cls?' '+L.cls:''),'text-anchor':L.anchor||'start'},gLab);
+    const lines=Array.isArray(L.t)?L.t:[L.t];lines.forEach((s,k)=>{const ts=mk('tspan',{x:L.x,dy:k?'1.05em':0},tx);ts.textContent=s});
+    tx.style.opacity=0;return {el:tx,at:L.at,chime:L.chime,fired:false}});
+  stage.style.backgroundColor=sc.bg;
+  built={sc,m,len,accs,labs};
+  // caption
+  caption.innerHTML=`<span class="tag fade">${sc.tag}</span><h2 class="fade">${sc.title}</h2><p class="fade">${sc.body}</p>`+
+    (sc.links?`<div class="links fade"><a href="https://lironsofer.online" target="_blank" rel="noopener">lironsofer.online</a><a href="https://www.linkedin.com/in/liron-sofer" target="_blank" rel="noopener">linkedin.com/in/liron-sofer</a></div>`:'');
+  chapBtns.forEach((b,k)=>b.setAttribute('aria-current',k===i?'true':'false'));
+}
+const ease=x=>x<0?0:x>1?1:x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+function render(lt,prevLt){
+  const {sc,m,len,accs,labs}=built;
+  const D=RM?.01:sc.draw,E=sc.erase,T=sc.dur,eraseAt=T-E;
+  let off=0,fadeOut=1,drawing=0;
+  if(lt<D){off=len*(1-ease(lt/D));drawing=1}
+  else if(E&&lt>eraseAt){const p=RM?1:ease((lt-eraseAt)/E);off=-len*p;fadeOut=1-p;drawing=.5}
+  m.style.strokeDashoffset=off;
+  accs.forEach(a=>{const at=RM?Math.min(a.at,D):a.at;const p=RM?(lt>=at?1:0):ease((lt-at)/a.len);a.el.style.strokeDashoffset=a.l*(1-p);a.el.style.opacity=fadeOut;if(lt>at&&lt<at+a.len)drawing=Math.max(drawing,.6)});
+  labs.forEach(L=>{const p=RM?(lt>=L.at?1:0):Math.min(1,Math.max(0,(lt-L.at)/.6));L.el.style.opacity=p*fadeOut;
+    if(L.chime&&!L.fired&&prevLt!=null&&prevLt<L.at&&lt>=L.at&&playing){L.fired=true;audio.chime()}});
+  if(playing)audio.scratch(drawing);else audio.scratch(0);
+}
+function sceneAt(time){for(let i=scenes.length-1;i>=0;i--)if(time>=scenes[i].start)return i;return 0}
+function update(prevT){
+  const i=sceneAt(Math.min(t,TOTAL-.0001));
+  if(i!==cur){cur=i;build(i);holdT=0;if(started){audio.setScene(scenes[i]);if(playing)narr.speak(scenes[i].vo)}prevT=null}
+  const lt=t-scenes[i].start;render(lt,prevT==null?null:prevT-scenes[i].start);
+  segs.forEach((s,k)=>{const sc=scenes[k];s.style.width=Math.max(0,Math.min(1,(t-sc.start)/sc.dur))*100+'%'});
+  timeEl.textContent=fmt(t)+' / '+fmt(TOTAL);
+}
+function setPlayIcon(){playBtn.innerHTML=ended?ICON.replay:playing?ICON.pause:ICON.play;playBtn.setAttribute('aria-label',ended?'Replay':playing?'Pause':'Play')}
+let boil=0;
+function frame(ts){
+  const dt=last?Math.min(.1,(ts-last)/1000):0;last=ts;
+  if(playing){const prev=t;let nt=t+dt;
+    const sc=scenes[cur],holdAt=sc.start+sc.dur-(sc.erase||0)-.3;
+    if(narr.speaking&&nt>holdAt&&holdT<16){holdT+=dt;nt=Math.max(t,holdAt)}
+    t=nt;
+    if(t>=TOTAL){t=TOTAL;playing=false;ended=true;audio.end();audio.scratch(0);setPlayIcon()}
+    update(prev);
+    if(!RM&&(boil+=dt)>.12){boil=0;turb.setAttribute('seed',1+Math.floor(Math.random()*6))}
+  }
+  requestAnimationFrame(frame);
+}
+function start(){audio.init();audio.resume();started=true;overlay.hidden=true;t=0;cur=-1;ended=false;playing=true;update(null);setPlayIcon()}
+function toggle(){
+  if(!started)return start();
+  if(ended){t=0;cur=-1;ended=false;playing=true;audio.resume();narr.resume();update(null);setPlayIcon();return}
+  playing=!playing;if(playing){audio.resume();narr.resume()}else{audio.pause();narr.pause()}setPlayIcon();
+}
+function seek(i){
+  if(!started){audio.init();started=true;overlay.hidden=true}
+  narr.resume();t=scenes[i].start;cur=-1;ended=false;playing=true;audio.resume();update(null);setPlayIcon();
+}
+$('startBtn').onclick=start;
+playBtn.onclick=toggle;
+muteBtn.innerHTML=ICON.sound;
+muteBtn.onclick=()=>{audio.setMute(!audio.muted);if(audio.muted)narr.stop();else if(playing)narr.speak(scenes[cur].vo);muteBtn.innerHTML=audio.muted?ICON.muted:ICON.sound;muteBtn.setAttribute('aria-label',audio.muted?'Unmute':'Mute')};
+const voiceBtn=$('voiceBtn');
+function setVoiceBtn(){voiceBtn.setAttribute('aria-pressed',narr.on&&narr.ok?'true':'false');voiceBtn.textContent=narr.ok?(narr.on?'Voice on':'Voice off'):'No voice';voiceBtn.disabled=!narr.ok}
+voiceBtn.onclick=()=>{narr.on=!narr.on;if(!narr.on)narr.stop();else if(playing)narr.speak(scenes[cur].vo);setVoiceBtn()};setVoiceBtn();
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/INPUT|TEXTAREA|BUTTON/.test(e.target.tagName)){e.preventDefault();toggle()}});
+
+/* resting frame: the opening scene fully drawn behind the play button */
+build(0);cur=0;render(scenes[0].draw+2,null);
+timeEl.textContent='0:00 / '+fmt(TOTAL);setPlayIcon();
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
