@@ -136,6 +136,7 @@ h2{font-size:clamp(28px,4vw,44px);letter-spacing:-.025em;line-height:1.1;margin:
 .contact p{color:var(--muted);max-width:52ch;margin:14px auto 0}
 .contact .cta{justify-content:center}
 footer{padding-block:36px 48px;color:var(--dim);font:13px var(--mono);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+footer a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,rgba(255,255,255,.15))}footer a:hover{color:var(--acc)}
 .reveal{animation:rise .6s ease both}
 @keyframes rise{from{opacity:.001;transform:translateY(14px)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}html{scroll-behavior:auto}}
@@ -204,9 +205,9 @@ footer{padding-block:36px 48px;color:var(--dim);font:13px var(--mono);display:fl
         <h3>Creative Studio</h3>
         <p class="one">From a website URL to launch-ready ads for Meta, LinkedIn, Google and TikTok.</p>
         <ul>
-          <li>Reads the real website to find the audience, pain and proof</li>
-          <li>Generates ad angles, then platform copy with live character limits</li>
-          <li>Renders visual mockups in every placement size</li>
+          <li>Claude reads the brand's website; GPT writes the concepts and copy in its tone</li>
+          <li>Platform-ready copy for Meta, LinkedIn, Google and TikTok, within each limit</li>
+          <li>Every ad designed from scratch by an image model (Nano Banana), in every size</li>
         </ul>
         <div class="foot"><a class="open" href="projects/creative-studio/">Open live →</a></div>
       </div>
@@ -217,9 +218,9 @@ footer{padding-block:36px 48px;color:var(--dim);font:13px var(--mono);display:fl
       <div class="body">
         <div class="chips"><span class="chip acc">Research</span><span class="chip">Agent</span><span class="chip">Competitive intel</span></div>
         <h3>Market Research Agent</h3>
-        <p class="one">Ask about any market and get an analyst-style report, researched live on the web.</p>
+        <p class="one">Enter your company's website and get research on your own market, researched live on the web.</p>
         <ul>
-          <li>Size signals, key players, pricing and funding in one table</li>
+          <li>Reads your site to work out your market, then asks a few quick questions</li>
           <li>Clusters customer complaints from reviews into clear themes</li>
           <li>Save a market and re-run it to see which prices, players and figures changed</li>
         </ul>
@@ -251,7 +252,7 @@ footer{padding-block:36px 48px;color:var(--dim);font:13px var(--mono);display:fl
         <ul>
           <li>Searches the web for real companies that match your job, client types and region</li>
           <li>Finds the decision-maker, falling back to inbox or contact form</li>
-          <li>Drafts a personal message that opens in your own Gmail or Outlook</li>
+          <li>Direct emails, LinkedIn profiles and drafts for each contact; export to CSV</li>
         </ul>
         <div class="foot"><a class="open" href="projects/reachlist/">Open live →</a></div>
       </div>
@@ -294,9 +295,9 @@ footer{padding-block:36px 48px;color:var(--dim);font:13px var(--mono);display:fl
   <div class="about">
     <div>
       <div class="sh" style="margin-bottom:18px"><div><div class="tag">// about</div><h2>A bit about me</h2></div></div>
-      <p>My workdays are full of <b>campaigns, decks, spreadsheets and a lot of calls</b>.</p>
-      <p>At some point I started wondering how much of that I could hand off to a tool I made myself. That turned into a habit. Now whenever something annoys me at work, or I get an idea I can't stop thinking about, <b>I try to build it</b>.</p>
-      <p>Some of these I use every week. Some exist because football and puzzles are fun. All of them taught me something.</p>
+      <p>I'm a <b>commercial person who thinks like a builder</b>. My background spans business development, growth, sales, marketing and revenue, mostly in SaaS, where I've owned pipelines, campaigns, partnerships and the numbers behind them.</p>
+      <p>I'm at my best where business meets data and technology. I can read a funnel, dig into the numbers until they explain themselves, and find the angle nobody tried yet. And when a workflow slows a team down, I don't wait for a tool: <b>I build it</b>. Everything on this page started that way.</p>
+      <p><b>I'm looking for my next challenge</b>: a role where I can drive growth, work closely with product and data, and turn good ideas into results. If that sounds like your team, I'd love to talk.</p>
     </div>
     <div class="term reveal" aria-label="Skills summary">
       <div class="bar"><i></i><i></i><i></i></div>
@@ -304,16 +305,17 @@ footer{padding-block:36px 48px;color:var(--dim);font:13px var(--mono);display:fl
 liron sofer
 
 <span class="p">$</span> <span class="w">cat focus.txt</span>
-<span class="k">paid_ua</span>        Google Ads, Meta, TikTok
-<span class="k">sales</span>          prospecting, outreach, call prep
-<span class="k">marketing</span>      creatives, positioning, research
-<span class="k">for_fun</span>        games, gifts, football
+<span class="k">growth</span>         paid UA, funnels, experiments
+<span class="k">revenue</span>        BD, sales, partnerships
+<span class="k">marketing</span>      positioning, creatives, research
+<span class="k">analysis</span>       data, dashboards, forecasting
+<span class="k">saas</span>           B2B, product-led, tech-savvy
 
 <span class="p">$</span> <span class="w">ls stack/</span>
-HTML  CSS  JavaScript  data viz  AI agents
+HTML  CSS  JavaScript  APIs  AI agents
 
 <span class="p">$</span> <span class="w">echo $STATUS</span>
-always building something ✓</pre>
+open to my next challenge ✓</pre>
     </div>
   </div>
 </section>
@@ -321,13 +323,14 @@ always building something ✓</pre>
 <section id="contact" class="wrap">
   <div class="contact reveal">
     <div class="tag mono" style="color:var(--acc);font-size:12px">// contact</div>
-    <h2>Want to chat?</h2>
-    <p>About work, a project idea, or one of the things on this page. Reach me any way you like.</p>
+    <h2>Let's talk</h2>
+    <p>About a role, a project, or one of the tools on this page. Reach me any way you like.</p>
     <div class="cta">
-      <a class="btn pri" href="mailto:YOUR_EMAIL">✉ YOUR_EMAIL</a>
-      <a class="btn" href="tel:YOUR_PHONE_INTL">☎ YOUR_PHONE_DISPLAY</a>
-      <a class="btn" href="YOUR_LINKEDIN" target="_blank" rel="noopener">LinkedIn ↗</a>
-      <a class="btn" href="YOUR_INSTAGRAM" target="_blank" rel="noopener">Instagram ↗</a>
+      <a class="btn pri" href="mailto:lironxpxp@gmail.com">✉ lironxpxp@gmail.com</a>
+      <a class="btn" href="tel:+972526768625">☎ 052-676-8625</a>
+      <a class="btn" href="https://wa.me/972526768625" target="_blank" rel="noopener">WhatsApp ↗</a>
+      <a class="btn" href="https://www.linkedin.com/in/liron-sofer/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="btn" href="https://www.instagram.com/soferliron/" target="_blank" rel="noopener">Instagram ↗</a>
     </div>
   </div>
 </section>
@@ -335,7 +338,7 @@ always building something ✓</pre>
 
 <footer class="wrap">
   <span>© <span id="yr">2026</span> Liron Sofer · lironsofer.online</span>
-  <span>Built by hand, hosted on GitHub Pages</span>
+  <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
 </footer>
 
 <script>
