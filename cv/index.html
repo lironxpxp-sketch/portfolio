@@ -35,13 +35,14 @@ html,body{margin:0}
   --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 body{background:var(--page);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
-.wrap{max-width:1080px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:18px}
+[hidden]{display:none!important}
+.wrap{max-width:1320px;margin:0 auto;padding-block:14px 28px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));display:grid;gap:18px}
 header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 header h1{font-family:var(--display);font-weight:700;font-size:clamp(1.5rem,3vw,2rem);margin:0;line-height:1.1}
 header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)}
 
-.stage{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:var(--stage);border-radius:4px;overflow:hidden;transition:background-color 1.2s ease}
-.stage svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage{position:relative;width:min(100%, calc((100svh - 150px) * 16 / 9));margin-inline:auto;max-width:100%;aspect-ratio:16/9;background:var(--stage);border-radius:4px;overflow:hidden;transition:background-color 1.2s ease}
+.stage > svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 .line{fill:none;stroke:var(--ink);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
 .acc{fill:none;stroke:var(--amber);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
 .acc.thin{stroke:var(--ink);stroke-width:3.5;opacity:.85}
@@ -51,12 +52,20 @@ header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;
 .lab.title{font-family:var(--display);font-weight:700;font-size:104px}
 .lab.amberTxt{fill:var(--amber);font-family:var(--mono);font-size:44px}
 
-.overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,18,24,.35)}
-.playbig{font:600 1.05rem var(--body);color:#0A1218;background:var(--amber);border:0;border-radius:999px;padding:14px 26px;cursor:pointer;display:flex;gap:10px;align-items:center;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.overlay{position:absolute;inset:0;display:grid;place-items:end center;padding-bottom:5%;background:transparent;cursor:pointer}
+.playbig{font:600 1.05rem var(--body);color:#0A1218;background:var(--amber);border:0;border-radius:999px;padding:12px 22px;cursor:pointer;display:flex;gap:10px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .playbig:hover{filter:brightness(1.06)}
 .playbig:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 
-.caption{display:grid;gap:4px;min-height:7.5em}
+.main{display:grid;gap:16px}
+.left{display:grid;gap:12px;min-width:0}
+.side{display:grid;gap:14px;align-content:start;min-width:0}
+.caption{display:grid;gap:4px;align-content:start;min-height:9.5em}
+@media (min-width:900px){
+  .main{grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:28px;align-items:start}
+  .side{max-height:calc(100svh - 90px);overflow:auto}
+  .chapters{grid-template-columns:1fr!important}
+}
 .caption .tag{font-family:var(--mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
 .caption h2{font-family:var(--display);font-weight:700;font-size:clamp(1.35rem,2.6vw,1.9rem);line-height:1.15;margin:0;text-wrap:balance}
 .caption p{margin:0;max-width:65ch;color:var(--ink);opacity:.9}
@@ -79,7 +88,7 @@ header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;
 @media (max-width:520px){.time{display:none}}
 .time{flex:none;font-family:var(--mono);font-size:.8rem;color:var(--ink-dim);font-variant-numeric:tabular-nums}
 
-.chapters{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 18px;border-top:1px solid var(--rule);padding-top:14px}
+.chapters{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 18px;border-top:1px solid var(--rule);padding-top:14px}
 .chapters button{all:unset;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:10px;padding:8px 6px;border-radius:4px;width:100%;box-sizing:border-box}
 .chapters button:hover{background:#111D25}
 .chapters button:focus-visible{outline:3px solid var(--amber)}
@@ -98,6 +107,8 @@ header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;
     <a class="back" href="/">← lironsofer.online</a>
   </header>
 
+  <div class="main">
+  <div class="left">
   <div class="stage" id="stage">
     <svg id="svg" viewBox="0 0 1600 900" role="img" aria-label="Line-drawn animation of Liron Sofer's career">
       <defs>
@@ -113,12 +124,11 @@ header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;
     <div class="overlay" id="overlay">
       <button class="playbig" id="startBtn" type="button">
         <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M5 3l12 7-12 7z" fill="currentColor"/></svg>
-        Play with voice &amp; music
+        Play my story · voice &amp; music
       </button>
     </div>
   </div>
 
-  <div class="caption" id="caption" aria-live="polite"></div>
 
   <div class="transport">
     <button class="iconbtn" id="playBtn" type="button" aria-label="Play"></button>
@@ -129,7 +139,12 @@ header p{margin:0;font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;
   </div>
 
 
+  </div>
+  <div class="side">
+  <div class="caption" id="caption" aria-live="polite"></div>
   <ol class="chapters" id="chapters"></ol>
+  </div>
+  </div>
 </div>
 
 <script>
@@ -153,7 +168,7 @@ function penta(cx,cy,r){let d='';for(let i=0;i<=5;i++){const a=-Math.PI/2+i*2*Ma
 
 /* ---------- the story ---------- */
 const scenes=[
- {key:'intro',tag:'Liron Sofer',title:'A career, drawn in one line',body:'From communications to high-tech, strategy and building my own way. About 90 seconds.',
+ {key:'intro',tag:'Liron Sofer',title:'A career, drawn in one line',body:'From communications to high-tech, strategy and building my own way. About a minute.',
   short:'Hello',yr:'',bg:'#15283A',dur:7,draw:3,erase:1.2,chord:[50,57,64,66,69],
   main:P(fig(800,1.3,{aR:[48,-62]})),
   labels:[{t:'Liron Sofer',x:800,y:250,cls:'title',at:1.6,anchor:'middle'}]},
@@ -417,7 +432,7 @@ function seek(i){
   if(!started){audio.init();started=true;overlay.hidden=true}
   narr.resume();t=scenes[i].start;cur=-1;ended=false;playing=true;audio.resume();update(null);setPlayIcon();
 }
-$('startBtn').onclick=start;
+$('startBtn').onclick=e=>{e.stopPropagation();start()};overlay.onclick=start;
 playBtn.onclick=toggle;
 muteBtn.innerHTML=ICON.sound;
 muteBtn.onclick=()=>{audio.setMute(!audio.muted);if(audio.muted)narr.stop();else if(playing)narr.speak(scenes[cur].vo);muteBtn.innerHTML=audio.muted?ICON.muted:ICON.sound;muteBtn.setAttribute('aria-label',audio.muted?'Unmute':'Mute')};
