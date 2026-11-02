@@ -49,20 +49,21 @@ The Worker picks the AI for each job and skips any that isn't connected:
 
 | Job | Order tried |
 |---|---|
-| Web research, reading websites | Gemini → GPT → Claude |
-| Concepts, ad copy, briefs | Claude → GPT → Gemini |
-| Ad artwork (illustrations) | Claude → GPT → Gemini |
-| AI photos | OpenAI image model |
+| Creative Studio: reading the brand's website | Claude → GPT → Gemini |
+| Creative Studio: concepts, tone and ad copy | GPT → Claude → Gemini |
+| Creative Studio: finished ad images | Nano Banana (Gemini) → OpenAI image model |
+| Web research in the other tools | Gemini → GPT → Claude |
+| Other writing | Claude → GPT → Gemini |
 
 If one fails, the next one answers. To change the order, add a **Text** variable `ROUTES`, e.g. `{"copy":["openai","claude"]}`.
 
-### Optional: connect GPT (OpenAI) and AI photos
+### Optional: connect GPT (OpenAI)
 
 1. At **platform.openai.com** sign in, add billing credit, and set a monthly limit under **Settings → Limits**.
 2. **API keys → Create new secret key**. Copy it (starts with `sk-`).
 3. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `OPENAI_API_KEY`, value = the key. Deploy.
 
-### Optional: connect Gemini (Google)
+### Optional: connect Gemini (Google): research and Nano Banana images
 
 1. At **aistudio.google.com** sign in and click **Get API key → Create API key**.
 2. Cloudflare → your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `GEMINI_API_KEY`, value = the key. Deploy.

@@ -1,0 +1,727 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Creative Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=Caveat:wght@700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: single-column guided flow (type → website → platforms → concepts → creatives) under a step rail; results widen to a tabbed board */
+:root{
+  --bg:#f6f4f9; --panel:#ffffff; --ink:#1d1a26; --muted:#6a6478; --line:#e3dfeb; --accent:#5b3fd1; --accent-ink:#ffffff; --accent-soft:#ece7fd;
+  --ok:#1f7a4d; --ok-bg:#e2f3e9; --over:#b3362c; --over-bg:#f9e3e0; --warn:#8a5a00; --warn-bg:#fbf0d9;
+  --serp-link:#1a0dab; --serp-url:#2a6a3a;
+  --f-display:"Bricolage Grotesque",Georgia,serif; --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#13111a; --panel:#1c1925; --ink:#ece9f3; --muted:#a39db3; --line:#2e2a3a; --accent:#a893ff; --accent-ink:#15111f; --accent-soft:#2a2342;
+  --ok:#6fd39c; --ok-bg:#183a29; --over:#f08a80; --over-bg:#40201d; --warn:#f0c674; --warn-bg:#3a2e14;
+  --serp-link:#9db8ff; --serp-url:#7fcf95; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13111a; --panel:#1c1925; --ink:#ece9f3; --muted:#a39db3; --line:#2e2a3a; --accent:#a893ff; --accent-ink:#15111f; --accent-soft:#2a2342;
+  --ok:#6fd39c; --ok-bg:#183a29; --over:#f08a80; --over-bg:#40201d; --warn:#f0c674; --warn-bg:#3a2e14;
+  --serp-link:#9db8ff; --serp-url:#7fcf95; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-block:22px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:18px}
+h1{font:800 28px var(--f-display);margin:0;letter-spacing:-.02em}
+h2{font:700 20px var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h3{font:600 15px var(--f-body);margin:0}
+.sub{color:var(--muted);font-size:13px}
+.mode{font:600 11px var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.mode.on{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+
+
+.rail{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding:0;list-style:none}
+.rail button{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 13px var(--f-body);padding:6px 12px 6px 6px;border-radius:999px;cursor:pointer}
+.rail button[disabled]{cursor:default;opacity:.55}
+.rail .n{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--bg);font-size:12px;font-variant-numeric:tabular-nums}
+.rail button.done .n{background:var(--accent-soft);color:var(--accent)}
+.rail button[aria-current="step"]{border-color:var(--ink);color:var(--ink)}
+.rail button[aria-current="step"] .n{background:var(--ink);color:var(--panel)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.lead{color:var(--muted);margin:4px 0 0;max-width:62ch}
+
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.choice{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:18px;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:6px}
+.choice:hover{border-color:var(--accent)}
+.choice[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.choice .t{font:700 18px var(--f-display)}
+.choice .d{color:var(--muted);font-size:13px}
+.choice .eg{font-size:12px;color:var(--accent);font-weight:600}
+
+label,.lbl{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;font:14px var(--f-body);padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+textarea{resize:vertical;min-height:64px}
+.urlrow{display:flex;gap:8px;flex-wrap:wrap}
+.urlrow input{flex:1 1 260px;min-width:0;font-size:15px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.swatches{display:flex;gap:8px;align-items:center}
+.swatches input[type=color]{width:40px;height:34px;padding:2px;flex:none}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600}
+details[open] summary{margin-bottom:8px}
+
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 13px var(--f-body);padding:9px 15px;border-radius:8px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.big{font-size:15px;padding:11px 20px}
+.btn.link{border:none;background:none;color:var(--accent);padding:4px 0;text-decoration:underline;text-underline-offset:2px}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.choice:focus-visible,.chip:focus-visible,.tab:focus-visible,.rail button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.actions .right{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+
+.note{font-size:12px;color:var(--muted)}
+.notice{font-size:13px;padding:10px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn)}
+.notice.info{background:var(--accent-soft);color:var(--accent)}
+.busy{display:flex;align-items:center;gap:12px;padding:28px 4px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25;transform:scale(.7)}}
+
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.chip{text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:12px;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:3px}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip .t{font-weight:700}
+.chip .d{font-size:12px;color:var(--muted)}
+.chip .k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.chip .hook{font:700 16px/1.25 var(--f-display);margin-top:2px}
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:none;color:var(--muted);font:600 13px var(--f-body);padding:6px 12px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+
+.creative{border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:18px}
+.creative .copy{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tag{align-self:flex-start;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:4px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field .k{display:flex;justify-content:space-between;gap:8px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.field [contenteditable]{border-radius:6px;padding:4px 6px;margin:0 -6px;outline:none;overflow-wrap:anywhere}
+.field [contenteditable]:focus{background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
+.cnt{font-variant-numeric:tabular-nums;padding:0 6px;border-radius:999px;white-space:nowrap}
+.cnt.ok{background:var(--ok-bg);color:var(--ok)} .cnt.over{background:var(--over-bg);color:var(--over)}
+.visuals{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;min-width:0}
+.vis{display:flex;flex-direction:column;gap:5px;max-width:100%}
+.vis .cap{font-size:11px;color:var(--muted)}
+.ad{container-type:size;position:relative;overflow:hidden;border-radius:6px;max-width:100%;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.ad .in{position:absolute;inset:0;padding:7cqmin;display:flex;flex-direction:column;justify-content:space-between;gap:3cqmin}
+.ad .logo{font:800 max(8px,6cqmin) var(--f-display);letter-spacing:-.02em;opacity:.9}
+.ad .hl{font:800 max(9px,10.5cqmin)/1.03 var(--f-display);letter-spacing:-.02em}
+.ad .sb{font:500 max(7px,4.8cqmin)/1.25 var(--f-body);opacity:.85}
+.ad .cta{align-self:flex-start;font:700 max(7px,4.4cqmin) var(--f-body);padding:2cqmin 4cqmin;border-radius:999px}
+.ad .shape{position:absolute;border-radius:50%;opacity:.2}
+.ad.wide .in{flex-direction:row;align-items:center}
+.ad.wide .hl{font-size:max(9px,26cqh)} .ad.wide .sb{display:none}
+.ad.wide .cta{align-self:center;font-size:max(7px,14cqh);padding:4cqh 8cqh}
+.ad.tall .hl{font-size:max(9px,15cqw)} .ad.tall .sb{font-size:max(7px,7.5cqw)} .ad.tall .cta{font-size:max(7px,7.5cqw)}
+.ad.story .in{justify-content:flex-end;padding-bottom:14cqh}
+.ad.story .logo{position:absolute;top:6cqw;left:7cqw}
+.serp{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg);max-width:560px;display:flex;flex-direction:column;gap:3px}
+.serp .spon{font-size:12px;font-weight:700}
+.serp .u{font-size:12px;color:var(--serp-url);overflow-wrap:anywhere}
+.serp .h{font-size:18px;color:var(--serp-link);line-height:1.3}
+.serp .d{font-size:13px;color:var(--muted)}
+.hidden{display:none}
+img.adimg{display:block;max-width:100%;height:auto;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.25);background:var(--bg)}
+.adwait{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;padding:10px;max-width:100%;border-radius:6px;border:1px dashed var(--line);background:var(--bg);color:var(--muted);font-size:12px}
+canvas.adc{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.vis .cap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cap .btn.link{font-size:11px;padding:0}
+.fmtrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fmtrow select{width:auto;font-size:12px;padding:5px 8px}
+.imgrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.imgrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.imgrow .ph{width:72px;height:72px;border-radius:8px;border:1px dashed var(--line);display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center}
+@media (max-width:760px){.creative{grid-template-columns:1fr}.panel{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Creative Studio</h1>
+      <div class="sub">From a website to ready-to-launch ad creatives for Meta, LinkedIn, Google and TikTok.</div>
+    </div>
+    <span class="mode" id="mode">Checking AI…</span>
+  </header>
+  <ol class="rail" id="rail" aria-label="Steps"></ol>
+  <main class="panel" id="view" aria-live="polite"></main>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cap=s=>{s=String(s||"").trim();return s?s.charAt(0).toUpperCase()+s.slice(1):s};
+const lc=s=>{s=String(s||"").trim();return s?s.charAt(0).toLowerCase()+s.slice(1):s};
+
+/* ---------- platform specs (recommended lengths before truncation) ---------- */
+const PLAT={
+  meta:{name:"Meta",long:"Facebook & Instagram",fmt:"Feed, Stories, Reels",
+    fields:[{k:"primary",l:"Primary text",max:125},{k:"headline",l:"Headline",max:40},{k:"description",l:"Description",max:30}],
+    sizes:[["Feed 1:1",1080,1080],["Feed 4:5",1080,1350],["Stories 9:16",1080,1920]]},
+  linkedin:{name:"LinkedIn",long:"Sponsored content",fmt:"Single image",
+    fields:[{k:"intro",l:"Intro text",max:150},{k:"headline",l:"Headline",max:70}],
+    sizes:[["Single image 1.91:1",1200,627],["Square 1:1",1200,1200]]},
+  google_search:{name:"Google Search",long:"Responsive search ad",fmt:"Text ad",
+    fields:[{k:"headlines",l:"Headline",max:30,count:5},{k:"descriptions",l:"Description",max:90,count:2}],sizes:[]},
+  google_display:{name:"Google Display",long:"Responsive display ad",fmt:"Banners",
+    fields:[{k:"short_headline",l:"Short headline",max:30},{k:"long_headline",l:"Long headline",max:90},{k:"description",l:"Description",max:90}],
+    sizes:[["Medium rectangle",300,250],["Leaderboard",728,90],["Skyscraper",160,600]]},
+  tiktok:{name:"TikTok",long:"In-feed ad",fmt:"Vertical video cover",
+    fields:[{k:"ad_text",l:"Ad text",max:100},{k:"hook",l:"On-screen hook",max:40}],
+    sizes:[["In-feed 9:16",1080,1920]]}
+};
+const GOALS={trial:["Sign-ups or free trial","Start free trial","Try free"],call:["Book a call or demo","Book a call","Book now"],
+  buy:["Sales","Shop now","Shop now"],lead:["Leads (form fill)","Get a quote","Get a quote"],visit:["Website visits","Learn more","Learn more"]};
+const ANGLES=["Pain","Outcome","Social proof","Curiosity","Objection","Urgency","Identity"];
+
+/* ---------- worked examples (fictional brands) ---------- */
+const EXAMPLES={
+  private:{url:"pulsefit-coaching.com",profile:{name:"PulseFit Coaching",what:"Online personal training with weekly plans and video check-ins",audience:"busy professionals in their 30s and 40s",pain:"no time to get to the gym consistently",proof:"clients train 3x a week on average after the first month",tone:"Friendly",bg:"#14213d",accent:"#fca311",confidence:"high"}},
+  company:{url:"ledgerly.app",company:{company:"Ledgerly",bg:"#1d3b2f",accent:"#d8f26b",confidence:"high",products:[
+    {name:"Ledgerly Invoicing",what:"Automated invoicing and payment reminders",audience:"agency owners and finance leads",pain:"chasing late client payments",proof:"clients get paid 11 days faster on average"},
+    {name:"Ledgerly Expenses",what:"Receipt capture and expense approvals from your phone",audience:"teams of 10 to 200 people",pain:"month-end expense reports nobody wants to do",proof:"approvals in under a day"},
+    {name:"Ledgerly Payroll",what:"Payroll and contractor payments in one run",audience:"founders and operations managers",pain:"paying staff and contractors across three tools",proof:""}]}}
+};
+
+/* ---------- state ---------- */
+const S={step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,
+  platforms:new Set(["meta","google_search"]),goal:"trial",concepts:[],picked:new Set(),creatives:[],tab:null,
+  busy:null,ctl:null,notice:"",usedAI:false};
+let sample=null,downloads=null,aiChecked=false;
+const ART={},PHOTO={},IMGS={};let CAPS={images:false};
+(window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};if(S.creatives.length&&!Object.keys(IMGS).length)queueImages();else refreshArt()}).catch(()=>{});
+
+const STEPS=()=>S.mode==="company"
+  ?[["type","Project type"],["site","Website & product"],["platforms","Platforms"],["create","Creatives"]]
+  :[["type","Project type"],["site","Website"],["platforms","Platforms"],["concepts","Concepts"],["create","Creatives"]];
+const stepId=()=>STEPS()[S.step][0];
+function maxReached(){ // highest step the user may jump to
+  if(!S.mode)return 0; if(!S.brief)return 1; if(stepId()==="create"||S.creatives.length)return STEPS().length-1;
+  if(S.mode==="private"&&S.concepts.length)return 3; return 2;}
+
+/* ---------- AI ---------- */
+(async()=>{
+  try{ if(window.claude&&window.claude.use){ [sample,downloads]=await Promise.all([window.claude.use("sample"),window.claude.use("downloads")]); } }catch(e){sample=null}
+  aiChecked=true; paintMode(); render();
+})();
+function paintMode(){const m=$("mode");
+  if(!aiChecked){m.textContent="Checking AI…";return}
+  m.className="mode"+(sample?" on":""); m.textContent=sample?"AI connected":"Template mode";
+  m.title=sample?"Analysis, copy and artwork are written by AI":"AI isn't available in this view, so the studio uses built-in templates";}
+const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
+async function ask(prompt,label,web){
+  S.ctl=new AbortController(); S.busy=label; render();
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,task:"site"}:{signal:S.ctl.signal,task:"creative"}); }
+  finally{ S.busy=null; S.ctl=null; }
+}
+function aiError(e){const c=e&&e.code;
+  if(c==="cancelled")return "stop";
+  if(FATAL.includes(c)){sample=null;paintMode();return "fallback"}
+  if(c==="not_configured"){S.notice="The AI isn't connected right now. Try again later.";return "error"}
+  if(c==="rate_limited")S.notice="You've hit a usage limit for now. Wait a few minutes and try again.";
+  else if(c==="invalid_json")S.notice="The AI's answer came back in the wrong shape. Try again.";
+  else if(c==="refused")S.notice="The AI couldn't help with this input. Check the website or details and try again.";
+  else S.notice="Couldn't reach the AI just now. Try again.";
+  return "error";}
+
+const briefText=b=>`Brand / product: ${b.name}${b.brand&&b.brand!==b.name?` (by ${b.brand})`:""}
+What it does: ${b.what}
+Audience: ${b.audience}
+Main pain it solves: ${b.pain}
+Proof point: ${b.proof||"(none given; do not invent numbers)"}
+Tone: ${b.tone}
+Website: ${S.url}`;
+
+/* ---------- step: analyze website ---------- */
+function normUrl(u){u=u.trim();if(!u)return"";if(!/^https?:\/\//i.test(u))u="https://"+u;try{return new URL(u).hostname.replace(/^www\./,"")}catch(e){return""}}
+function domainName(host){const base=host.split(".")[0]||host;return base.split(/[-_]/).filter(Boolean).map(cap).join(" ")}
+
+async function analyze(){
+  S.notice=""; const host=normUrl($("url").value); S.url=host; S.paste=($("paste")||{}).value||"";
+  if(!host){S.notice="Enter a website address, like mysite.com.";render();return}
+  S.profile=null;S.company=null;S.product=-1;S.brief=null;S.concepts=[];S.picked.clear();S.creatives=[];
+  const ex=EXAMPLES[S.mode]; if(ex&&host===ex.url){applyExample();return}
+  if(sample){
+    const company=S.mode==="company";
+    const shape=company
+      ?`{"company":"Company name","bg":"#hex dark brand color","accent":"#hex accent color","image":"main image URL from the page data, or empty","logo":"logo URL from the page data, or empty","confidence":"high|medium|low","products":[{"name":"","what":"one sentence","audience":"","pain":"main pain, lowercase phrase","proof":"real proof point if you know one, else empty string"}]}  (2 to 6 products or services)`
+      :`{"name":"brand or person's business name","what":"what they offer, one sentence","audience":"who it's for","pain":"the main pain it solves, lowercase phrase","proof":"real proof point if you know one, else empty string","tone":"Direct|Friendly|Bold|Premium","bg":"#hex dark brand color","accent":"#hex accent color","image":"main image URL from the page data, or empty","logo":"logo URL from the page data, or empty","confidence":"high|medium|low"}`;
+    const prompt=`You are a senior performance marketer preparing an ad brief.
+The ${company?"company":"person or small business"} behind this website: ${host}
+${S.paste.trim()?`Text copied from their website:\n"""\n${S.paste.slice(0,8000)}\n"""\n`:""}
+${window.__aiWeb?`If the website's own page text is included below, base the brief on it first. Also search the web for "${host}" and read what the site itself says about its offer, audience and proof. Base the brief only on what you find; the domain name and words in it (like "cafe" or "studio") are not evidence of what the business does. If the search finds nothing about the site, make sensible assumptions and set confidence to "low". `:`Use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". `}Never invent statistics or awards.
+Reply with only JSON in this shape:
+${shape}`;
+    try{
+      const r=await ask(prompt,"Reading "+host+"…",true); S.usedAI=true;
+      if(company){const p=Array.isArray(r.products)?r.products.filter(x=>x&&x.name).slice(0,6):[];
+        S.company={company:r.company||domainName(host),bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),image:url(r.image),logo:url(r.logo),confidence:r.confidence||"medium",products:p.length?p:[{name:r.company||domainName(host),what:"",audience:"",pain:"",proof:""}]};
+        if(S.company.products.length===1)pickProduct(0);
+      }else{S.profile={name:r.name||domainName(host),what:r.what||"",audience:r.audience||"",pain:r.pain||"",proof:r.proof||"",tone:["Direct","Friendly","Bold","Premium"].includes(r.tone)?r.tone:"Friendly",bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),image:url(r.image),logo:url(r.logo),confidence:r.confidence||"medium"};S.brief={...S.profile}}
+      render();return;
+    }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
+  }
+  // template mode: name from the domain, the rest filled in by the user
+  const name=domainName(host);
+  if(S.mode==="company"){S.company={company:name,bg:"#1f2a44",accent:"#ffb547",confidence:"none",products:[{name:name,what:"",audience:"",pain:"",proof:""}]};pickProduct(0)}
+  else{S.profile={name,what:"",audience:"",pain:"",proof:"",tone:"Friendly",bg:"#1f2a44",accent:"#ffb547",confidence:"none"};S.brief={...S.profile}}
+  render();
+}
+function url(v){v=String(v||"").trim();return /^https?:\/\/\S+$/i.test(v)?v:""}
+function hex(v,d){return /^#[0-9a-f]{6}$/i.test(String(v||"").trim())?String(v).trim():d}
+function applyExample(){const ex=EXAMPLES[S.mode];S.url=ex.url;S.notice="";
+  if(S.mode==="company"){S.company=JSON.parse(JSON.stringify(ex.company));S.product=-1;S.brief=null}
+  else{S.profile={...ex.profile};S.brief={...S.profile}}
+  render();}
+function pickProduct(i){S.product=i;const c=S.company,p=c.products[i];
+  S.brief={name:p.name,brand:c.company,what:p.what||"",audience:p.audience||"",pain:p.pain||"",proof:p.proof||"",tone:(S.brief&&S.brief.tone)||"Direct",bg:c.bg,accent:c.accent,image:c.image||"",logo:c.logo||"",upload:(S.brief&&S.brief.upload)||""};
+  S.concepts=[];S.picked.clear();S.creatives=[];}
+
+/* ---------- step: concepts ---------- */
+async function suggestConcepts(fresh){
+  S.notice="";const b=S.brief;
+  if(sample){
+    const plats=[...S.platforms].map(p=>PLAT[p].name).join(", ");
+    const prompt=`You are the lead creative strategist at a performance agency known for specific, scroll-stopping ads. Suggest 6 distinct messaging concepts for paid ads.
+${briefText(b)}
+Platforms: ${plats}
+Campaign goal: ${GOALS[S.goal][0]}
+${fresh&&S.concepts.length?`Avoid repeating these earlier concepts: ${S.concepts.map(c=>c.title).join("; ")}\n`:""}Each concept uses a different angle from: ${ANGLES.join(", ")}.
+How to make them good:
+- Start from a real customer insight: a specific moment, frustration or wish this audience has, the way they'd say it themselves.
+- Be concrete to THIS product and audience: name situations, objects, times, people and details from the brief. A concept that would fit any company is a failure.
+- Hooks must stop the scroll: a vivid scenario, a surprising truth, a pointed question, a confession, a playful twist, or a bold claim the brief supports. Max 40 characters.
+- Banned: "unlock", "elevate", "game-changer", "seamless", "next level", "look no further", "revolutionize", "effortless", "in today's world", rhetorical "Imagine…".
+- Never invent statistics, reviews or awards.
+Reply with only a JSON array of 6 objects: [{"angle":"one of the angles","title":"concept name, 2-5 words","insight":"the customer truth, one sentence","message":"the core message, one sentence","hook":"ad hook, max 40 characters"}]`;
+    try{const r=await ask(prompt,"Finding messaging concepts…");S.usedAI=true;
+      const list=(Array.isArray(r)?r:r.concepts||[]).filter(c=>c&&c.hook).slice(0,6);
+      if(list.length){S.concepts=list;S.picked=new Set([0,1,2].filter(i=>i<list.length));render();return}
+      S.notice="The AI didn't return any concepts. Try again.";render();return;
+    }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
+  }
+  S.concepts=templateConcepts(b,fresh?1:0);S.picked=new Set([0,1,2]);render();
+}
+function templateConcepts(b,shift){
+  const n=b.name,pain=lc(b.pain)||"the usual hassle",aud=b.audience||"people like you",what=lc(b.what)||"what you need";
+  const sets=[
+    ["Pain","Name the problem",`${n} takes ${pain} off your plate.`,[`Still dealing with ${pain}?`,`Done with ${pain}?`]],
+    ["Outcome","Show the result",b.proof?`${cap(b.proof)}.`:`${cap(what)}, without the hassle.`,[b.proof?cap(b.proof):`Get results that last`,`See the difference in weeks`]],
+    ["Social proof","Peers already use it",`${cap(aud)} choose ${n} for ${what}.`,[`Why ${aud} choose ${n}`,`The pick for ${aud}`]],
+    ["Curiosity","The simple fix",`There is an easier way to handle ${pain}.`,[`The simple fix for ${pain}`,`What works when nothing else did`]],
+    ["Objection","Easier than you think",`Getting started with ${n} is quick and low-risk.`,[`Easier to start than you think`,`No big commitment to start`]],
+    ["Urgency","Start now",`Every week you wait, ${pain} costs you more.`,[`Start this week, not someday`,`Your best month starts now`]]];
+  return sets.map(([angle,title,message,hooks],i)=>({angle,title,message,hook:hooks[(shift+i)%2]}));
+}
+
+/* ---------- step: creatives ---------- */
+async function create(){
+  S.notice="";const b=S.brief,plats=[...S.platforms];
+  const concepts=S.mode==="private"?[...S.picked].sort().map(i=>S.concepts[i]):null;
+  if(sample){
+    const specs=plats.map(p=>{const P=PLAT[p];return `- "${p}" (${P.name} ${P.long}): fields {${P.fields.map(f=>f.count?`"${f.k}": array of ${f.count} strings, each max ${f.max} chars`:`"${f.k}": max ${f.max} chars`).join("; ")}}`}).join("\n");
+    const cTxt=concepts?`Write one creative per platform for EACH of these concepts:\n${concepts.map(c=>`- "${c.title}" (${c.angle}): ${c.message} Hook: ${c.hook}`).join("\n")}`
+      :`Choose the 3 strongest, clearly different messaging concepts for this product yourself (angles such as ${ANGLES.join(", ")}), and write one creative per platform for each.`;
+    const hasImg=!!(b.upload||b.image);
+    const prompt=`You are a senior performance copywriter and art director. Write platform-ready ad creatives that feel native to each platform and impossible to scroll past.
+${briefText(b)}
+Campaign goal: ${GOALS[S.goal][0]} (default call to action: "${GOALS[S.goal][1]}")
+${cTxt}
+Platforms and their copy fields (stay within the character limits; count carefully):
+${specs}
+Copy rules: be concrete and specific to this product and audience (situations, objects, moments, the brief's details); vary sentence rhythm; write like a person, not a brochure. Banned: "unlock", "elevate", "game-changer", "seamless", "next level", "look no further", "revolutionize", "effortless". Each platform's copy should sound native to it (TikTok casual and first-person, LinkedIn credible and specific, Search direct and keyword-led).
+Every creative also needs a "visual": the brief for its ad image, which an image model will design as a finished ad.
+- "headline": the text printed on the image, max 45 chars
+- "cta": button text on the image, max 16 chars
+- "direction": 3-5 sentences of art direction: the visual idea (a scene, object, character, metaphor or moment), composition, style (e.g. editorial photo, bold illustration, 3D, collage, typographic poster, UGC-style), mood, lighting and how the brand colors appear. It must dramatize THIS creative's concept for THIS brand and platform.
+Every creative's direction must be clearly different from all the others in style and idea. No stock-photo clichés (handshakes, people pointing at laptops, generic smiling teams).
+Match the tone. Use the proof point only as given; never invent numbers, awards, reviews or customer names.
+Reply with only JSON: {"creatives":[{"platform":"meta","concept":"concept title","angle":"angle","fields":{...},"visual":{...}}]}`;
+    try{const r=await ask(prompt,"Writing creatives for "+plats.map(p=>PLAT[p].name).join(", ")+"…");S.usedAI=true;
+      const list=(r&&Array.isArray(r.creatives)?r.creatives:[]).filter(c=>c&&PLAT[c.platform]&&c.fields);
+      if(list.length){list.forEach(c=>{c.visual={...fillVisual({...(c.visual||{}),format:"bold",_concept:c.concept},b),direction:String((c.visual||{}).direction||"")}});S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;Object.keys(IMGS).forEach(k=>delete IMGS[k]);render();queueImages();return}
+      S.notice="The AI didn't return any creatives. Try again.";render();return;
+    }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
+  }
+  const cs=concepts||templateConcepts(b,0).slice(0,3);
+  S.creatives=[];plats.forEach(p=>cs.forEach(c=>S.creatives.push(templateCreative(p,c,b))));
+  S.tab=plats[0];render();
+}
+function fit(s,max){s=String(s||"").trim();if(s.length<=max)return s;const cut=s.slice(0,max-1);const sp=cut.lastIndexOf(" ");return (sp>max*.6?cut.slice(0,sp):cut).replace(/[,.;:\s]+$/,"")+"…"}
+function templateCreative(p,c,b){
+  const cta=GOALS[S.goal][1],short=GOALS[S.goal][2],n=b.name,what=b.what||n,proof=b.proof?cap(b.proof)+".":"";
+  const F={
+    meta:{primary:`${c.hook} ${c.message} ${proof}`.trim(),headline:fit(c.hook,40),description:fit(cta,30)},
+    linkedin:{intro:`${c.hook} ${c.message} ${proof}`.trim(),headline:fit(`${n}: ${lc(what)}`,70)},
+    google_search:{headlines:[fit(n,30),fit(c.hook,30),fit(cta,30),fit(what,30),fit(c.title,30)],descriptions:[fit(`${cap(what)}. ${proof}`,90),fit(`${c.message} ${cta} today.`,90)]},
+    google_display:{short_headline:fit(c.hook,30),long_headline:fit(`${c.hook} ${n} helps ${b.audience||"you"}.`,90),description:fit(`${c.message} ${proof}`,90)},
+    tiktok:{ad_text:fit(`${c.message} ${cta}.`,100),hook:fit(c.hook,40)}
+  }[p];
+  const fmts=["phone","checklist","beforeafter","notification","compare","bold"],k=Math.abs([...c.title].reduce((a,ch)=>a+ch.charCodeAt(0),0))%fmts.length;
+  return {platform:p,concept:c.title,angle:c.angle,fields:F,visual:fillVisual({format:fmts[k],headline:c.hook,sub:b.proof?cap(b.proof):cap(what),cta:short},b)};
+}
+
+/* ---------- rendering ---------- */
+function rail(){const steps=STEPS(),mx=maxReached();
+  $("rail").innerHTML=steps.map(([id,l],i)=>`<li><button type="button" data-go="${i}" ${i>mx?"disabled":""} class="${i<S.step?"done":""}" ${i===S.step?'aria-current="step"':""}><span class="n">${i<S.step?"✓":i+1}</span>${esc(l)}</button></li>`).join("");}
+
+function render(){rail();const v=$("view");
+  if(S.busy){v.innerHTML=`<div class="busy"><span class="dot" aria-hidden="true"></span><span>${esc(S.busy)}</span><button type="button" class="btn" data-act="stop" style="margin-left:auto">Stop</button></div>`;return}
+  const notice=S.notice?`<div class="notice">${esc(S.notice)}</div>`:"";
+  v.innerHTML=({type:vType,site:vSite,platforms:vPlatforms,concepts:vConcepts,create:vCreate})[stepId()](notice);
+  if(stepId()==="create"){document.querySelectorAll("#view .field").forEach(count);paintAll();if(document.fonts){document.fonts.ready.then(paintAll);if(!window.__fontHook){window.__fontHook=1;document.fonts.addEventListener("loadingdone",()=>paintAll())}}}
+}
+
+function vType(n){return `<div class="stack">
+  <div><h2>What are you promoting?</h2><p class="lead">Pick the kind of project. You'll add your website next, and the studio fills in the brief for you.</p></div>
+  <div class="choices">
+    <button type="button" class="choice" data-mode="private" aria-pressed="${S.mode==="private"}"><span class="t">Private project</span><span class="d">One person or small business with one main offer.</span><span class="eg">e.g. a personal trainer, a coach, a local shop</span></button>
+    <button type="button" class="choice" data-mode="company" aria-pressed="${S.mode==="company"}"><span class="t">Company</span><span class="d">A company with several products or services. You'll choose which one to promote.</span><span class="eg">e.g. a software company, a brand with product lines</span></button>
+  </div>${n}</div>`}
+
+function vSite(n){const company=S.mode==="company",ex=EXAMPLES[S.mode];
+  let body="";
+  if(company&&S.company){const c=S.company;
+    body=`<div class="stack">${conf(c.confidence)}
+      <div><h3>Which product are you promoting?</h3><p class="note">Found at ${esc(c.company)}. Pick one to build the brief.</p></div>
+      <div class="products">${c.products.map((p,i)=>`<button type="button" class="chip" data-prod="${i}" aria-pressed="${S.product===i}"><span class="t">${esc(p.name)}</span><span class="d">${esc(p.what||"Add a description below")}</span></button>`).join("")}</div>
+      ${S.brief?briefForm():""}</div>`;
+  }else if(!company&&S.profile){body=`<div class="stack">${conf(S.profile.confidence)}${briefForm()}</div>`}
+  return `<div class="stack">
+    <div><h2>${company?"Your company website":"Your website"}</h2><p class="lead">${company?"Add the company's site. The studio lists its products so you can pick one.":"Add your site. The studio fills in what you do, who it's for and the main pain you solve."}</p></div>
+    <form class="stack" id="siteform">
+      <div class="urlrow"><input id="url" type="text" inputmode="url" autocomplete="url" placeholder="${company?"yourcompany.com":"yourwebsite.com"}" value="${esc(S.url)}" aria-label="Website address"><button class="btn primary" type="submit">${S.brief||S.company?"Analyze again":"Analyze"}</button></div>
+      <details ${S.paste?"open":""}><summary>Add text from your site for a more accurate brief (optional)</summary><textarea id="paste" rows="4" placeholder="Paste your homepage or About page text here">${esc(S.paste)}</textarea></details>
+      <div class="note">No site handy? <button type="button" class="btn link" data-act="example">Use the example: ${esc(ex.url)}</button></div>
+    </form>${n}${body}
+    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right"><button type="button" class="btn primary" data-act="next" ${S.brief?"":"disabled"}>Choose platforms</button></div></div>
+  </div>`}
+function conf(c){
+  if(c==="none")return `<div class="notice">AI isn't available here, so the studio couldn't read the site. Fill in the details below and the templates do the rest.</div>`;
+  if(c==="low")return `<div class="notice">The AI doesn't know this site well, so these details are a best guess. Check them, or paste text from your site above and analyze again.</div>`;
+  return `<div class="notice info">Filled in from ${esc(S.url)}. Edit anything that's off.</div>`}
+function briefForm(){const b=S.brief;
+  return `<div class="stack" id="briefform">
+    <div class="grid2">
+      <div><label for="f-name">Name</label><input id="f-name" data-f="name" value="${esc(b.name)}"></div>
+      <div><label for="f-audience">Audience</label><input id="f-audience" data-f="audience" value="${esc(b.audience)}" placeholder="Who you want to reach"></div>
+    </div>
+    <div><label for="f-what">What it does</label><textarea id="f-what" data-f="what" rows="2" placeholder="One sentence about your offer">${esc(b.what)}</textarea></div>
+    <div class="grid2">
+      <div><label for="f-pain">Main pain it solves</label><input id="f-pain" data-f="pain" value="${esc(b.pain)}" placeholder="e.g. no time to get to the gym"></div>
+      <div><label for="f-proof">Proof point (optional)</label><input id="f-proof" data-f="proof" value="${esc(b.proof)}" placeholder="A real result, rating or number"></div>
+    </div>
+    <div class="grid2">
+      <div><label for="f-tone">Tone</label><select id="f-tone" data-f="tone">${["Direct","Friendly","Bold","Premium"].map(t=>`<option ${b.tone===t?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div><span class="lbl">Image for the ads</span><div class="imgrow">${b.upload||imgUrl(b.image)?`<img src="${esc(b.upload||imgUrl(b.image))}" alt="">`:`<span class="ph">No image</span>`}
+        <label class="btn" for="f-upload" style="margin:0;display:inline-block">Upload image</label><input type="file" id="f-upload" accept="image/*" hidden>
+        ${b.upload?'<button type="button" class="btn link" data-act="noupload">Use the site image</button>':""}</div>
+        <span class="note">${b.image&&!b.upload?"Found on the website. ":""}Upload a product or team photo to use it in the ads.</span></div>
+      <div><span class="lbl">Brand colors</span><div class="swatches"><input type="color" id="f-bg" data-f="bg" value="${esc(b.bg)}" aria-label="Background color"><input type="color" id="f-accent" data-f="accent" value="${esc(b.accent)}" aria-label="Accent color"><span class="note">background · accent</span></div></div>
+    </div></div>`}
+
+function vPlatforms(n){const company=S.mode==="company";
+  return `<div class="stack">
+    <div><h2>Where will the ads run?</h2><p class="lead">Pick one or more platforms. Copy follows each platform's character limits and the visuals come in its main sizes.</p></div>
+    <div class="chips">${Object.entries(PLAT).map(([k,P])=>`<button type="button" class="chip" data-plat="${k}" aria-pressed="${S.platforms.has(k)}"><span class="t">${P.name}</span><span class="d">${P.long} · ${P.fmt}</span></button>`).join("")}</div>
+    <div style="max-width:320px"><label for="goal">Campaign goal</label><select id="goal">${Object.entries(GOALS).map(([k,g])=>`<option value="${k}" ${S.goal===k?"selected":""}>${g[0]}</option>`).join("")}</select></div>
+    ${n}
+    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right">
+      <button type="button" class="btn primary big" data-act="${company?"create":"concepts"}" ${S.platforms.size?"":"disabled"}>${company?"Create creatives":"Suggest concepts"}</button></div></div>
+  </div>`}
+
+function vConcepts(n){
+  return `<div class="stack">
+    <div><h2>Pick your messages</h2><p class="lead">Concepts for ${esc(S.brief.name)}. Choose up to three. Each one becomes a creative on every platform you picked.</p></div>
+    <div class="chips">${S.concepts.map((c,i)=>`<button type="button" class="chip" data-con="${i}" aria-pressed="${S.picked.has(i)}"><span class="k">${esc(c.angle)} · ${esc(c.title)}</span><span class="hook">${esc(c.hook)}</span><span class="d">${esc(c.message)}</span>${c.insight?`<span class="d" style="font-style:italic">Insight: ${esc(c.insight)}</span>`:""}</button>`).join("")}</div>
+    <p class="note">${S.picked.size} of 3 selected</p>${n}
+    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right">
+      <button type="button" class="btn" data-act="reconcepts">Suggest new concepts</button>
+      <button type="button" class="btn primary big" data-act="create" ${S.picked.size?"":"disabled"}>Create</button></div></div>
+  </div>`}
+
+function vCreate(n){
+  if(!S.creatives.length)return `<div class="stack">${n||'<p class="note">No creatives yet.</p>'}<div class="actions"><button type="button" class="btn" data-act="back">Back</button><button type="button" class="btn primary" data-act="create">Create</button></div></div>`;
+  const plats=[...S.platforms].filter(p=>S.creatives.some(c=>c.platform===p));if(!plats.includes(S.tab))S.tab=plats[0];
+  const list=S.creatives.map((c,i)=>[c,i]).filter(([c])=>c.platform===S.tab);
+  return `<div class="stack">
+    <div class="actions"><div><h2>Creatives for ${esc(S.brief.name)}</h2><p class="lead">${S.creatives.length} creatives across ${plats.length} platform${plats.length>1?"s":""}. Click any text to edit it.${S.usedAI?"":" Written from templates."}</p></div>
+      <div class="right"><button type="button" class="btn" data-act="create">Regenerate</button><button type="button" class="btn primary" data-act="zip">Download all (ZIP)</button><button type="button" class="btn" data-act="csv">Download copy (CSV)</button><button type="button" class="btn" data-act="restart">New project</button></div></div>
+    ${n}
+    <div class="tabs" role="tablist">${plats.map(p=>`<button type="button" class="tab" role="tab" data-tab="${p}" aria-selected="${p===S.tab}">${PLAT[p].name}</button>`).join("")}</div>
+    ${list.map(([c,i])=>creativeCard(c,i)).join("")}
+  </div>`}
+
+function creativeCard(c,i){const P=PLAT[c.platform];
+  const fields=P.fields.map(f=>{const v=c.fields[f.k];
+    if(f.count){const arr=(Array.isArray(v)?v:[v]).filter(x=>x!=null).slice(0,f.count);
+      return arr.map((t,j)=>fieldHtml(i,f.k,j,`${f.l} ${j+1}`,f.max,t)).join("")}
+    return fieldHtml(i,f.k,-1,f.l,f.max,v)}).join("");
+  return `<article class="creative" data-i="${i}">
+    <div class="copy"><span class="tag">${esc(c.angle||"Concept")} · ${esc(c.concept||"")}</span>${fields}
+      <div><button type="button" class="btn" data-act="copy" data-i="${i}">Copy text</button></div></div>
+    <div class="visuals">${P.sizes.length?P.sizes.map(s=>adHtml(c,s,i)).join(""):serpHtml(c)}</div>
+  </article>`}
+function fieldHtml(i,k,j,label,max,text){return `<div class="field" data-max="${max}"><div class="k"><span>${esc(label)}</span><span class="cnt"></span></div><div contenteditable="true" role="textbox" aria-label="${esc(label)}" data-i="${i}" data-k="${k}" data-j="${j}">${esc(text||"")}</div></div>`}
+function count(f){const t=f.querySelector("[contenteditable]").textContent.trim(),max=+f.dataset.max,c=f.querySelector(".cnt");c.textContent=t.length+" / "+max;c.className="cnt "+(t.length<=max?"ok":"over")}
+
+function fillVisual(v,b){v={...v};const n=b.name||"it",pain=lc(b.pain)||"the old way",what=lc(b.what)||n;
+  if(!FORMATS[v.format])v.format="bold";
+  if(v.format==="photo"&&!(b.upload||b.image||(v._concept&&PHOTO[v._concept])))v.format="bold";
+  if(v.format==="art"&&!(v._concept&&ART[v._concept]&&ART[v._concept].svg))v.format="bold";
+  if(v.format==="testimonial"&&!v.quote)v.format="bold";
+  if(v.format==="stat"&&!v.stat){const m=String(b.proof||"").match(/[\d][\d.,]*\s*(%|x|×|\+|k|m)?/i);if(m){v.stat=m[0].trim();v.statLabel=v.statLabel||cap(b.proof.replace(m[0],"").trim())}else v.format="bold"}
+  if(v.format==="phone")v.screen=v.screen||n;
+  if(v.format==="beforeafter"){v.before=v.before||cap(pain);v.after=v.after||`With ${n}: ${what}`}
+  if(v.format==="checklist"&&!(v.bullets||[]).length)v.bullets=[cap(what),`Made for ${b.audience||"you"}`,`No more ${pain}`].map(x=>fit(x,40));
+  if(v.format==="notification"&&!(v.notifs||[]).length)v.notifs=[fit(`Reminder: ${pain} again today`,70),fit(`${n}: ${cap(what)}`,70)];
+  if(v.format==="chat"&&!(v.chat||[]).length)v.chat=[{from:"them",text:fit(`Ugh, ${pain} again`,60)},{from:"me",text:fit(`Try ${n}. Seriously.`,60)}];
+  if(v.format==="compare"){v.them=v.them||"The old way";if(!(v.rows||[]).length)v.rows=[fit(cap(what),32),`No ${fit(pain,26)}`,"Ready in minutes"]}
+  if(v.format==="ugc")v.note=v.note||fit(`honestly wish I'd found ${n} sooner`,60);
+  return v}
+function fmtOptions(c){const b=S.brief,v=c.visual||{},A=ART[c.concept];return Object.entries(FORMATS).filter(([k])=>!(k==="art"&&!(A&&A.svg))&&!(k==="photo"&&!(b.upload||b.image||PHOTO[c.concept]))&&!(k==="testimonial"&&!v.quote&&!(c._orig&&c._orig.quote))&&!(k==="stat"&&!v.stat&&!/\d/.test(b.proof||"")))
+  .map(([k,l])=>`<option value="${k}" ${v.format===k?"selected":""}>${l}</option>`).join("")}
+function lum(h){const n=parseInt(h.slice(1),16),f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(n>>16&255)+.7152*f(n>>8&255)+.0722*f(n&255)}
+function adHtml(c,[name,w,h],i){const r=w/h,dw=r>3?Math.min(520,w):r<.6?(h>1000?190:130):Math.min(260*r,r>1.5?400:280,w);
+  const cw=Math.round(Math.min(w,dw*2)),ch=Math.round(cw/r),G=IMGS[imgKey(i,w,h)];
+  const dl=`<button type="button" class="btn link" data-act="png" data-i="${i}" data-w="${w}" data-h="${h}" data-n="${esc(name)}">Download PNG</button>`;
+  if(G&&G.url)return `<div class="vis"><img class="adimg" src="${G.url}" alt="${esc((c.visual||{}).headline||"Ad")}" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h}"><div class="cap">${esc(name)} · ${w}×${h} ${dl}</div></div>`;
+  if(G&&(G.busy||G.queued))return `<div class="vis"><div class="adwait" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h}"><span class="dot"></span><span>${G.busy?"Designing…":"Queued"}</span></div><div class="cap">${esc(name)} · ${w}×${h}</div></div>`;
+  if(G&&G.err)return `<div class="vis"><div class="adwait" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h}"><span>${esc(G.err)}</span><button type="button" class="btn link" data-act="retryimg" data-i="${i}" data-w="${w}" data-h="${h}">Try again</button></div><div class="cap">${esc(name)} · ${w}×${h}</div></div>`;
+  return `<div class="vis"><canvas class="adc" data-i="${i}" data-w="${w}" data-h="${h}" width="${cw}" height="${ch}" style="width:${Math.round(dw)}px" role="img" aria-label="${esc((c.visual||{}).headline||"Ad image")}"></canvas>
+    <div class="cap">${esc(name)} · ${w}×${h} <button type="button" class="btn link" data-act="png" data-i="${i}" data-w="${w}" data-h="${h}" data-n="${esc(name)}">Download PNG</button></div></div>`}
+function serpHtml(c){const f=c.fields,hs=(Array.isArray(f.headlines)?f.headlines:[]).slice(0,3),ds=(Array.isArray(f.descriptions)?f.descriptions:[]);
+  return `<div class="vis" style="flex:1 1 280px"><div class="serp"><span class="spon">Sponsored</span><span class="u">${esc(S.url||"yourwebsite.com")}</span><span class="h">${esc(hs.join(" | "))}</span><span class="d">${esc(ds[0]||"")}</span></div>
+    <div class="cap">Search result preview · Google rotates up to 15 headlines and 4 descriptions</div></div>`}
+
+function buildCsv(){const rows=[["Platform","Concept","Angle","Field","Text","Characters","Limit"]];
+    S.creatives.forEach(c=>{const P=PLAT[c.platform];P.fields.forEach(f=>{const v=c.fields[f.k];(Array.isArray(v)?v:[v]).forEach((x,j)=>{x=String(x||"");rows.push([P.name,c.concept||"",c.angle||"",f.count?`${f.l} ${j+1}`:f.l,x,x.length,f.max])})});
+      const v=c.visual||{};rows.push([P.name,c.concept||"",c.angle||"","Image headline",v.headline||"",(v.headline||"").length,""]);rows.push([P.name,c.concept||"",c.angle||"","Image button",v.cta||"",(v.cta||"").length,""])});
+    const csv=rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+    const fn=(S.brief.name||"creatives").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-creatives.csv";
+    return {csv,fn}}
+
+/* ---------- ad image engine: every creative is drawn on a canvas at its real platform size ---------- */
+const FORMATS={
+  art:"AI artwork",photo:"Photo",phone:"Phone mockup",testimonial:"Customer quote",stat:"Big number",beforeafter:"Before / after",
+  checklist:"Checklist",notification:"Notifications",chat:"Chat",compare:"Them vs us",ugc:"Sticky note",bold:"Bold type"};
+const IMG={};
+function imgUrl(u){if(!u)return"";if(/^(data|blob):/.test(u))return u;if(!/^https?:\/\//i.test(u))return"";
+  return window.__aiEndpoint?window.__aiEndpoint+"?img="+encodeURIComponent(u):"";}
+function getImg(u,cb){const src=imgUrl(u);if(!src)return null;const c=IMG[src];
+  if(c)return c.ok?c.el:null;
+  const el=new Image();el.crossOrigin="anonymous";IMG[src]={ok:false,el};
+  el.onload=()=>{IMG[src].ok=true;cb&&cb()};el.onerror=()=>{IMG[src].bad=true};el.src=src;return null;}
+function rgb(h){const n=parseInt(String(h||"#000").slice(1),16);return[n>>16&255,n>>8&255,n&255]}
+function mix(a,b,t){const x=rgb(a),y=rgb(b);return"#"+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,"0")).join("")}
+function ink(bg){return lum(bg)>.4?"#141414":"#ffffff"}
+function rr(ctx,x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function font(w,s,fam){return `${w} ${Math.round(s)}px ${fam==="d"?'"Bricolage Grotesque",Georgia,serif':fam==="h"?'"Caveat","Comic Sans MS",cursive':'"Figtree",system-ui,sans-serif'}`}
+function wrap(ctx,t,maxW){const words=String(t||"").split(/\s+/).filter(Boolean),lines=[];let cur="";
+  for(const w of words){const test=cur?cur+" "+w:w;if(ctx.measureText(test).width<=maxW||!cur)cur=test;else{lines.push(cur);cur=w}}if(cur)lines.push(cur);return lines}
+// largest font size (from max down to min) that fits the text in a box
+function fitText(ctx,t,w,h,max,min,weight,fam,lh){lh=lh||1.12;for(let s=max;s>=min;s-=Math.max(1,s*.06)){ctx.font=font(weight,s,fam);const L=wrap(ctx,t,w);
+    if(L.length*s*lh<=h&&L.every(l=>ctx.measureText(l).width<=w*1.02))return{s,L,lh}}
+  ctx.font=font(weight,min,fam);let L=wrap(ctx,t,w);const keep=Math.max(1,Math.floor(h/(min*lh)));if(L.length>keep){L=L.slice(0,keep);L[keep-1]=L[keep-1].replace(/\s*\S*$/,"")+"…"}return{s:min,L,lh}}
+function drawText(ctx,t,x,y,w,h,o){o=o||{};const f=fitText(ctx,t,w,h,o.max,o.min||10,o.weight||700,o.fam||"b",o.lh);ctx.font=font(o.weight||700,f.s,o.fam||"b");
+  ctx.fillStyle=o.color||"#fff";ctx.textBaseline="top";ctx.textAlign=o.align||"left";const tot=f.L.length*f.s*f.lh;
+  let yy=o.valign==="middle"?y+(h-tot)/2:o.valign==="bottom"?y+h-tot:y;const xx=o.align==="center"?x+w/2:o.align==="right"?x+w:x;
+  f.L.forEach(l=>{ctx.fillText(l,xx,yy+(f.s*f.lh-f.s)/2);yy+=f.s*f.lh});return{h:tot,s:f.s}}
+function cover(ctx,img,x,y,w,h){const r=Math.max(w/img.naturalWidth,h/img.naturalHeight),iw=img.naturalWidth*r,ih=img.naturalHeight*r;
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.drawImage(img,x+(w-iw)/2,y+(h-ih)/2,iw,ih);ctx.restore()}
+function pattern(ctx,x,y,w,h,B,seed){ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  const g=ctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,mix(B.bg,B.accent,.25));g.addColorStop(1,B.bg);ctx.fillStyle=g;ctx.fillRect(x,y,w,h);
+  const u=Math.min(w,h);ctx.globalAlpha=.9;ctx.fillStyle=B.accent;ctx.beginPath();ctx.arc(x+w*(seed%2?.85:.15),y+h*.2,u*.32,0,7);ctx.fill();
+  ctx.globalAlpha=.25;ctx.strokeStyle=ink(B.bg);ctx.lineWidth=u*.012;for(let i=0;i<5;i++){ctx.beginPath();ctx.arc(x+w*.5,y+h*1.05,u*(.25+i*.12),Math.PI,2*Math.PI);ctx.stroke()}
+  ctx.globalAlpha=.18;ctx.fillStyle=ink(B.bg);for(let i=0;i<14;i++){ctx.beginPath();ctx.arc(x+w*((i*37%100)/100),y+h*((i*61%100)/100),u*.012,0,7);ctx.fill()}
+  ctx.restore()}
+function photoOr(ctx,x,y,w,h,B,seed){const im=B.photo;if(im)cover(ctx,im,x,y,w,h);else pattern(ctx,x,y,w,h,B,seed)}
+function check(ctx,x,y,s,col,ok){ctx.save();ctx.fillStyle=ok?col:"rgba(127,127,127,.35)";ctx.beginPath();ctx.arc(x+s/2,y+s/2,s/2,0,7);ctx.fill();
+  ctx.strokeStyle=ok?ink(col):"#fff";ctx.lineWidth=s*.13;ctx.lineCap="round";ctx.beginPath();
+  if(ok){ctx.moveTo(x+s*.28,y+s*.52);ctx.lineTo(x+s*.44,y+s*.68);ctx.lineTo(x+s*.73,y+s*.35)}else{ctx.moveTo(x+s*.33,y+s*.33);ctx.lineTo(x+s*.67,y+s*.67);ctx.moveTo(x+s*.67,y+s*.33);ctx.lineTo(x+s*.33,y+s*.67)}
+  ctx.stroke();ctx.restore()}
+function ctaPill(ctx,t,x,y,maxW,s,B,align){ctx.font=font(700,s,"b");const tw=Math.min(ctx.measureText(t).width,maxW-s*2.4),w=tw+s*2.4,h=s*2.3;
+  const xx=align==="center"?x-w/2:x;rr(ctx,xx,y,w,h,h/2);ctx.fillStyle=B.accent;ctx.fill();ctx.fillStyle=ink(B.accent);ctx.textBaseline="middle";ctx.textAlign="center";ctx.fillText(t+" →",xx+w/2,y+h/2,maxW-s*1.2);return h}
+function brandMark(ctx,x,y,s,B,color){if(B.logoImg){const h=s*1.5,w=Math.min(h*B.logoImg.naturalWidth/B.logoImg.naturalHeight,s*7);ctx.drawImage(B.logoImg,x,y,w,h);return h}
+  ctx.font=font(800,s,"d");ctx.fillStyle=color;ctx.textBaseline="top";ctx.textAlign="left";ctx.fillText(B.name,x,y,s*14);return s*1.2}
+
+// ---- visual blocks: each draws one format inside a rectangle ----
+const VIS={
+  photo(ctx,x,y,w,h,v,B){photoOr(ctx,x,y,w,h,B,1)},
+  art(ctx,x,y,w,h,v,B){if(B.art)cover(ctx,B.art,x,y,w,h);else pattern(ctx,x,y,w,h,B,7)},
+  bold(ctx,x,y,w,h,v,B){pattern(ctx,x,y,w,h,B,2)},
+  phone(ctx,x,y,w,h,v,B){pattern(ctx,x,y,w,h,{...B,bg:mix(B.bg,"#000000",.2)},3);
+    const ph=h*.86,pw=Math.min(w*.62,ph*.5),px=x+(w-pw)/2,py=y+(h-ph)/2,r=pw*.14;
+    ctx.save();ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=pw*.12;ctx.shadowOffsetY=pw*.04;rr(ctx,px,py,pw,ph,r);ctx.fillStyle="#0b0b0f";ctx.fill();ctx.restore();
+    const sx=px+pw*.05,sy=py+pw*.05,sw=pw*.9,sh=ph-pw*.1;ctx.save();rr(ctx,sx,sy,sw,sh,r*.75);ctx.clip();
+    if(B.photo){cover(ctx,B.photo,sx,sy,sw,sh*.55);}else{const g=ctx.createLinearGradient(sx,sy,sx,sy+sh*.55);g.addColorStop(0,B.accent);g.addColorStop(1,B.bg);ctx.fillStyle=g;ctx.fillRect(sx,sy,sw,sh*.55)}
+    ctx.fillStyle="#f6f6f8";ctx.fillRect(sx,sy+sh*.55,sw,sh*.45);
+    drawText(ctx,v.screen||B.name,sx+sw*.08,sy+sh*.6,sw*.84,sh*.14,{max:sw*.11,min:6,weight:800,fam:"d",color:"#141414"});
+    for(let i=0;i<2;i++){rr(ctx,sx+sw*.08,sy+sh*(.77+i*.09),sw*(i?.6:.84),sh*.045,sh*.02);ctx.fillStyle="#e2e2e8";ctx.fill()}
+    rr(ctx,sx+sw*.08,sy+sh*.92,sw*.84,sh*.06,sh*.03);ctx.fillStyle=B.accent;ctx.fill();ctx.restore();
+    rr(ctx,px+pw*.36,py+pw*.07,pw*.28,pw*.06,pw*.03);ctx.fillStyle="#0b0b0f";ctx.fill()},
+  testimonial(ctx,x,y,w,h,v,B){ctx.fillStyle=mix(B.bg,"#ffffff",.92);ctx.fillRect(x,y,w,h);const p=Math.min(w,h)*.09,u=Math.min(w,h);
+    ctx.fillStyle=B.accent;ctx.font=font(800,u*.28,"d");ctx.textBaseline="top";ctx.textAlign="left";ctx.fillText("“",x+p,y+p*.4);
+    for(let i=0;i<5;i++)star(ctx,x+p+i*u*.075,y+p+u*.2,u*.03,"#f5b301");
+    const t=drawText(ctx,v.quote||"",x+p,y+p+u*.3,w-p*2,h-p*2-u*.42,{max:u*.1,min:8,weight:600,fam:"d",color:"#16141c",lh:1.18});
+    drawText(ctx,"— "+(v.author||"Customer"),x+p,y+p+u*.32+t.h,w-p*2,u*.08,{max:u*.05,min:7,weight:600,color:"#5a5566"})},
+  stat(ctx,x,y,w,h,v,B){photoOr(ctx,x,y,w,h,B,4);ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(x,y,w,h);const u=Math.min(w,h);
+    const t=drawText(ctx,v.stat||"",x+w*.08,y+h*.18,w*.84,h*.42,{max:u*.42,min:12,weight:800,fam:"d",color:B.accent,align:"center",valign:"bottom",lh:1});
+    drawText(ctx,v.statLabel||"",x+w*.1,y+h*.62,w*.8,h*.28,{max:u*.075,min:7,weight:600,color:"#fff",align:"center"})},
+  beforeafter(ctx,x,y,w,h,v,B){const half=w/2,u=Math.min(w,h);ctx.fillStyle=mix("#9a9aa2",B.bg,.35);ctx.fillRect(x,y,half,h);ctx.fillStyle=B.accent;ctx.fillRect(x+half,y,half,h);
+    [["Before",v.before,"#ffffff",false],["After",v.after,ink(B.accent),true]].forEach(([lab,t,col,ok],i)=>{const xx=x+i*half+half*.1;
+      check(ctx,xx,y+h*.12,u*.09,ok?ink(B.accent):"#666",ok);ctx.globalAlpha=1;
+      drawText(ctx,lab.toUpperCase(),xx+u*.12,y+h*.12,half*.6,u*.09,{max:u*.05,min:6,weight:800,color:col,valign:"middle"});
+      drawText(ctx,t||"",xx,y+h*.3,half*.8,h*.6,{max:u*.075,min:7,weight:700,fam:"d",color:col})});
+    ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x+half,y+h/2,u*.07,0,7);ctx.fill();ctx.fillStyle="#141414";ctx.font=font(800,u*.06,"b");ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("→",x+half,y+h/2)},
+  checklist(ctx,x,y,w,h,v,B){ctx.fillStyle=mix(B.bg,"#ffffff",.08);ctx.fillRect(x,y,w,h);const items=(v.bullets||[]).slice(0,3),u=Math.min(w,h),rowH=h/(items.length+1);
+    items.forEach((t,i)=>{const yy=y+rowH*(i+.5);check(ctx,x+w*.08,yy,u*.1,B.accent,true);drawText(ctx,t,x+w*.08+u*.15,yy-u*.01,w*.84-u*.15,u*.13,{max:u*.07,min:7,weight:700,color:ink(B.bg),valign:"middle"})})},
+  notification(ctx,x,y,w,h,v,B){photoOr(ctx,x,y,w,h,B,5);ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(x,y,w,h);const u=Math.min(w,h),list=(v.notifs||[]).slice(0,3);
+    ctx.font=font(300,u*.16,"b");ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="top";ctx.fillText("9:41",x+w/2,y+h*.06);
+    list.forEach((t,i)=>{const bw=w*.86,bh=h*.17,bx=x+w*.07,by=y+h*.33+i*(bh+h*.03);ctx.save();ctx.shadowColor="rgba(0,0,0,.25)";ctx.shadowBlur=u*.03;
+      rr(ctx,bx,by,bw,bh,u*.04);ctx.fillStyle="rgba(250,250,252,.94)";ctx.fill();ctx.restore();rr(ctx,bx+bw*.04,by+bh*.18,bh*.36,bh*.36,bh*.09);ctx.fillStyle=B.accent;ctx.fill();
+      drawText(ctx,B.name.toUpperCase(),bx+bw*.04+bh*.5,by+bh*.18,bw*.6,bh*.22,{max:bh*.2,min:6,weight:700,color:"#55525e"});
+      drawText(ctx,t,bx+bw*.04,by+bh*.56,bw*.92,bh*.38,{max:bh*.24,min:6,weight:600,color:"#16141c"})})},
+  chat(ctx,x,y,w,h,v,B){ctx.fillStyle="#efeae2";ctx.fillRect(x,y,w,h);const list=(v.chat||[]).slice(0,4);if(!list.length)return;
+    let fs=Math.min(w,h)*.075,items;const lay=()=>{ctx.font=font(600,fs,"b");items=list.map(m=>{const L=wrap(ctx,m.text,w*.7-fs*1.2);return{m,L,lw:Math.max(...L.map(l=>ctx.measureText(l).width))+fs*1.2,bh:L.length*fs*1.25+fs*.8}});return items.reduce((a,i)=>a+i.bh+fs*.6,0)};
+    while(lay()>h*.88&&fs>8)fs*=.92;let yy=y+(h-items.reduce((a,i)=>a+i.bh+fs*.6,0)+fs*.6)/2;
+    items.forEach(({m,L,lw,bh})=>{const me=m.from==="me",bx=me?x+w*.95-lw:x+w*.05;rr(ctx,bx,yy,lw,bh,fs*.6);ctx.fillStyle=me?mix(B.accent,"#ffffff",.55):"#ffffff";ctx.fill();
+      ctx.fillStyle="#141414";ctx.textBaseline="top";ctx.textAlign="left";ctx.font=font(600,fs,"b");L.forEach((l,i)=>ctx.fillText(l,bx+fs*.6,yy+fs*.4+i*fs*1.25));yy+=bh+fs*.6})},
+  compare(ctx,x,y,w,h,v,B){ctx.fillStyle=mix(B.bg,"#ffffff",.06);ctx.fillRect(x,y,w,h);const rows=(v.rows||[]).slice(0,4),u=Math.min(w,h),cw=w*.2,lx=x+w*.06,c1=x+w*.58,c2=x+w*.78,rowH=h/(rows.length+1.4);
+    drawText(ctx,v.them||"Others",c1-cw*.1,y+rowH*.3,cw*1.1,rowH*.6,{max:u*.045,min:6,weight:700,color:mix(ink(B.bg),B.bg,.4),align:"center",valign:"middle"});
+    rr(ctx,c2-cw*.05,y+rowH*.2,cw*1.1,h-rowH*.4,u*.03);ctx.fillStyle=B.accent;ctx.globalAlpha=.18;ctx.fill();ctx.globalAlpha=1;
+    drawText(ctx,B.name,c2-cw*.05,y+rowH*.3,cw*1.1,rowH*.6,{max:u*.045,min:6,weight:800,color:ink(B.bg),align:"center",valign:"middle"});
+    rows.forEach((t,i)=>{const yy=y+rowH*(i+1.2),s=Math.min(rowH*.5,u*.08);drawText(ctx,t,lx,yy,w*.48,rowH*.8,{max:u*.055,min:6,weight:600,color:ink(B.bg),valign:"middle"});
+      check(ctx,c1+cw*.5-s/2,yy+rowH*.4-s/2,s,"#888",false);check(ctx,c2+cw*.5-s/2,yy+rowH*.4-s/2,s,B.accent,true)})},
+  ugc(ctx,x,y,w,h,v,B){photoOr(ctx,x,y,w,h,B,6);const u=Math.min(w,h),nw=w*.62,nh=h*.42;ctx.save();ctx.translate(x+w*.52,y+h*.5);ctx.rotate(-.06);
+    ctx.shadowColor="rgba(0,0,0,.3)";ctx.shadowBlur=u*.04;ctx.shadowOffsetY=u*.015;ctx.fillStyle="#fff176";ctx.fillRect(-nw/2,-nh/2,nw,nh);ctx.shadowColor="transparent";
+    drawText(ctx,v.note||"",-nw/2+nw*.08,-nh/2+nh*.1,nw*.84,nh*.8,{max:u*.1,min:8,weight:700,fam:"h",color:"#2a2410",valign:"middle",lh:1.05});ctx.restore()}
+};
+function star(ctx,cx,cy,r,col){ctx.save();ctx.fillStyle=col;ctx.beginPath();for(let i=0;i<10;i++){const a=Math.PI/2+i*Math.PI/5,rr2=i%2?r*.45:r;ctx.lineTo(cx+Math.cos(a)*rr2,cy-Math.sin(a)*rr2)}ctx.closePath();ctx.fill();ctx.restore()}
+
+// ---- layout: split each size into a visual area and a text area ----
+function drawAd(ctx,W,H,c,B){const v=c.visual||{},fmt=FORMATS[v.format]?v.format:"bold",r=W/H,u=Math.min(W,H);AD_U=u;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle=B.bg;ctx.fillRect(0,0,W,H);const fg=ink(B.bg);
+  const head=v.headline||"",sub=v.sub||"",ct=v.cta||"Learn more";
+  if(r>3){ // leaderboard banner
+    VIS.bold(ctx,0,0,W,H,v,B);ctx.fillStyle="rgba(0,0,0,.35)";ctx.fillRect(0,0,W,H);
+    brandMark(ctx,H*.25,H*.3,H*.28,B,"#fff");drawText(ctx,head,W*.25,H*.12,W*.5,H*.76,{max:H*.36,min:8,weight:800,fam:"d",color:"#fff",valign:"middle"});
+    ctaPill(ctx,ct,W*.79,H*.26,W*.19,H*.2,B);return}
+  const fullBleed=["photo","bold","ugc","notification","stat","art"].includes(fmt);
+  if(fullBleed&&fmt!=="bold"&&fmt!=="photo"){ // visual fills most, text strip on top or bottom
+    const th=r<.7?H*.3:r>1.3?H*.42:H*.38;VIS[fmt](ctx,0,0,W,H-th,v,B);ctx.fillStyle=B.bg;ctx.fillRect(0,H-th,W,th);textArea(ctx,0,H-th,W,th,head,sub,ct,B,fg,true);return}
+  if(fmt==="photo"||fmt==="bold"){VIS[fmt](ctx,0,0,W,H,v,B);const g=ctx.createLinearGradient(0,H*.35,0,H);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.78)");
+    if(fmt==="photo"){ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+    brandMark(ctx,u*.07,u*.07,u*.045,B,fmt==="photo"?"#fff":fg);
+    const big=fmt==="bold";textArea(ctx,0,big?H*.3:H*.5,W,big?H*.7:H*.5,head,sub,ct,B,fmt==="photo"?"#fff":fg,false,big);return}
+  // split layouts
+  if(r>1.3){const vw=W*.5;VIS[fmt](ctx,W-vw,0,vw,H,v,B);textArea(ctx,0,0,W-vw,H,head,sub,ct,B,fg,true)}
+  else{const vh=r<.7?H*.58:H*.56;VIS[fmt](ctx,0,H-vh,W,vh,v,B);textArea(ctx,0,0,W,H-vh,head,sub,ct,B,fg,true)}}
+function textArea(ctx,x,y,w,h,head,sub,ct,B,col,logo,big){const u=AD_U,p=u*.055;let yy=y+p;
+  if(logo&&h>u*.3){yy+=brandMark(ctx,x+p,yy,u*.034,B,col)+u*.022}
+  const cs=u*.038,ctaH=cs*2.3,avail=y+h-p-ctaH-u*.03-yy;
+  const hh=drawText(ctx,head,x+p,yy,w-p*2,avail*(sub?.72:1),{max:big?u*.17:u*.12,min:Math.max(9,u*.03),weight:800,fam:"d",color:col,lh:1.04}).h;
+  if(sub){drawText(ctx,sub,x+p,yy+hh+u*.022,w-p*2,avail-hh-u*.022,{max:u*.05,min:Math.max(7,u*.022),weight:500,color:col})}
+  ctaPill(ctx,ct,x+p,y+h-p-ctaH,w-p*2,cs,B)}
+let AD_U=1000;
+function svgUrl(svg){return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)}
+function brandFor(c){const b=S.brief||{},k=c&&c.concept,A=k&&ART[k];return{bg:hex(b.bg,"#1f2a44"),accent:hex(b.accent,"#ffb547"),name:b.brand||b.name||"Brand",
+  photo:k&&PHOTO[k]?getImg(PHOTO[k],paintAll):b.upload?getImg(b.upload,paintAll):getImg(b.image,paintAll),logoImg:getImg(b.logo,paintAll),
+  art:A&&A.svg?getImg(svgUrl(A.svg),paintAll):null}}
+function paintAll(){document.querySelectorAll("canvas.adc").forEach(cv=>{const c=S.creatives[+cv.dataset.i];if(!c)return;const B=brandFor(c);
+  const W=+cv.dataset.w,H=+cv.dataset.h,k=cv.width/W,ctx=cv.getContext("2d");ctx.setTransform(k,0,0,k,0,0);try{drawAd(ctx,W,H,c,B)}catch(e){console.error(e)}})}
+function loadEl(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src})}
+async function adPng(c,w,h){const cv=document.createElement("canvas");cv.width=w;cv.height=h;const ctx=cv.getContext("2d"),G=IMGS[imgKey(S.creatives.indexOf(c),w,h)];
+  if(G&&G.url){const im=await loadEl(G.url);ctx.fillStyle=hex(S.brief.bg,"#111");ctx.fillRect(0,0,w,h);cover(ctx,im,0,0,w,h);return new Promise(res=>cv.toBlob(b=>res(b),"image/png"))}
+  drawAd(ctx,w,h,c,brandFor(c));
+  return new Promise(res=>cv.toBlob(b=>res(b),"image/png"))}
+function loadZip(){return window.JSZip?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)})}
+function fileSlug(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"ad"}
+async function saveBlob(name,blob){try{if(downloads){await downloads.save({filename:name,data:blob});return true}}catch(e){if(e&&e.code==="declined")return false}
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return true}
+
+function refreshArt(){if(stepId()==="create")render()}
+/* ---------- finished ad images, designed by the image model (one per creative and size) ---------- */
+const imgKey=(i,w,h)=>`${i}|${w}x${h}`;
+function ratio(w,h){const R=[["1:1",1],["4:5",.8],["5:4",1.25],["9:16",.5625],["16:9",1.778],["21:9",2.333],["8:1",8],["1:4",.25],["3:4",.75],["4:3",1.333],["2:3",.667],["3:2",1.5]];
+  const r=w/h;return R.reduce((a,b)=>Math.abs(Math.log(b[1]/r))<Math.abs(Math.log(a[1]/r))?b:a)[0]}
+function adPrompt(c,[name,w,h],resize){const b=S.brief,P=PLAT[c.platform],v=c.visual||{},con=(S.concepts||[]).find(x=>x.title===c.concept)||{};
+  const copy=P.fields.filter(f=>!f.count).map(f=>`${f.l}: ${String(c.fields[f.k]||"").trim()}`).join("\n");
+  return `${resize?`Reference image 1 is the approved version of this exact ad. Recreate it as a ${w}x${h} version (${ratio(w,h)}): keep the same idea, scene, style, colors and text, and re-compose for the new shape so nothing is cut off or crowded.\n\n`:""}Design one finished, ready-to-publish ${P.name} ad (${P.long}, placement: ${name}, ${w}x${h} pixels, ${ratio(w,h)}).
+Brand: ${b.brand&&b.brand!==b.name?`${b.name} by ${b.brand}`:b.name}${S.url?` (${S.url})`:""}
+What it is: ${b.what}
+Who it's for: ${b.audience}
+The problem it solves: ${b.pain}
+${b.proof?`Real proof point (may be used as written): ${b.proof}\n`:""}Tone: ${b.tone}
+Brand colors: ${b.bg} and ${b.accent}. Build the palette around them.
+Campaign goal: ${GOALS[S.goal][0]}
+Concept: "${c.concept}"${c.angle?` (${c.angle} angle)`:""}${con.insight?`\nCustomer insight: ${con.insight}`:""}${con.message?`\nCore message: ${con.message}`:""}
+The ad copy that runs with it:
+${copy}
+Art direction for this ad: ${v.direction||"An original visual idea that dramatizes the concept for this audience."}
+Text on the image, spelled exactly as written: the headline "${v.headline||c.concept}", a button reading "${v.cta||GOALS[S.goal][2]}", and the brand name "${b.brand||b.name}". No other words, no fake statistics, no fake logos of other companies, no watermarks.
+Make it look like a real, high-performing ${P.name} ad created by a top creative agency for this exact brand: original and specific to this product and concept, with one clear focal point, strong contrast, and legible type at phone size. Not a template, not generic stock imagery. Keep all text at least 8% away from every edge.${b.upload&&!resize?"\nReference image 1 is the brand's own product or photo: feature it faithfully in the ad.":""}`}
+let IMG_RUNNING=0;const IMG_MAX=3;
+function queueImages(){if(!window.__aiImage||!CAPS.images)return;S.creatives.forEach((c,i)=>{(PLAT[c.platform].sizes||[]).forEach(([,w,h])=>{const k=imgKey(i,w,h);if(!IMGS[k])IMGS[k]={queued:true}})});render();pumpImages()}
+function nextJob(){for(let i=0;i<S.creatives.length;i++){const c=S.creatives[i],sz=PLAT[c.platform].sizes||[];for(let n=0;n<sz.length;n++){const [,w,h]=sz[n],G=IMGS[imgKey(i,w,h)];
+    if(!G||!G.queued)continue;if(n>0){const M=IMGS[imgKey(i,sz[0][1],sz[0][2])];if(!M||!M.url){if(M&&M.err){return {i,c,size:sz[n],ref:null}}continue}return {i,c,size:sz[n],ref:M.url}}return {i,c,size:sz[n],ref:null}}}return null}
+async function pumpImages(){while(IMG_RUNNING<IMG_MAX){const job=nextJob();if(!job)return;const [,w,h]=job.size,k=imgKey(job.i,w,h);IMGS[k]={busy:true};IMG_RUNNING++;render();
+    (async()=>{const refs=job.ref?[job.ref]:(S.brief.upload?[S.brief.upload]:[]);
+      try{const url=await window.__aiImage(adPrompt(job.c,job.size,!!job.ref),ratio(w,h),refs);if(S.creatives[job.i]===job.c)IMGS[k]={url}}
+      catch(e){IMGS[k]={err:e&&e.code==="rate_limited"?"Image limit reached for now.":e&&e.code==="refused"?"The image model declined this one.":e&&e.code==="not_configured"?"Images aren't connected.":"Couldn't create this image."}}
+      IMG_RUNNING--;render();pumpImages()})()}}
+
+/* ---------- events ---------- */
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button");if(!t||!t.closest(".wrap"))return;
+  if(t.dataset.go){S.step=+t.dataset.go;S.notice="";render();return}
+  if(t.dataset.mode){if(S.mode!==t.dataset.mode){Object.assign(S,{mode:t.dataset.mode,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[]});S.picked.clear()}S.step=1;S.notice="";render();return}
+  if(t.dataset.prod){pickProduct(+t.dataset.prod);render();return}
+  if(t.dataset.plat){const k=t.dataset.plat;S.platforms.has(k)?S.platforms.delete(k):S.platforms.add(k);S.creatives=[];render();return}
+  if(t.dataset.con){const i=+t.dataset.con;if(S.picked.has(i))S.picked.delete(i);else if(S.picked.size<3)S.picked.add(i);else{S.notice="You can pick up to three concepts. Deselect one first."}render();S.notice="";return}
+  if(t.dataset.tab){S.tab=t.dataset.tab;render();return}
+  const a=t.dataset.act;if(!a)return;
+  if(a==="stop"){S.ctl&&S.ctl.abort();return}
+  if(a==="back"){S.step=Math.max(0,S.step-1);S.notice="";render();return}
+  if(a==="next"){S.step++;S.notice="";render();return}
+  if(a==="example"){applyExample();return}
+  if(a==="concepts"){S.step=3;if(!S.concepts.length){await suggestConcepts(false)}else render();return}
+  if(a==="reconcepts"){await suggestConcepts(true);return}
+  if(a==="create"){Object.keys(IMGS).forEach(k=>delete IMGS[k]);S.step=STEPS().length-1;await create();return}
+  if(a==="restart"){Object.assign(S,{step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[],notice:"",usedAI:false});S.picked.clear();render();return}
+  if(a==="copy"){const c=S.creatives[+t.dataset.i],txt=PLAT[c.platform].fields.map(f=>{const v=c.fields[f.k];return Array.isArray(v)?v.map((x,j)=>`${f.l} ${j+1}: ${x}`).join("\n"):`${f.l}: ${v||""}`}).join("\n");
+    try{await navigator.clipboard.writeText(txt);t.textContent="Copied"}catch(err){t.textContent="Copy failed. Select the text instead."}setTimeout(()=>{t.textContent="Copy text"},1600);return}
+  if(a==="csv"){const {csv,fn}=buildCsv();await saveBlob(fn,new Blob(["\ufeff"+csv],{type:"text/csv"}));return}
+  if(a==="png"){const c=S.creatives[+t.dataset.i],w=+t.dataset.w,h=+t.dataset.h;t.textContent="Saving…";
+    const blob=await adPng(c,w,h);await saveBlob(`${fileSlug(S.brief.name)}-${c.platform}-${fileSlug(c.concept)}-${w}x${h}.png`,blob);t.textContent="Download PNG";return}
+  if(a==="zip"){t.disabled=true;t.textContent="Building ZIP…";try{await loadZip();const z=new JSZip(),{csv,fn}=buildCsv();z.file(fn,"\ufeff"+csv);
+      for(const c of S.creatives){for(const [nm,w,h] of PLAT[c.platform].sizes){z.file(`${PLAT[c.platform].name}/${fileSlug(c.concept)}-${w}x${h}.png`,await adPng(c,w,h))}}
+      await saveBlob(`${fileSlug(S.brief.name)}-creatives.zip`,await z.generateAsync({type:"blob"}))}catch(err){S.notice="Couldn't build the ZIP. Try downloading images one by one.";render()}
+    t.disabled=false;t.textContent="Download all (ZIP)";return}
+  if(a==="noupload"){S.brief.upload="";render();return}
+  if(a==="retryimg"){const i=+t.dataset.i;IMGS[imgKey(i,+t.dataset.w,+t.dataset.h)]={queued:true};render();pumpImages();return}
+});
+document.addEventListener("submit",e=>{if(e.target.id==="siteform"){e.preventDefault();analyze()}});
+document.addEventListener("change",e=>{const el=e.target;
+  if(el.dataset&&el.dataset.fmt!=null){const c=S.creatives[+el.dataset.fmt];c._userFmt=true;c.visual=fillVisual({...c.visual,_concept:c.concept,format:el.value},S.brief);paintAll();return}
+  if(el.id==="f-upload"&&el.files&&el.files[0]){const f=el.files[0];if(!/^image\//.test(f.type)){S.notice="That file isn't an image.";render();return}
+    const rd=new FileReader();rd.onload=async()=>{let u=rd.result;try{const im=await loadEl(u),k=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement("canvas");
+      cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);u=cv.toDataURL("image/jpeg",.88)}catch(x){}
+      S.brief.upload=u;if(S.company&&S.product>=0)S.company.upload=u;render()};rd.readAsDataURL(f)}});
+document.addEventListener("input",e=>{const el=e.target;
+  if(el.dataset&&el.dataset.f&&S.brief){S.brief[el.dataset.f]=el.value;S.concepts=[];S.creatives=[];
+    if(S.mode==="company"&&S.company&&S.product>=0){const p=S.company.products[S.product];if(["name","what","audience","pain","proof"].includes(el.dataset.f))p[el.dataset.f]=el.value;if(el.dataset.f==="bg"||el.dataset.f==="accent")S.company[el.dataset.f]=el.value}
+    rail();return}
+  if(el.id==="goal"){S.goal=el.value;S.creatives=[];return}
+  if(el.id==="paste"){S.paste=el.value;return}
+  if(el.isContentEditable){const c=S.creatives[+el.dataset.i],k=el.dataset.k,j=+el.dataset.j,t=el.textContent;
+    if(j>=0){if(!Array.isArray(c.fields[k]))c.fields[k]=[];c.fields[k][j]=t}else c.fields[k]=t;count(el.closest(".field"))}
+});
+render();
+})();
+</script>
+
+</body></html>

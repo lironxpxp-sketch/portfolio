@@ -1,4 +1,4 @@
-<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=6"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=7"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Creative Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=Caveat:wght@700&display=swap">
@@ -122,6 +122,8 @@ details[open] summary{margin-bottom:8px}
 .serp .h{font-size:18px;color:var(--serp-link);line-height:1.3}
 .serp .d{font-size:13px;color:var(--muted)}
 .hidden{display:none}
+img.adimg{display:block;max-width:100%;height:auto;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.25);background:var(--bg)}
+.adwait{display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;text-align:center;padding:10px;max-width:100%;border-radius:6px;border:1px dashed var(--line);background:var(--bg);color:var(--muted);font-size:12px}
 canvas.adc{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .vis .cap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .cap .btn.link{font-size:11px;padding:0}
@@ -189,8 +191,8 @@ const S={step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,b
   platforms:new Set(["meta","google_search"]),goal:"trial",concepts:[],picked:new Set(),creatives:[],tab:null,
   busy:null,ctl:null,notice:"",usedAI:false};
 let sample=null,downloads=null,aiChecked=false;
-const ART={},PHOTO={};let CAPS={images:false};
-(window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};refreshArt()}).catch(()=>{});
+const ART={},PHOTO={},IMGS={};let CAPS={images:false};
+(window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};if(S.creatives.length&&!Object.keys(IMGS).length)queueImages();else refreshArt()}).catch(()=>{});
 
 const STEPS=()=>S.mode==="company"
   ?[["type","Project type"],["site","Website & product"],["platforms","Platforms"],["create","Creatives"]]
@@ -212,7 +214,7 @@ function paintMode(){const m=$("mode");
 const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
 async function ask(prompt,label,web){
   S.ctl=new AbortController(); S.busy=label; render();
-  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,task:"research"}:{signal:S.ctl.signal,task:"copy"}); }
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,task:"site"}:{signal:S.ctl.signal,task:"creative"}); }
   finally{ S.busy=null; S.ctl=null; }
 }
 function aiError(e){const c=e&&e.code;
@@ -331,24 +333,16 @@ ${cTxt}
 Platforms and their copy fields (stay within the character limits; count carefully):
 ${specs}
 Copy rules: be concrete and specific to this product and audience (situations, objects, moments, the brief's details); vary sentence rhythm; write like a person, not a brochure. Banned: "unlock", "elevate", "game-changer", "seamless", "next level", "look no further", "revolutionize", "effortless". Each platform's copy should sound native to it (TikTok casual and first-person, LinkedIn credible and specific, Search direct and keyword-led).
-Every creative also needs a "visual" for its image. Pick the format that best dramatizes that creative's idea, and use at least 4 different formats across the whole set:
-- "photo": the brand's image full-bleed with the headline (${hasImg?"a brand image is available":"NO brand image is available, so avoid this format"})
-- "phone": a phone mockup; add "screen": 2-5 word title shown on the app screen
-- "beforeafter": add "before" and "after", each a concrete situation, max 60 chars
-- "checklist": add "bullets": 3 items, max 40 chars each
-- "notification": add "notifs": 2-3 lock-screen notifications that tell a tiny story, max 70 chars each
-- "chat": add "chat": 2-4 messages [{"from":"them" or "me","text":"max 60 chars"}], a realistic text conversation
-- "compare": add "them": what people use instead (e.g. "Spreadsheets"), and "rows": 3-4 benefits, max 32 chars each
-- "ugc": add "note": a handwritten sticky note in a personal voice, max 60 chars
-- "stat": ONLY if the proof point contains a number; add "stat" (that number) and "statLabel"
-- "testimonial": ONLY if the brief contains a real customer quote; add "quote" and "author". Never invent quotes, reviews or names.
-- "bold": big type and shapes only
-Every visual also has "format", "headline" (max 45 chars), "sub" (max 80 chars) and "cta" (button text, max 16 chars).
+Every creative also needs a "visual": the brief for its ad image, which an image model will design as a finished ad.
+- "headline": the text printed on the image, max 45 chars
+- "cta": button text on the image, max 16 chars
+- "direction": 3-5 sentences of art direction: the visual idea (a scene, object, character, metaphor or moment), composition, style (e.g. editorial photo, bold illustration, 3D, collage, typographic poster, UGC-style), mood, lighting and how the brand colors appear. It must dramatize THIS creative's concept for THIS brand and platform.
+Every creative's direction must be clearly different from all the others in style and idea. No stock-photo clichés (handshakes, people pointing at laptops, generic smiling teams).
 Match the tone. Use the proof point only as given; never invent numbers, awards, reviews or customer names.
 Reply with only JSON: {"creatives":[{"platform":"meta","concept":"concept title","angle":"angle","fields":{...},"visual":{...}}]}`;
     try{const r=await ask(prompt,"Writing creatives for "+plats.map(p=>PLAT[p].name).join(", ")+"…");S.usedAI=true;
       const list=(r&&Array.isArray(r.creatives)?r.creatives:[]).filter(c=>c&&PLAT[c.platform]&&c.fields);
-      if(list.length){list.forEach(c=>{c._orig={quote:(c.visual||{}).quote};c.visual=fillVisual({...(c.visual||{headline:c.concept}),_concept:c.concept},b)});S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;render();makeArt();return}
+      if(list.length){list.forEach(c=>{c.visual={...fillVisual({...(c.visual||{}),format:"bold",_concept:c.concept},b),direction:String((c.visual||{}).direction||"")}});S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;Object.keys(IMGS).forEach(k=>delete IMGS[k]);render();queueImages();return}
       S.notice="The AI didn't return any creatives. Try again.";render();return;
     }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
   }
@@ -469,7 +463,7 @@ function creativeCard(c,i){const P=PLAT[c.platform];
   return `<article class="creative" data-i="${i}">
     <div class="copy"><span class="tag">${esc(c.angle||"Concept")} · ${esc(c.concept||"")}</span>${fields}
       <div><button type="button" class="btn" data-act="copy" data-i="${i}">Copy text</button></div></div>
-    <div class="visuals">${P.sizes.length?artBar(c)+`<div class="fmtrow" style="flex-basis:100%"><label for="fmt-${i}" style="margin:0">Image style</label><select id="fmt-${i}" data-fmt="${i}">${fmtOptions(c)}</select></div>`+P.sizes.map(s=>adHtml(c,s,i)).join(""):serpHtml(c)}</div>
+    <div class="visuals">${P.sizes.length?P.sizes.map(s=>adHtml(c,s,i)).join(""):serpHtml(c)}</div>
   </article>`}
 function fieldHtml(i,k,j,label,max,text){return `<div class="field" data-max="${max}"><div class="k"><span>${esc(label)}</span><span class="cnt"></span></div><div contenteditable="true" role="textbox" aria-label="${esc(label)}" data-i="${i}" data-k="${k}" data-j="${j}">${esc(text||"")}</div></div>`}
 function count(f){const t=f.querySelector("[contenteditable]").textContent.trim(),max=+f.dataset.max,c=f.querySelector(".cnt");c.textContent=t.length+" / "+max;c.className="cnt "+(t.length<=max?"ok":"over")}
@@ -492,7 +486,11 @@ function fmtOptions(c){const b=S.brief,v=c.visual||{},A=ART[c.concept];return Ob
   .map(([k,l])=>`<option value="${k}" ${v.format===k?"selected":""}>${l}</option>`).join("")}
 function lum(h){const n=parseInt(h.slice(1),16),f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(n>>16&255)+.7152*f(n>>8&255)+.0722*f(n&255)}
 function adHtml(c,[name,w,h],i){const r=w/h,dw=r>3?Math.min(520,w):r<.6?(h>1000?190:130):Math.min(260*r,r>1.5?400:280,w);
-  const cw=Math.round(Math.min(w,dw*2)),ch=Math.round(cw/r);
+  const cw=Math.round(Math.min(w,dw*2)),ch=Math.round(cw/r),G=IMGS[imgKey(i,w,h)];
+  const dl=`<button type="button" class="btn link" data-act="png" data-i="${i}" data-w="${w}" data-h="${h}" data-n="${esc(name)}">Download PNG</button>`;
+  if(G&&G.url)return `<div class="vis"><img class="adimg" src="${G.url}" alt="${esc((c.visual||{}).headline||"Ad")}" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h}"><div class="cap">${esc(name)} · ${w}×${h} ${dl}</div></div>`;
+  if(G&&(G.busy||G.queued))return `<div class="vis"><div class="adwait" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h}"><span class="dot"></span><span>${G.busy?"Designing…":"Queued"}</span></div><div class="cap">${esc(name)} · ${w}×${h}</div></div>`;
+  if(G&&G.err)return `<div class="vis"><div class="adwait" style="width:${Math.round(dw)}px;aspect-ratio:${w}/${h}"><span>${esc(G.err)}</span><button type="button" class="btn link" data-act="retryimg" data-i="${i}" data-w="${w}" data-h="${h}">Try again</button></div><div class="cap">${esc(name)} · ${w}×${h}</div></div>`;
   return `<div class="vis"><canvas class="adc" data-i="${i}" data-w="${w}" data-h="${h}" width="${cw}" height="${ch}" style="width:${Math.round(dw)}px" role="img" aria-label="${esc((c.visual||{}).headline||"Ad image")}"></canvas>
     <div class="cap">${esc(name)} · ${w}×${h} <button type="button" class="btn link" data-act="png" data-i="${i}" data-w="${w}" data-h="${h}" data-n="${esc(name)}">Download PNG</button></div></div>`}
 function serpHtml(c){const f=c.fields,hs=(Array.isArray(f.headlines)?f.headlines:[]).slice(0,3),ds=(Array.isArray(f.descriptions)?f.descriptions:[]);
@@ -635,49 +633,46 @@ function brandFor(c){const b=S.brief||{},k=c&&c.concept,A=k&&ART[k];return{bg:he
   art:A&&A.svg?getImg(svgUrl(A.svg),paintAll):null}}
 function paintAll(){document.querySelectorAll("canvas.adc").forEach(cv=>{const c=S.creatives[+cv.dataset.i];if(!c)return;const B=brandFor(c);
   const W=+cv.dataset.w,H=+cv.dataset.h,k=cv.width/W,ctx=cv.getContext("2d");ctx.setTransform(k,0,0,k,0,0);try{drawAd(ctx,W,H,c,B)}catch(e){console.error(e)}})}
-function adPng(c,w,h){const cv=document.createElement("canvas");cv.width=w;cv.height=h;drawAd(cv.getContext("2d"),w,h,c,brandFor(c));
+function loadEl(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src})}
+async function adPng(c,w,h){const cv=document.createElement("canvas");cv.width=w;cv.height=h;const ctx=cv.getContext("2d"),G=IMGS[imgKey(S.creatives.indexOf(c),w,h)];
+  if(G&&G.url){const im=await loadEl(G.url);ctx.fillStyle=hex(S.brief.bg,"#111");ctx.fillRect(0,0,w,h);cover(ctx,im,0,0,w,h);return new Promise(res=>cv.toBlob(b=>res(b),"image/png"))}
+  drawAd(ctx,w,h,c,brandFor(c));
   return new Promise(res=>cv.toBlob(b=>res(b),"image/png"))}
 function loadZip(){return window.JSZip?Promise.resolve():new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";sc.onload=res;sc.onerror=rej;document.head.appendChild(sc)})}
 function fileSlug(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"ad"}
 async function saveBlob(name,blob){try{if(downloads){await downloads.save({filename:name,data:blob});return true}}catch(e){if(e&&e.code==="declined")return false}
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);return true}
 
-/* ---------- AI artwork and photos, one per concept ---------- */
-function cleanSvg(t){let s=String(t||"");const a=s.indexOf("<svg"),b=s.lastIndexOf("</svg>");if(a<0||b<0)return"";s=s.slice(a,b+6);
-  s=s.replace(/<(script|foreignObject|image|iframe|style)[\s\S]*?<\/\1>/gi,"").replace(/<(script|foreignObject|image|iframe)[^>]*\/?>/gi,"")
-   .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*')/gi,"").replace(/(xlink:)?href\s*=\s*("(?!#)[^"]*"|'(?!#)[^']*')/gi,"").replace(/url\((?!\s*['"]?#)[^)]*\)/gi,"none");
-  s=s.replace(/<svg([^>]*)>/i,(m,at)=>{at=at.replace(/\s(width|height)\s*=\s*("[^"]*"|'[^']*')/gi,"");if(!/xmlns=/.test(at))at+=' xmlns="http://www.w3.org/2000/svg"';if(!/viewBox/i.test(at))at+=' viewBox="0 0 1000 1000"';return `<svg${at} width="1000" height="1000">`});
-  return s.length<60000?s:""}
-function artPrompt(c){const b=S.brief,con=(S.concepts||[]).find(x=>x.title===c.concept)||{};
-  return `You are an award-winning art director and illustrator. Design the artwork for one paid social ad.
-${briefText(b)}
-Brand colors: background ${b.bg}, accent ${b.accent}. You may add 2-3 colors that harmonize with them.
-Concept: "${c.concept}" (${c.angle||con.angle||""})${con.insight?`\nCustomer insight: ${con.insight}`:""}
-Message: ${con.message||(c.visual||{}).sub||""}
-Headline that will sit on the ad: "${(c.visual||{}).headline||""}"
-
-Create an ORIGINAL illustration that shows this specific idea visually: a scene, object, character or visual metaphor that only makes sense for this product and this audience. Not abstract decoration, not generic icons, not a phone mockup. Make it bold and readable at small sizes, with one clear focal point.
-Technical rules for the SVG: one <svg> element with viewBox="0 0 1000 1000"; flat vector style using shapes, paths and gradients; NO text, letters or numbers anywhere; no <image>, no external links, no scripts, no CSS <style>; under 14000 characters. Fill the whole square edge to edge (a background shape covering 0,0 to 1000,1000).
-Also write "photo": a vivid description of a realistic photo for the same concept (setting, people or product, moment, light, camera angle), with no text or logos in the scene.
-Reply with only JSON: {"svg":"<svg ...>...</svg>","alt":"one sentence describing the artwork","photo":"photo description"}`}
-async function makeArt(force){if(!sample)return;const keys=[...new Set(S.creatives.map(c=>c.concept))].filter(k=>force===k||!ART[k]);
-  await Promise.all(keys.map(async k=>{const c=S.creatives.find(x=>x.concept===k);ART[k]={busy:true};refreshArt();
-    try{const r=await sample.json(artPrompt(c),{task:"art",cache:false});const svg=cleanSvg(r&&r.svg);
-      ART[k]={svg,alt:String(r&&r.alt||""),photo:String(r&&r.photo||""),failed:!svg};
-      if(svg)S.creatives.filter(x=>x.concept===k&&!x._userFmt).forEach(x=>{x.visual=fillVisual({...x.visual,_concept:k,format:"art"},S.brief)});
-    }catch(e){ART[k]={failed:true}}refreshArt()}))}
-async function makePhoto(k){const c=S.creatives.find(x=>x.concept===k);if(!c||!window.__aiImage)return;const A=ART[k]||{};
-  PHOTO[k]={busy:true};refreshArt();const b=S.brief;
-  const prompt=(A.photo||`A realistic advertising photo for ${b.name}: ${b.what}. Audience: ${b.audience}. Concept: ${c.concept}.`)+` Style: authentic, high-end advertising photography, natural light, ${b.tone||"friendly"} mood, colors that work with ${b.bg} and ${b.accent}. No text, letters, logos or watermarks anywhere in the image. Keep the lower third calm and uncluttered.`;
-  try{PHOTO[k]=await window.__aiImage(prompt,"1024x1024");S.creatives.filter(x=>x.concept===k).forEach(x=>{x._userFmt=true;x.visual=fillVisual({...x.visual,_concept:k,format:"photo"},S.brief)})}
-  catch(e){PHOTO[k]=null;S.notice=e&&e.code==="rate_limited"?"Photo limit reached for now. Try again in a few minutes.":e&&e.code==="refused"?"The image model declined this prompt. Try another concept.":"Couldn't create the photo. Try again."}
-  render()}
 function refreshArt(){if(stepId()==="create")render()}
-function artBar(c){const k=c.concept,A=ART[k],P=PHOTO[k];if(!sample&&!window.__aiImage)return"";
-  const st=A&&A.busy?"Designing artwork…":A&&A.failed?"Artwork didn't come out.":A&&A.svg?"":"";
-  const photoBtn=window.__aiImage&&CAPS.images?(P&&P.busy?'<span class="note">Creating photo…</span>':`<button type="button" class="btn" data-act="photo" data-k="${esc(k)}">${P?"New AI photo":"Create AI photo"}</button>`):"";
-  const artBtn=sample&&!(A&&A.busy)?`<button type="button" class="btn link" data-act="redoart" data-k="${esc(k)}">${A&&A.svg?"Redo artwork":"Design artwork"}</button>`:"";
-  return `<div class="fmtrow" style="flex-basis:100%">${st?`<span class="note">${st}</span>`:""}${artBtn}${photoBtn}</div>`}
+/* ---------- finished ad images, designed by the image model (one per creative and size) ---------- */
+const imgKey=(i,w,h)=>`${i}|${w}x${h}`;
+function ratio(w,h){const R=[["1:1",1],["4:5",.8],["5:4",1.25],["9:16",.5625],["16:9",1.778],["21:9",2.333],["8:1",8],["1:4",.25],["3:4",.75],["4:3",1.333],["2:3",.667],["3:2",1.5]];
+  const r=w/h;return R.reduce((a,b)=>Math.abs(Math.log(b[1]/r))<Math.abs(Math.log(a[1]/r))?b:a)[0]}
+function adPrompt(c,[name,w,h],resize){const b=S.brief,P=PLAT[c.platform],v=c.visual||{},con=(S.concepts||[]).find(x=>x.title===c.concept)||{};
+  const copy=P.fields.filter(f=>!f.count).map(f=>`${f.l}: ${String(c.fields[f.k]||"").trim()}`).join("\n");
+  return `${resize?`Reference image 1 is the approved version of this exact ad. Recreate it as a ${w}x${h} version (${ratio(w,h)}): keep the same idea, scene, style, colors and text, and re-compose for the new shape so nothing is cut off or crowded.\n\n`:""}Design one finished, ready-to-publish ${P.name} ad (${P.long}, placement: ${name}, ${w}x${h} pixels, ${ratio(w,h)}).
+Brand: ${b.brand&&b.brand!==b.name?`${b.name} by ${b.brand}`:b.name}${S.url?` (${S.url})`:""}
+What it is: ${b.what}
+Who it's for: ${b.audience}
+The problem it solves: ${b.pain}
+${b.proof?`Real proof point (may be used as written): ${b.proof}\n`:""}Tone: ${b.tone}
+Brand colors: ${b.bg} and ${b.accent}. Build the palette around them.
+Campaign goal: ${GOALS[S.goal][0]}
+Concept: "${c.concept}"${c.angle?` (${c.angle} angle)`:""}${con.insight?`\nCustomer insight: ${con.insight}`:""}${con.message?`\nCore message: ${con.message}`:""}
+The ad copy that runs with it:
+${copy}
+Art direction for this ad: ${v.direction||"An original visual idea that dramatizes the concept for this audience."}
+Text on the image, spelled exactly as written: the headline "${v.headline||c.concept}", a button reading "${v.cta||GOALS[S.goal][2]}", and the brand name "${b.brand||b.name}". No other words, no fake statistics, no fake logos of other companies, no watermarks.
+Make it look like a real, high-performing ${P.name} ad created by a top creative agency for this exact brand: original and specific to this product and concept, with one clear focal point, strong contrast, and legible type at phone size. Not a template, not generic stock imagery. Keep all text at least 8% away from every edge.${b.upload&&!resize?"\nReference image 1 is the brand's own product or photo: feature it faithfully in the ad.":""}`}
+let IMG_RUNNING=0;const IMG_MAX=3;
+function queueImages(){if(!window.__aiImage||!CAPS.images)return;S.creatives.forEach((c,i)=>{(PLAT[c.platform].sizes||[]).forEach(([,w,h])=>{const k=imgKey(i,w,h);if(!IMGS[k])IMGS[k]={queued:true}})});render();pumpImages()}
+function nextJob(){for(let i=0;i<S.creatives.length;i++){const c=S.creatives[i],sz=PLAT[c.platform].sizes||[];for(let n=0;n<sz.length;n++){const [,w,h]=sz[n],G=IMGS[imgKey(i,w,h)];
+    if(!G||!G.queued)continue;if(n>0){const M=IMGS[imgKey(i,sz[0][1],sz[0][2])];if(!M||!M.url){if(M&&M.err){return {i,c,size:sz[n],ref:null}}continue}return {i,c,size:sz[n],ref:M.url}}return {i,c,size:sz[n],ref:null}}}return null}
+async function pumpImages(){while(IMG_RUNNING<IMG_MAX){const job=nextJob();if(!job)return;const [,w,h]=job.size,k=imgKey(job.i,w,h);IMGS[k]={busy:true};IMG_RUNNING++;render();
+    (async()=>{const refs=job.ref?[job.ref]:(S.brief.upload?[S.brief.upload]:[]);
+      try{const url=await window.__aiImage(adPrompt(job.c,job.size,!!job.ref),ratio(w,h),refs);if(S.creatives[job.i]===job.c)IMGS[k]={url}}
+      catch(e){IMGS[k]={err:e&&e.code==="rate_limited"?"Image limit reached for now.":e&&e.code==="refused"?"The image model declined this one.":e&&e.code==="not_configured"?"Images aren't connected.":"Couldn't create this image."}}
+      IMG_RUNNING--;render();pumpImages()})()}}
 
 /* ---------- events ---------- */
 document.addEventListener("click",async e=>{
@@ -695,7 +690,7 @@ document.addEventListener("click",async e=>{
   if(a==="example"){applyExample();return}
   if(a==="concepts"){S.step=3;if(!S.concepts.length){await suggestConcepts(false)}else render();return}
   if(a==="reconcepts"){await suggestConcepts(true);return}
-  if(a==="create"){Object.keys(ART).forEach(k=>delete ART[k]);Object.keys(PHOTO).forEach(k=>delete PHOTO[k]);S.step=STEPS().length-1;await create();return}
+  if(a==="create"){Object.keys(IMGS).forEach(k=>delete IMGS[k]);S.step=STEPS().length-1;await create();return}
   if(a==="restart"){Object.assign(S,{step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[],notice:"",usedAI:false});S.picked.clear();render();return}
   if(a==="copy"){const c=S.creatives[+t.dataset.i],txt=PLAT[c.platform].fields.map(f=>{const v=c.fields[f.k];return Array.isArray(v)?v.map((x,j)=>`${f.l} ${j+1}: ${x}`).join("\n"):`${f.l}: ${v||""}`}).join("\n");
     try{await navigator.clipboard.writeText(txt);t.textContent="Copied"}catch(err){t.textContent="Copy failed. Select the text instead."}setTimeout(()=>{t.textContent="Copy text"},1600);return}
@@ -707,14 +702,15 @@ document.addEventListener("click",async e=>{
       await saveBlob(`${fileSlug(S.brief.name)}-creatives.zip`,await z.generateAsync({type:"blob"}))}catch(err){S.notice="Couldn't build the ZIP. Try downloading images one by one.";render()}
     t.disabled=false;t.textContent="Download all (ZIP)";return}
   if(a==="noupload"){S.brief.upload="";render();return}
-  if(a==="redoart"){const k=t.dataset.k;S.creatives.filter(x=>x.concept===k).forEach(x=>x._userFmt=false);await makeArt(k);return}
-  if(a==="photo"){await makePhoto(t.dataset.k);return}
+  if(a==="retryimg"){const i=+t.dataset.i;IMGS[imgKey(i,+t.dataset.w,+t.dataset.h)]={queued:true};render();pumpImages();return}
 });
 document.addEventListener("submit",e=>{if(e.target.id==="siteform"){e.preventDefault();analyze()}});
 document.addEventListener("change",e=>{const el=e.target;
   if(el.dataset&&el.dataset.fmt!=null){const c=S.creatives[+el.dataset.fmt];c._userFmt=true;c.visual=fillVisual({...c.visual,_concept:c.concept,format:el.value},S.brief);paintAll();return}
   if(el.id==="f-upload"&&el.files&&el.files[0]){const f=el.files[0];if(!/^image\//.test(f.type)){S.notice="That file isn't an image.";render();return}
-    const rd=new FileReader();rd.onload=()=>{S.brief.upload=rd.result;if(S.company&&S.product>=0)S.company.upload=rd.result;render()};rd.readAsDataURL(f)}});
+    const rd=new FileReader();rd.onload=async()=>{let u=rd.result;try{const im=await loadEl(u),k=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement("canvas");
+      cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);u=cv.toDataURL("image/jpeg",.88)}catch(x){}
+      S.brief.upload=u;if(S.company&&S.product>=0)S.company.upload=u;render()};rd.readAsDataURL(f)}});
 document.addEventListener("input",e=>{const el=e.target;
   if(el.dataset&&el.dataset.f&&S.brief){S.brief[el.dataset.f]=el.value;S.concepts=[];S.creatives=[];
     if(S.mode==="company"&&S.company&&S.product>=0){const p=S.company.products[S.product];if(["name","what","audience","pain","proof"].includes(el.dataset.f))p[el.dataset.f]=el.value;if(el.dataset.f==="bg"||el.dataset.f==="accent")S.company[el.dataset.f]=el.value}
