@@ -67,7 +67,6 @@ h1 .cur{display:inline-block;width:.08em;height:.85em;background:var(--acc);marg
 .btn{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--f);text-decoration:none;padding:12px 20px;border-radius:10px;border:1px solid var(--line2);background:var(--bg2);color:var(--fg);transition:border-color .2s,transform .2s}
 .btn:hover{border-color:var(--muted);transform:translateY(-1px)}
 .btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
-.mailgrp{display:inline-flex;flex-wrap:wrap;gap:8px}button.btn{cursor:pointer}
 .btn.pri:hover{box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 25%,transparent)}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:64px;border:1px solid var(--line);border-radius:14px;background:var(--bg2);overflow:hidden}
 .stat{padding:18px 20px;border-right:1px solid var(--line)}
@@ -264,7 +263,7 @@ open to my next challenge ✓</pre>
     <h2>Let's talk</h2>
     <p>About a role, a project, or one of the tools on this page. Reach me any way you like.</p>
     <div class="cta">
-      <span class="mailgrp"><a class="btn pri" data-t="email" href="mailto:lironxpxp@gmail.com">✉ <span id="mailTxt">lironxpxp@gmail.com</span></a><button class="btn" id="copyMail" type="button">Copy email</button></span>
+      <a class="btn pri" data-t="email" href="mailto:lironxpxp@gmail.com">✉ lironxpxp@gmail.com</a>
       <a class="btn" data-t="phone" href="tel:+972526768625">☎ 052-676-8625</a>
       <a class="btn" data-t="whatsapp" href="https://wa.me/972526768625" target="_blank" rel="noopener">WhatsApp ↗</a>
       <a class="btn" data-t="linkedin" href="https://www.linkedin.com/in/liron-sofer/" target="_blank" rel="noopener">LinkedIn ↗</a>
@@ -301,13 +300,6 @@ open to my next challenge ✓</pre>
   }
   // Contact clicks
   document.querySelectorAll("#contact .cta a").forEach(a=>a.addEventListener("click",()=>track("contact/"+(a.dataset.t||"link"),"Contact: "+(a.dataset.t||"link")+(who?" ("+who+")":""))));
-  // Copy email
-  const cb=document.getElementById("copyMail");
-  if(cb)cb.addEventListener("click",()=>{
-    const done=()=>{cb.textContent="Copied ✓";track("contact/copy-email","Contact: copied email"+(who?" ("+who+")":""));setTimeout(()=>cb.textContent="Copy email",2000)};
-    const sel=()=>{const r=document.createRange();r.selectNodeContents(document.getElementById("mailTxt"));const s=getSelection();s.removeAllRanges();s.addRange(r);cb.textContent="Press Ctrl+C"};
-    try{navigator.clipboard.writeText("lironxpxp@gmail.com").then(done,sel)}catch(e){sel()}
-  });
 
   const btns=document.querySelectorAll(".filters button"),cards=document.querySelectorAll("#grid .card");
   btns.forEach(b=>b.addEventListener("click",()=>{
