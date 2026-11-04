@@ -152,6 +152,12 @@ tbody tr.new{animation:fl 1.6s ease}
 @keyframes sk{to{background-position:-200% 0}}
 .more{margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
 .sampleban{font-size:13px;color:var(--warn);margin:0 0 12px}
+.howto{display:flex;gap:10px;align-items:flex-start;margin:0 0 12px;padding:11px 14px;border-radius:12px;background:color-mix(in srgb,var(--acc) 6%,var(--bg2));border:1px solid color-mix(in srgb,var(--acc) 22%,transparent);font-size:14px;color:var(--muted)}
+.howto b{color:var(--fg)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+td.go{text-align:right;vertical-align:middle;width:1%;white-space:nowrap}
+.btn.open{color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,transparent);background:color-mix(in srgb,var(--acc) 7%,transparent);pointer-events:none}
+tbody tr:hover .btn.open,tbody tr.sel .btn.open{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
 
 /* side panel */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30}
@@ -203,6 +209,8 @@ body.side-open{overflow:hidden}
   td.co{grid-column:1}
   td.ft{grid-column:2;grid-row:1;justify-self:end}
   td.wn,td.pc,td.vv{grid-column:1/-1}
+  td.go{grid-column:1/-1;text-align:left;width:auto;margin-top:4px}
+  td.go .btn{width:100%}
   .why{max-width:none}
 }
 </style>
@@ -592,20 +600,22 @@ function rowHTML(l,i){
     <td class="ft"><span class="fit ${f}" title="Fit score">${l.fit}</span></td>
     <td class="wn"><span class="why">${esc(l.whyNow||l.reasons[0]||"")}</span></td>
     <td class="pc">${contactCell(l.contact)}</td>
-    <td class="vv">${viaCell(l.contact)}</td></tr>`;
+    <td class="vv">${viaCell(l.contact)}</td>
+    <td class="go"><button class="btn sm open" tabindex="-1" aria-hidden="true">Contact info →</button></td></tr>`;
 }
 function vLeads(){
   const p=S.info&&S.info.products[S.product];
-  const skel=busy&&S.leads.length<LEADS?Array.from({length:Math.min(6,LEADS-S.leads.length)},()=>`<tr class="skel"><td class="num"></td><td class="co"><div style="width:70%"></div></td><td class="ft"><div style="width:34px"></div></td><td class="wn"><div></div></td><td class="pc"><div style="width:60%"></div></td><td class="vv"><div style="width:60px"></div></td></tr>`).join(""):"";
+  const skel=busy&&S.leads.length<LEADS?Array.from({length:Math.min(6,LEADS-S.leads.length)},()=>`<tr class="skel"><td class="num"></td><td class="co"><div style="width:70%"></div></td><td class="ft"><div style="width:34px"></div></td><td class="wn"><div></div></td><td class="pc"><div style="width:60%"></div></td><td class="vv"><div style="width:60px"></div></td><td class="go"></td></tr>`).join(""):"";
   return `<section>
     ${S.sample?`<p class="sampleban">Sample run with made-up companies and people, to show how it works.</p>`:""}
     <div class="rhead"><div><h1 style="margin:0">${S.leads.length?`${S.leads.length} leads`:"Finding leads"} for ${esc(p?p.name:"")}</h1>
       <div class="stats" id="stats"></div></div>
       <div class="row"><button class="btn sm ghost" id="restart">Start over</button><button class="btn sm" id="csv"${S.leads.length?"":" disabled"}>⤓ Download CSV</button></div></div>
     ${busy?`<div class="load" style="padding-top:0"><span class="spin"></span><span>${esc(busy)} This usually takes 1–2 minutes.</span></div>`:""}
-    <div class="tbl"><table><thead><tr><th>#</th><th>Company</th><th>Fit</th><th>Why now</th><th>Best contact</th><th>Reach via</th></tr></thead>
+    ${S.leads.length?`<p class="howto"><span class="ic" aria-hidden="true">👆</span><span><b>Click any lead</b> to open its details: why it fits, the decision-maker and how to reach them, an email or LinkedIn message draft, and the <b>Find email</b> button.</span></p>`:""}
+    <div class="tbl"><table><thead><tr><th>#</th><th>Company</th><th>Fit</th><th>Why now</th><th>Best contact</th><th>Reach via</th><th><span class="sr">Details</span></th></tr></thead>
     <tbody id="rows">${S.leads.map(rowHTML).join("")}${skel}</tbody></table></div>
-    ${!busy&&S.leads.length?`<div class="more"><span class="dim mono" style="font-size:12.5px">Click a lead for details, a message draft, or to find their email</span><button class="btn pri" id="more">Generate ${LEADS} more leads</button></div>`:""}
+    ${!busy&&S.leads.length?`<div class="more"><span class="dim mono" style="font-size:12.5px">${S.leads.length} leads · ${S.emailLookups||0} of ${MAX_EMAIL} email lookups used</span><button class="btn pri" id="more">Generate ${LEADS} more leads</button></div>`:""}
     ${error?`<p class="err">${esc(error)}</p>`:""}
   </section>`;
 }
