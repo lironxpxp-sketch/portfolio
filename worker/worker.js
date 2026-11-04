@@ -122,7 +122,7 @@ function overLimit(ip, map = hits, limit = PER_IP_LIMIT) {
 
 // Read a website's own page (title, description, headings, visible text) so new
 // sites that search engines haven't indexed yet can still be understood.
-async function readSite(input, deep = false) {
+async function readSite(input, deep = false, brand = false) {
   let url;
   try { url = new URL(/^https?:\/\//i.test(input) ? input : "https://" + input); } catch { return ""; }
   const host = url.hostname.toLowerCase();
@@ -161,6 +161,35 @@ async function readSite(input, deep = false) {
     body && `Visible text: ${body}`,
   ].filter(Boolean);
   if (parts.length <= 1) return "";
+  if (brand) {
+    // Brand signals for ad design: theme colour, most-used colours, fonts and a logo image
+    const theme = meta(/<meta[^>]+name=["']theme-color["'][^>]*content=["']([^"']*)["']/i) || meta(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']theme-color["']/i);
+    let css = (html.match(/<style[^>]*>[\s\S]*?<\/style>/gi) || []).join("\n").slice(0, 200000) + " " + (html.match(/style=["'][^"']*["']/gi) || []).join(" ");
+    const sheetHrefs = [...html.matchAll(/<link[^>]+>/gi)].map((m) => m[0]).filter((t) => /rel=["'][^"']*stylesheet/i.test(t)).map((t) => (t.match(/href=["']([^"']+)["']/i) || [])[1]).filter(Boolean);
+    const sheets = await Promise.all(sheetHrefs.filter((h) => !/fonts\.googleapis/i.test(h)).slice(0, 2).map(async (h) => {
+      try { const r = await fetch(abs(h), { headers: { "user-agent": "Mozilla/5.0 (compatible; LironSoferPortfolio/1.0)" }, signal: AbortSignal.timeout(5000) }); return r.ok ? (await r.text()).slice(0, 300000) : ""; } catch { return ""; }
+    }));
+    css += " " + sheets.join(" ");
+    const count = new Map();
+    for (const m of css.matchAll(/#([0-9a-f]{6}|[0-9a-f]{3})\b/gi)) {
+      let h = m[1].toLowerCase(); if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      if (Math.max(r, g, b) - Math.min(r, g, b) < 28) continue; // skip whites, blacks and greys
+      count.set("#" + h, (count.get("#" + h) || 0) + 1);
+    }
+    const colors = [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map((e) => e[0]);
+    const fonts = new Map();
+    for (const h of sheetHrefs.filter((x) => /fonts\.googleapis/i.test(x))) for (const m of h.matchAll(/family=([^&:]+)/gi)) fonts.set(decodeURIComponent(m[1]).replace(/\+/g, " "), 99);
+    for (const m of css.matchAll(/font-family\s*:\s*([^;}]+)/gi)) {
+      const f = m[1].split(",")[0].replace(/&quot;/g, "").trim().replace(/^['"\\]+|['"\\]+$/g, "").trim();
+      if (!f || /^(inherit|initial|unset|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|var\()/i.test(f)) continue;
+      fonts.set(f, (fonts.get(f) || 0) + 1);
+    }
+    const fontList = [...fonts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map((e) => e[0]);
+    const logoTag = [...html.matchAll(/<img[^>]+>/gi)].map((m) => m[0]).find((t) => /logo/i.test(t));
+    const logo = logoTag ? abs((logoTag.match(/src=["']([^"']+)["']/i) || [])[1] || "") : "";
+    parts.push(`Brand signals: theme colour ${theme || "none"}; most-used colours ${colors.join(", ") || "none found"}; fonts ${fontList.join(", ") || "none found"}${logo ? `; logo image ${logo}` : ""}`);
+  }
   if (deep) {
     // Read further: the site's own About / Product / Pricing / Solutions pages
     const base = new URL(res.url || url);
@@ -378,7 +407,7 @@ export default {
     // If the page asked about a specific website, read that site directly and add it to the question
     let siteText = "";
     if (typeof body.siteUrl === "string" && body.siteUrl.trim()) {
-      siteText = await readSite(body.siteUrl.trim(), !!body.deep);
+      siteText = await readSite(body.siteUrl.trim(), !!body.deep, !!body.brand);
       if (siteText) {
         const last = messages[messages.length - 1];
         last.content += `\n\nThe website's own pages, fetched just now (treat this as the main evidence about the business):\n"""\n${siteText.slice(0, MAX_PROMPT_CHARS)}\n"""`;
