@@ -433,7 +433,7 @@ function vTargets(){
       <form class="add" data-g="roles"><input placeholder="Add a job title" maxlength="60" aria-label="Add a job title"><button class="btn sm">Add</button></form></div>
     <div class="grp"><span class="lbl">Region</span><div class="chips">${mk.map(m=>`<button class="chip mk" aria-pressed="${S.markets.includes(m)}" data-g="markets" data-v="${esc(m)}"><span class="c1">${esc(m)}</span></button>`).join("")}</div></div>
     <div class="cta"><button class="btn ghost" id="back">← Product</button>
-      <span class="row"><span class="dim mono" style="font-size:12.5px">${lastTest()?"One test per day: today's is used":"One test per day · takes about a minute"}</span><button class="btn pri" id="go"${S.aud.length&&S.roles.length?"":" disabled"}>Start ${LEADS}-lead test →</button></span></div>
+      <span class="row"><span class="dim mono" style="font-size:12.5px">${lastTest()?"One test per day: today's is used":"One test per day · takes 1–2 minutes"}</span><button class="btn pri" id="go"${S.aud.length&&S.roles.length?"":" disabled"}>Start ${LEADS}-lead test →</button></span></div>
     ${error?`<p class="err">${esc(error)}</p>`:""}
   </section>`;
 }
@@ -496,22 +496,27 @@ async function startLeads(){
   markTest();
   S.leads=[];S.reserve=[];S.seen=[];S.swaps=0;S.sel=null;S.tpl={};S.step=4;error="";busy=`Searching the web for companies that fit…`;save();render();
   track("start","Started a 20-lead test");
-  const want=LEADS+RESERVE, half=Math.ceil(want/2)+1;
-  const a=S.aud.length>1?[S.aud.slice(0,Math.ceil(S.aud.length/2)).join("; "),S.aud.slice(Math.ceil(S.aud.length/2)).join("; ")]:["established, larger companies","fast-growing, smaller companies"];
-  const got=[];
-  const run=async f=>{try{const l=await fetchLeads(half,f);addUnique(l,got);place(got)}catch(e){return e}};
-  const errs=(await Promise.all(a.map(run))).filter(Boolean);
-  if(got.length<LEADS){try{addUnique(await fetchLeads(want-got.length+3,""),got);place(got)}catch(e){errs.push(e)}}
+  const per=7, ANG=["recently funded or fast-growing companies","companies hiring for the decision-maker roles right now","well-known leaders in their segment","companies with a recent launch, expansion or new leadership"];
+  const focus=ANG.map((a,i)=>(S.aud.length?S.aud[i%S.aud.length]+": ":"")+a);
+  const got=[];let done=0;
+  const run=async f=>{try{const l=await fetchLeads(per,f);addUnique(l,got);place(got)}catch(e){return e}finally{done++}};
+  const errs=(await Promise.all(focus.map(run))).filter(Boolean);
+  if(got.length<LEADS&&got.length){try{addUnique(await fetchLeads(LEADS-got.length+3,""),got);place(got)}catch(e){errs.push(e)}}
   busy="";
   if(!got.length){try{localStorage.removeItem("rlb.testAt")}catch(e){}error=friendly(errs[0]);S.step=3;save();render();return}
   place(got);save();render();resolveAll();
   track("leads","Got leads");
 }
 function place(got){
-  got.sort((x,y)=>y.fit-x.fit);
-  S.leads=got.slice(0,LEADS);S.reserve=got.slice(LEADS);
+  // keep leads already on screen in place (and their contacts); add new ones, best fit first
+  const shown=new Set(S.leads.map(l=>l.id));
+  const fresh=got.filter(l=>!shown.has(l.id)&&!S.reserve.some(r=>r.id===l.id)).sort((x,y)=>y.fit-x.fit);
+  const pool=[...S.reserve,...fresh].sort((x,y)=>y.fit-x.fit);
+  while(S.leads.length<LEADS&&pool.length)S.leads.push(pool.shift());
+  S.leads.sort((x,y)=>y.fit-x.fit);
+  S.reserve=pool;
   busy=S.leads.length<LEADS?`Found ${S.leads.length} so far, still searching…`:"";
-  if(S.step===4)render();
+  save();if(S.step===4){render();resolveAll()}
 }
 
 /* ---------- contact waterfall ---------- */
@@ -581,7 +586,7 @@ function vLeads(){
     <div class="rhead"><div><h1 style="margin:0">${S.leads.length?`${S.leads.length} leads`:"Finding leads"} for ${esc(p?p.name:"")}</h1>
       <div class="stats" id="stats"></div></div>
       <div class="row"><button class="btn sm ghost" id="restart">Start over</button><button class="btn sm" id="csv"${S.leads.length?"":" disabled"}>⤓ Download CSV</button></div></div>
-    ${busy?`<div class="load" style="padding-top:0"><span class="spin"></span><span>${esc(busy)} This usually takes about a minute.</span></div>`:""}
+    ${busy?`<div class="load" style="padding-top:0"><span class="spin"></span><span>${esc(busy)} This usually takes 1–2 minutes.</span></div>`:""}
     <div class="tbl"><table><thead><tr><th>#</th><th>Company</th><th>Fit</th><th>Why now</th><th>Best contact</th><th>Reach via</th></tr></thead>
     <tbody id="rows">${S.leads.map(rowHTML).join("")}${skel}</tbody></table></div>
     ${!busy&&S.leads.length?`<div class="more"><span class="dim mono" style="font-size:12.5px">Click a lead for details and a message draft</span><button class="btn pri" id="more">Generate ${LEADS} more leads</button></div>`:""}
