@@ -192,7 +192,8 @@ async function readSite(input, deep = false) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
-    if (!ALLOWED_ORIGINS.includes(origin)) {
+    // Live site, plus the staging copy on Cloudflare Pages (any project named lironsofer…)
+    if (!ALLOWED_ORIGINS.includes(origin) && !/^https:\/\/([a-z0-9-]+\.)?lironsofer[a-z0-9-]*\.pages\.dev$/.test(origin)) {
       return new Response("Not allowed", { status: 403 });
     }
     if (request.method === "OPTIONS") {
