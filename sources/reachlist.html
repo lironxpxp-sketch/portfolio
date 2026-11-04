@@ -494,7 +494,7 @@ async function startLeads(){
   if(!LIVE()){error="The live AI isn't available here. Try the sample run from step 1.";render();return}
   if(lastTest()){track("daily-limit","Hit the daily test limit");modal("day");return}
   markTest();
-  S.leads=[];S.reserve=[];S.seen=[];S.swaps=0;S.sel=null;S.tpl={};S.step=4;error="";busy=`Searching the web for companies that fit…`;save();render();
+  S.leads=[];S.reserve=[];S.seen=[];S.swaps=0;S.emailLookups=0;S.sel=null;S.tpl={};S.step=4;error="";busy=`Searching the web for companies that fit…`;save();render();
   track("start","Started a 20-lead test");
   const per=7, ANG=["recently funded or fast-growing companies","companies hiring for the decision-maker roles right now","well-known leaders in their segment","companies with a recent launch, expansion or new leadership"];
   const focus=ANG.map((a,i)=>(S.aud.length?S.aud[i%S.aud.length]+": ":"")+a);
@@ -528,25 +528,41 @@ function roleScore(title){
   const sen=/\b(chief|ceo|cmo|cro|coo|cto|cfo|founder|co-founder|owner|president)\b/.test(t)?.5:/\b(vp|vice president|head)\b/.test(t)?.4:/\bdirector\b/.test(t)?.3:/\b(manager|lead)\b/.test(t)?.15:0;
   return best+sen;
 }
+// Default contact: the decision-maker found on the web, reached via LinkedIn (no email credits used)
 async function resolve(l){
-  const chain=[];let hunter=null;
-  if(CAPS.emailFinder&&!S.sample){
-    try{hunter=await post({findPeople:{domain:l.domain}})}catch(e){hunter=null}
-    const ppl=(hunter&&hunter.people)||[];
-    chain.push({k:"Email finder",ok:ppl.length>0});
-    if(ppl.length){
-      const best=ppl.map(p=>({p,s:roleScore(p.title)+(p.verified?.1:0)+(p.confidence||0)/1000})).sort((a,b)=>b.s-a.s)[0].p;
-      const alt=l.people.find(x=>x.name.toLowerCase()!==best.name.toLowerCase());
-      return {kind:"email",name:best.name,title:best.title,email:best.email,linkedin:best.linkedin||"",verified:best.verified,confidence:best.confidence,generic:(hunter.generic||[])[0]||"",alt:alt||null,chain};
-    }
-  }else chain.push({k:"Email finder",ok:false,off:true});
-  const generic=(hunter&&hunter.generic||[])[0]||"";
+  const chain=[{k:"Email finder",ok:false,off:true}];
   const withLi=l.people.find(p=>p.linkedin);
-  if(withLi){chain.push({k:"LinkedIn profile",ok:true});return {kind:"li",name:withLi.name,title:withLi.title,linkedin:withLi.linkedin,generic,chain}}
-  if(l.people[0]){chain.push({k:"LinkedIn search",ok:true});const p=l.people[0];return {kind:"li",name:p.name,title:p.title,linkedin:liPeopleSearch(p.name+" "+l.company),search:true,generic,chain}}
+  if(withLi){chain.push({k:"LinkedIn profile",ok:true});return {kind:"li",name:withLi.name,title:withLi.title,linkedin:withLi.linkedin,chain}}
+  if(l.people[0]){chain.push({k:"LinkedIn search",ok:true});const p=l.people[0];return {kind:"li",name:p.name,title:p.title,linkedin:liPeopleSearch(p.name+" "+l.company),search:true,chain}}
   chain.push({k:"LinkedIn role search",ok:true});
   const role=S.roles[0]||"Head of Marketing";
-  return {kind:"li",name:"",title:role,linkedin:liPeopleSearch(role+" "+l.company),search:true,role:true,generic,chain};
+  return {kind:"li",name:"",title:role,linkedin:liPeopleSearch(role+" "+l.company),search:true,role:true,chain};
+}
+// Email lookup only when the visitor asks for it (uses one email-finder credit)
+const MAX_EMAIL=5;
+async function findEmail(l){
+  if((S.emailLookups||0)>=MAX_EMAIL){modal("email");return}
+  S.emailLookups=(S.emailLookups||0)+1;l._finding=true;save();renderSide();
+  track("find-email","Looked up an email");
+  let r=null;
+  try{
+    if(S.sample){await new Promise(x=>setTimeout(x,700));const c=l.contact||{};r={people:c.name?[{name:c.name,title:c.title,email:c.name.split(" ")[0].toLowerCase()+"@"+l.domain,verified:true,confidence:90}]:[],generic:["hello@"+l.domain]}}
+    else r=await post({findPeople:{domain:l.domain}});
+  }catch(e){r=null}
+  delete l._finding;l.emailTried=true;
+  const ppl=(r&&r.people)||[], generic=((r&&r.generic)||[])[0]||"", prev=l.contact||{};
+  if(ppl.length){
+    // favour a person who has an email over a more senior person who doesn't
+    const best=ppl.map(p=>({p,s:roleScore(p.title)+(p.verified?.1:0)+(p.confidence||0)/1000})).sort((a,b)=>b.s-a.s)[0].p;
+    const sameAsPrev=prev.name&&prev.name.toLowerCase()===best.name.toLowerCase();
+    l.contact={kind:"email",name:best.name,title:best.title,email:best.email,linkedin:best.linkedin||(sameAsPrev&&!prev.search?prev.linkedin:""),verified:best.verified,confidence:best.confidence,generic,
+      alt:!sameAsPrev&&prev.name?{name:prev.name,title:prev.title,linkedin:prev.search?"":prev.linkedin}:null,
+      chain:[{k:"Email finder",ok:true}]};
+    if((S.tpl[l.id]||{}).kind!=="email")S.tpl[l.id]={kind:"email"};
+  }else{
+    l.contact=Object.assign({},prev,{generic,noEmail:r?true:false,lookupFailed:!r,chain:[{k:"Email finder",ok:false},...(prev.chain||[]).filter(c=>c.k!=="Email finder")]});
+  }
+  save();updRow(l);stats();if(S.sel===l.id)renderSide();
 }
 let resolving=false;
 async function resolveAll(){
@@ -589,7 +605,7 @@ function vLeads(){
     ${busy?`<div class="load" style="padding-top:0"><span class="spin"></span><span>${esc(busy)} This usually takes 1–2 minutes.</span></div>`:""}
     <div class="tbl"><table><thead><tr><th>#</th><th>Company</th><th>Fit</th><th>Why now</th><th>Best contact</th><th>Reach via</th></tr></thead>
     <tbody id="rows">${S.leads.map(rowHTML).join("")}${skel}</tbody></table></div>
-    ${!busy&&S.leads.length?`<div class="more"><span class="dim mono" style="font-size:12.5px">Click a lead for details and a message draft</span><button class="btn pri" id="more">Generate ${LEADS} more leads</button></div>`:""}
+    ${!busy&&S.leads.length?`<div class="more"><span class="dim mono" style="font-size:12.5px">Click a lead for details, a message draft, or to find their email</span><button class="btn pri" id="more">Generate ${LEADS} more leads</button></div>`:""}
     ${error?`<p class="err">${esc(error)}</p>`:""}
   </section>`;
 }
@@ -637,6 +653,7 @@ function renderSide(){
   sideEl.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
   $$(".seg button",sideEl).forEach(b=>b.onclick=()=>{const cur=S.tpl[l.id]||{};S.tpl[l.id]={kind:b.dataset.k};if(cur.kind===b.dataset.k)S.tpl[l.id]=cur;save();renderSide()});
   $("#gen",sideEl).onclick=()=>genTemplate(l);
+  const fm=$("#findmail",sideEl);if(fm)fm.onclick=()=>findEmail(l);
   $("#client",sideEl).onclick=()=>alreadyClient(l);
   bindTpl(l);
   setTimeout(()=>{const x=$(".x",sideEl);x&&x.focus()},20);
@@ -653,6 +670,9 @@ function contactBlock(l){
   return `<div class="contact">${head}<div class="ln">${links.join("")}</div><div class="alt">${esc(note)}</div>
     ${c.alt?`<div class="alt">Also at ${esc(l.company)}: <b>${esc(c.alt.name)}</b>, ${esc(c.alt.title)}${c.alt.linkedin&&!S.sample?` · <a href="${esc(c.alt.linkedin)}" target="_blank" rel="noopener">LinkedIn ↗</a>`:""}</div>`:""}
     ${c.generic?`<div class="alt">General inbox: <a href="mailto:${esc(c.generic)}">${esc(c.generic)}</a></div>`:""}
+    ${c.kind!=="email"?(l._finding?`<div class="load" style="padding:10px 0 0"><span class="spin"></span><span>Looking for a work email at ${esc(l.domain)}…</span></div>`
+      :l.emailTried?`<div class="alt">${c.lookupFailed?"The email lookup didn't answer. Try again later.":`No public work email found at ${esc(l.domain)}.`}</div>`
+      :(CAPS.emailFinder||S.sample)?`<div class="row" style="margin-top:10px"><button class="btn sm pri" id="findmail">✉ Find email</button><span class="dim" style="font-size:12.5px">${MAX_EMAIL-(S.emailLookups||0)} of ${MAX_EMAIL} lookups left in this test</span></div>`:""):""}
     ${c.chain&&c.chain.length?`<div class="chain" aria-label="How this contact was found">${c.chain.map(s=>`<span class="${s.ok?"ok":""}">${s.ok?"✓":"–"} ${esc(s.k)}${s.off?" (off)":""}</span>`).join("")}</div>`:""}</div>`;
 }
 function tplBlock(l,t){
@@ -724,7 +744,7 @@ function modal(kind){
   const el=document.createElement("div");
   el.className="modal";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-labelledby","mt");
   el.innerHTML=`<div class="box"><div class="em" aria-hidden="true">🔒</div><h2 id="mt">This is a test version</h2>
-    <p>${kind==="day"?`You've already run today's 20-lead test. You can run a new one ${esc(nextTime())}. `:kind==="swap"?"You've swapped the most leads this test allows. ":""}Only the tool owner can generate unlimited leads. Feel free to contact Liron.</p>
+    <p>${kind==="day"?`You've already run today's 20-lead test. You can run a new one ${esc(nextTime())}. `:kind==="swap"?"You've swapped the most leads this test allows. ":kind==="email"?`You've used all ${MAX_EMAIL} email lookups in this test. `:""}Only the tool owner can generate unlimited leads. Feel free to contact Liron.</p>
     <div class="row"><a class="btn pri" href="../../index.html#contact">Contact Liron</a><button class="btn ghost" id="mclose">Close</button></div></div>`;
   document.body.appendChild(el);document.body.classList.add("modal-open");
   const close=()=>{el.remove();document.body.classList.remove("modal-open")};
