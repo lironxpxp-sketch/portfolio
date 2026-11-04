@@ -49,8 +49,8 @@ textarea{resize:vertical;min-height:84px;line-height:1.45}
 section h3{font:600 11px var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
 /* 30-second version */
 .tldr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--line);gap:1px}
-.tldr div{background:var(--accent-soft);padding:12px 14px;min-width:0}
-.tldr div.r{background:var(--risk-bg)}
+.tldr>div{background:var(--accent-soft);padding:12px 14px;min-width:0}
+.tldr>div.r{background:var(--risk-bg)}
 .tldr .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
 .tldr div.r .k{color:var(--risk)}
 .tldr p{margin:0;font-size:14px;font-weight:500}
@@ -95,25 +95,41 @@ ol.q{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .status.err{color:var(--risk)}
 @media (max-width:860px){.layout{grid-template-columns:1fr}.cols,.row{grid-template-columns:1fr}.brief{padding:18px 16px}.bhead-side{align-items:flex-start}}
 @media (max-width:620px){.tldr{grid-template-columns:1fr}}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acts .btn{font-size:13px;padding:6px 11px}
+.pend{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px;padding:12px 14px;border:1px dashed var(--line);border-radius:8px}
+.pend::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:pc-sp .8s linear infinite;flex:none}
+@keyframes pc-sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pend::before{animation-duration:2.4s}}
+.failed{color:var(--muted);font-size:13.5px;padding:10px 14px;border:1px solid var(--line);border-radius:8px}
+.paste{min-height:190px;font-size:14.5px}
+details.more{border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+details.more summary{cursor:pointer;font-weight:600;color:var(--accent)}
+details.more[open] summary{margin-bottom:12px}
+details.more .field{margin-bottom:12px}
+.limitnote{font-size:12.5px;color:var(--muted);margin:0}
+.limitnote a{color:var(--accent)}
+@media print{
+  body{background:#fff!important;color:#000!important}
+  .top .settings,.agenda,.note,.pf-back,.acts,.toggle,.draftnote{display:none!important}
+  .layout{display:block!important}.brief{border:0!important;padding:0!important}
+}
 </style>
 
 <div class="wrap">
   <div class="top">
     <div>
       <h1>Pre-Call Brief <span class="demo">Demo data</span></h1>
-      <div class="sub">External meetings from your calendar, each with a brief built an hour before it starts.</div>
+      <div class="sub">Sample meetings on the left. Paste your own meeting invite to get a brief in about a minute.</div>
     </div>
-    <div class="settings">
-      <label for="deliver">Deliver</label>
-      <select id="deliver"><option>Email, 60 min before</option><option>Slack DM, 60 min before</option><option>Email, morning of</option></select>
-    </div>
+    <div class="settings"></div>
   </div>
 
   <div class="layout">
     <nav class="agenda" id="agenda" aria-label="Upcoming meetings"></nav>
     <article class="brief" id="brief"></article>
   </div>
-  <p class="note" style="margin-top:14px">The calendar meetings are fictional sample data. Briefs you create are drafted by AI from your notes (plus a web search of the company where available), and are saved in this browser only.</p>
+  <p class="note" style="margin-top:14px">The sample meetings are fictional. Briefs you create are drafted by AI from your invite and notes plus a live web search of the company and the people, and are saved in this browser only.</p>
 </div>
 
 <script>
@@ -165,6 +181,7 @@ const KEY="precall.mine.v1", DRAFT="precall.form.v1";
 const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
 const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let mine=load(KEY,[]); if(!Array.isArray(mine))mine=[];
+mine.forEach(m=>{if(m.pending){const p=m.pending;m.failed=m.failed||{};["company","people","strategy"].forEach(k=>{if(p[k])m.failed[k]="This part didn't finish because the page was closed. Draft the brief again to complete it."});delete m.pending}});
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -184,106 +201,161 @@ function brief(){
   const m=all().find(x=>x.id===cur)||M[0];cur=m.id;
   const first=/first meeting/i.test(m.last||""), gen=!!m.gen;
   const li=(arr,empty)=>arr.length?`<ul class="items">${arr.map(([d,t,isNew,isRisk])=>`<li ${isNew?"":"data-old"}><span class="date">${esc(d)}</span><span>${isRisk?'<span class="tag risk">Risk</span>':""}${isNew&&!first?'<span class="tag new">New</span>':""}${esc(t)}</span></li>`).join("")}</ul>`:`<p class="empty">${empty}</p>`;
-  const t=m.tldr||{};
+  const t=m.tldr||{}, P=m.pending||{}, F=m.failed||{};
+  const wait=(k,txt)=>P[k]?`<div class="pend">${txt}</div>`:F[k]?`<div class="failed">${esc(F[k])}</div>`:null;
   $("brief").className="brief"+(onlyNew?" hidden-old":"");
   $("brief").innerHTML=`
   <div class="bhead"><div><div class="meta">${esc([m.day,m.time,m.type].filter(Boolean).join(" · "))}</div><h2>${esc(m.co)}</h2><div class="meta">${esc(m.last)}${first?"":" · items marked New happened since then"}</div></div>
    <div class="bhead-side">${first?"":`<label class="toggle"><input type="checkbox" id="onlynew" ${onlyNew?"checked":""}> Only what's new since last call</label>`}
-   ${gen?`<button class="btn danger" id="delbtn">${confirmDel?"Click again to remove":"Remove brief"}</button>`:""}</div></div>
-  ${gen?`<div class="draftnote">${window.__aiWeb?"Drafted by AI from your notes and a live web search. Double-check key facts before the call.":"Drafted by Claude from your notes and its general knowledge, not live web research. Check company facts and news before the call."}</div>`:""}
-  <section aria-label="30-second version"><h3>30-second version</h3><div class="tldr">
+   <div class="acts"><button class="btn" id="copybtn" type="button">Copy brief</button><button class="btn" id="pdfbtn" type="button">Download PDF</button><button class="btn" id="mailbtn" type="button">Email it to myself</button>${gen&&!m.pending?`<button class="btn danger" id="delbtn">${confirmDel?"Click again to remove":"Remove brief"}</button>`:""}</div></div></div>
+  ${gen?`<div class="draftnote">${m.pending?"Drafting now. Each section fills in as soon as it's ready.":window.__aiWeb?"Drafted by AI from your invite, notes and a live web search. Double-check key facts before the call.":"Drafted by AI from your notes and its general knowledge, not live web research. Check company facts and news before the call."}</div>`:""}
+  <section aria-label="30-second version"><h3>30-second version</h3>${wait("strategy","Writing the 30-second version once the research is in…")||`<div class="tldr">
     <div><div class="k">Why this meeting</div><p>${esc(t.why||"—")}</p></div>
     <div><div class="k">Get from the call</div><p>${esc(t.goal||"—")}</p></div>
-    <div class="r"><div class="k">Watch out</div><p>${esc(t.risk||"—")}</p></div></div></section>
-  <section><h3>Who you're meeting</h3><div class="people">${m.people.map(p=>`<div class="person"><div class="av">${esc(ini(p.n))}</div><div><div class="n">${esc(p.n)}</div><div class="r">${esc(p.r)}</div>${p.p?`<p>${esc(p.p)}</p>`:""}</div></div>`).join("")||'<p class="empty">No attendees listed.</p>'}</div></section>
-  <section><h3>Company snapshot</h3>${m.facts.length?`<div class="facts">${m.facts.map(([k,v])=>`<div class="fact"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`:""}<p class="about">${esc(m.about)}</p></section>
-  <div class="cols"><section><h3>${gen?"Recent news":"Last 30 days"}</h3>${li(m.news,gen?"No reliable recent news. Search the company before the call.":"Nothing new.")}</section><section><h3>Your history</h3>${li(m.history,"No previous contact.")}</section></div>
-  <section><h3>Talking points</h3><ul class="items">${m.points.map((p,i)=>`<li><span class="date">${i+1}</span><span>${esc(p)}</span></li>`).join("")}</ul></section>
-  <div class="cols"><section><h3>Questions to ask</h3><ol class="q">${m.qs.map(q=>`<li>${esc(q)}</li>`).join("")}</ol></section>
-  <section><h3>Likely objections</h3><div class="obj">${m.obj.map(([o,a])=>`<div><b>${esc(o)}</b>${esc(a)}</div>`).join("")}</div></section></div>`;
+    <div class="r"><div class="k">Watch out</div><p>${esc(t.risk||"—")}</p></div></div>`}</section>
+  <section><h3>Who you're meeting</h3>${P.people?`<div class="people">${m.people.map(p=>`<div class="person"><div class="av">${esc(ini(p.n))}</div><div><div class="n">${esc(p.n)}</div><div class="r">${esc(p.r)}</div><p class="meta">Researching their background…</p></div></div>`).join("")}</div>`:`<div class="people">${m.people.map(p=>`<div class="person"><div class="av">${esc(ini(p.n))}</div><div><div class="n">${esc(p.n)}</div><div class="r">${esc(p.r)}</div>${p.p?`<p>${esc(p.p)}</p>`:""}</div></div>`).join("")||'<p class="empty">No attendees listed.</p>'}</div>`}</section>
+  <section><h3>Company snapshot</h3>${wait("company","Researching "+esc(m.co)+" on the web…")||`${m.facts.length?`<div class="facts">${m.facts.map(([k,v])=>`<div class="fact"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("")}</div>`:""}<p class="about">${esc(m.about)}</p>`}</section>
+  <div class="cols"><section><h3>${gen?"Recent news":"Last 30 days"}</h3>${wait("company","Looking for recent news…")||li(m.news,gen?"No reliable recent news. Search the company before the call.":"Nothing new.")}</section><section><h3>Your history</h3>${wait("strategy","Reading your notes…")||li(m.history,"No previous contact.")}</section></div>
+  <section><h3>Talking points</h3>${wait("strategy","Writing talking points…")||`<ul class="items">${m.points.map((p,i)=>`<li><span class="date">${i+1}</span><span>${esc(p)}</span></li>`).join("")}</ul>`}</section>
+  <div class="cols"><section><h3>Questions to ask</h3>${wait("strategy","Writing questions…")||`<ol class="q">${m.qs.map(q=>`<li>${esc(q)}</li>`).join("")}</ol>`}</section>
+  <section><h3>Likely objections</h3>${wait("strategy","Preparing likely objections…")||`<div class="obj">${m.obj.map(([o,a])=>`<div><b>${esc(o)}</b>${esc(a)}</div>`).join("")}</div>`}</section></div>`;
 }
 
 const TYPES=["Discovery call","Follow-up","Proposal review","Partnership intro","Renewal check-in","Other"];
+const LIMIT=3, LKEY="precall.made.v1", DAY=24*60*60*1000;
+const madeToday=()=>{const v=load(LKEY,[]);return (Array.isArray(v)?v:[]).filter(t=>Date.now()-t<DAY)};
 function form(){
-  const f=load(DRAFT,{});
+  const f=load(DRAFT,{}), left=LIMIT-madeToday().length;
   $("brief").className="brief";
   $("brief").innerHTML=`
-  <div class="bhead"><div><div class="meta">New brief</div><h2>Brief a new meeting</h2><div class="meta">Tell Claude who you're meeting. It drafts the same one-page brief, ready in under a minute.</div></div></div>
+  <div class="bhead"><div><div class="meta">New brief</div><h2>Brief a new meeting</h2><div class="meta">Paste the calendar invite or the email about the meeting. The brief is ready in about a minute.</div></div></div>
   <form class="form" id="f" novalidate>
-    <div class="row">
-      <div class="field"><label for="f-co">Company *</label><input type="text" id="f-co" required placeholder="e.g. Monday.com" value="${esc(f.co||"")}"></div>
-      <div class="field"><label for="f-type">Meeting type</label><select id="f-type">${TYPES.map(t=>`<option ${f.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
-    </div>
-    <div class="row">
-      <div class="field"><label for="f-when">When</label><input type="text" id="f-when" placeholder="e.g. Thu 5 Nov · 14:00–14:30" value="${esc(f.when||"")}"></div>
-      <div class="field"><label for="f-site">Website</label><input type="text" id="f-site" placeholder="e.g. monday.com" value="${esc(f.site||"")}"></div>
-    </div>
-    <div class="field"><label for="f-people">Who you're meeting</label><textarea id="f-people" placeholder="One per line: name, title&#10;Dana Levi, VP Marketing">${esc(f.people||"")}</textarea></div>
-    <div class="field"><label for="f-sell">What you're selling</label><input type="text" id="f-sell" value="${esc(f.sell||"Ad reporting platform that merges Meta, Google and TikTok data into one daily view")}"></div>
-    <div class="field"><label for="f-notes">What you already know</label><textarea id="f-notes" placeholder="Past calls, emails, CRM stage, deal size, what they said. Dates help Claude mark what's new.">${esc(f.notes||"")}</textarea><span class="hint">The more specific this is, the sharper the talking points.</span></div>
-    <div class="actions"><button type="submit" class="btn primary" id="gen">Draft the brief</button><button type="button" class="btn" id="stop" hidden>Stop</button><span class="status" id="status" role="status"></span></div>
+    <div class="field"><label for="f-invite">Meeting invite or email *</label><textarea id="f-invite" class="paste" placeholder="Paste it here, e.g.&#10;&#10;Intro: Acme × Northwind&#10;Thu 5 Nov 2026 · 14:00–14:30&#10;Attendees: Dana Levi (dana@northwind.com), Omer Katz&#10;Agenda: see how you could help with cross-channel reporting">${esc(f.invite||"")}</textarea></div>
+    <details class="more"${f.co||f.sell||f.notes||f.site?" open":""}><summary>Add details (optional)</summary>
+      <div class="row">
+        <div class="field"><label for="f-co">Company</label><input type="text" id="f-co" placeholder="If it isn't clear from the invite" value="${esc(f.co||"")}"></div>
+        <div class="field"><label for="f-site">Website</label><input type="text" id="f-site" placeholder="e.g. monday.com" value="${esc(f.site||"")}"></div>
+      </div>
+      <div class="field"><label for="f-type">Meeting type</label><select id="f-type"><option value="">Work it out from the invite</option>${TYPES.map(t=>`<option ${f.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div class="field"><label for="f-sell">What you're selling</label><input type="text" id="f-sell" placeholder="e.g. Ad reporting platform that merges Meta, Google and TikTok data" value="${esc(f.sell||"")}"></div>
+      <div class="field"><label for="f-notes">What you already know</label><textarea id="f-notes" placeholder="Past calls, emails, CRM stage, deal size, what they said. Dates help mark what's new.">${esc(f.notes||"")}</textarea><span class="hint">The more specific this is, the sharper the talking points.</span></div>
+    </details>
+    <div class="actions"><button type="submit" class="btn primary" id="gen"${left<=0?" disabled":""}>Draft the brief</button><span class="status" id="status" role="status"></span></div>
+    <p class="limitnote">${left>0?`Test version: ${left} of ${LIMIT} briefs left today.`:`You've made today's ${LIMIT} test briefs. Only the tool owner can make unlimited briefs. Feel free to <a href="../../index.html#contact">contact Liron</a>.`}</p>
   </form>`;
-  if(sample===null)setStatus("Checking Claude is available…");
+  if(sample===null)setStatus("Checking the AI is available…");
 }
-function readForm(){return{co:$("f-co").value.trim(),type:$("f-type").value,when:$("f-when").value.trim(),site:$("f-site").value.trim(),people:$("f-people").value.trim(),sell:$("f-sell").value.trim(),notes:$("f-notes").value.trim()}}
+function readForm(){const v=id=>($(id)&&$(id).value||"").trim();return{invite:v("f-invite"),co:v("f-co"),type:v("f-type"),site:v("f-site"),sell:v("f-sell"),notes:v("f-notes")}}
 function setStatus(t,err){const s=$("status");if(!s)return;s.textContent=t;s.className="status"+(err?" err":"")}
-
-function prompt(f){return `You are a sales-prep analyst. Write a one-page pre-call brief for a salesperson.
-
-Today is ${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}.
-Company: ${f.co}${f.site?` (${f.site})`:""}
-Meeting type: ${f.type}
-When: ${f.when||"not given"}
-Attendees (one per line):
-${f.people||"not given"}
-What the salesperson sells: ${f.sell||"not given"}
-What the salesperson already knows:
-${f.notes||"nothing yet"}
-
-Rules:
-- Use the salesperson's notes as the primary source. If you have a web search tool, search for the company (and its website if given) to fill the company snapshot and recent news with current, real facts, and look up attendees' public roles. Without search, use your general knowledge only where you are confident. Never invent news, quotes, numbers or dates.
-- If a fact is unknown, write "Unknown · check" as its value.
-- "news" holds only events you are confident happened, with the month and year as the date (e.g. "Mar 2025"). An empty array is fine.
-- "history" is built only from the salesperson's notes, newest first. Empty array if none.
-- In news and history, the third value is 1 if the item happened after the last call, else 0. The fourth value is 1 if it is a risk to the deal, else 0.
-- "last" is "First meeting" unless the notes mention an earlier call, then "Last call <date>".
-- For attendees with no known background, "p" says what to find out about them.
-- Write short, plain sentences. 3 talking points, 3-4 questions, 2 objections with responses. Tie each to what they sell.
-
-Reply with only this JSON:
-{"type":"${f.type}","last":"First meeting","tldr":{"why":"one sentence","goal":"one sentence: the single outcome to get","risk":"one sentence"},"people":[{"n":"Name","r":"Title","p":"one sentence"}],"facts":[["Industry","..."],["Employees","..."],["HQ","..."],["Funding","..."],["Stage","..."],["Fit","..."]],"about":"two sentences","news":[["Mar 2025","event",0,0]],"history":[["Oct 30","event",1,0]],"points":["..."],"qs":["..."],"obj":[["\\"objection\\"","response"]]}`}
 
 const str=v=>typeof v==="string"?v:(v==null?"":String(v));
 const arr=v=>Array.isArray(v)?v:[];
-function normalize(d,f){
-  d=d&&typeof d==="object"?d:{};const t=d.tldr||{};
-  const items=a=>arr(a).filter(Array.isArray).map(x=>[str(x[0]),str(x[1]),x[2]?1:0,x[3]?1:0]).filter(x=>x[1]).slice(0,6);
-  let people=arr(d.people).map(p=>({n:str(p&&p.n)||"Unknown",r:str(p&&p.r),p:str(p&&p.p)})).slice(0,6);
-  if(!people.length&&f.people)people=f.people.split("\n").filter(Boolean).map(l=>{const[n,...r]=l.split(",");return{n:n.trim(),r:r.join(",").trim(),p:""}});
-  return{id:"u"+Date.now().toString(36),gen:1,day:"",time:f.when,co:f.co,type:str(d.type)||f.type,last:str(d.last)||"First meeting",
-    tldr:{why:str(t.why),goal:str(t.goal),risk:str(t.risk)},people,
-    facts:arr(d.facts).filter(Array.isArray).map(x=>[str(x[0]),str(x[1])]).filter(x=>x[0]).slice(0,6),
-    about:str(d.about),news:items(d.news),history:items(d.history),
-    points:arr(d.points).map(str).filter(Boolean).slice(0,5),qs:arr(d.qs).map(str).filter(Boolean).slice(0,5),
-    obj:arr(d.obj).filter(Array.isArray).map(x=>[str(x[0]),str(x[1])]).filter(x=>x[0]).slice(0,3)};
-}
-const ERR={not_granted:"Claude isn't allowed on this page. Allow it from the artifact's permissions to draft briefs.",sampling_disabled:"Claude isn't available for this account.",rate_limited:"Too many requests right now. Try again in a minute.",session_expired:"Your session expired. Sign in again, then retry.",refused:"Claude couldn't draft this one. Rephrase your notes and try again.",invalid_json:"The draft came back in the wrong shape. Try again.",empty_completion:"Claude returned nothing. Add a few more details and try again.",prompt_too_large:"Your notes are too long. Shorten them and try again."};
+const clip=(v,n)=>{v=str(v).trim();return v.length>n?v.slice(0,n-1)+"…":v};
+const items=a=>arr(a).filter(Array.isArray).map(x=>[str(x[0]),str(x[1]),x[2]?1:0,x[3]?1:0]).filter(x=>x[1]).slice(0,6);
+const today=()=>new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+function pExtract(f){return `Read this meeting invite or email and pull out the facts. Today is ${today()}.
+"""
+${f.invite||"(no invite pasted)"}
+"""
+${f.co?`The user says the company is: ${f.co}\n`:""}${f.site?`The user says the website is: ${f.site}\n`:""}
+The "company" is the OTHER organisation the salesperson is meeting (not the salesperson's own company). If several organisations appear, pick the external one.
+Reply with only JSON: {"company":"","website":"domain if you can tell, else ''","when":"day, date and time in a short form like 'Thu 5 Nov · 14:00–14:30', or ''","type":"one of: ${TYPES.join(", ")}","people":[{"n":"full name","r":"title if stated, else ''","email":"if shown, else ''"}]}
+Only include people from the other organisation. Never invent names.`}
+
+function pCompany(m){return `Research this company for a salesperson's meeting prep. Use web search for current, real facts. Today is ${today()}.
+Company: ${m.co}${m.site?` (${m.site})`:""}
+Reply with only JSON: {"facts":[["Industry",""],["Employees",""],["HQ",""],["Funding",""],["Stage",""],["Products",""]],"about":"two plain sentences on what they do and what is changing for them","news":[["Mon YYYY","event, one line",1,0]]}
+Rules: news = real events from the last 12 months only, newest first, max 5, with month and year. The third value is 1 if the event is in the last 3 months, else 0; the fourth is 1 if it is a risk for a seller (layoffs, budget cuts, a vendor review). If a fact is unknown write "Unknown · check". Never invent numbers or events.`}
+
+function pPeople(m){return `Research these people for a salesperson's meeting prep. Use web search (LinkedIn pages, company pages, talks, articles, posts). Today is ${today()}.
+Company: ${m.co}${m.site?` (${m.site})`:""}
+People:
+${m.people.map(p=>`- ${p.n}${p.r?`, ${p.r}`:""}${p.email?` (${p.email})`:""}`).join("\n")}
+For each person give their current title, how long they've been in the role if you can tell, past companies, and anything recent they posted, said or did that's useful in a meeting.
+Reply with only JSON: {"people":[{"n":"exact name as given","r":"Title · time in role","p":"one or two sentences: background and something recent, or what to find out if nothing is public"}]}
+Never invent facts. If you can't find a person, keep their name, keep any known title, and write in "p" what to look up before the call.`}
+
+function pStrategy(m,f){return `You are a sales-prep analyst. Using the research below, write the strategy part of a one-page pre-call brief. Today is ${today()}.
+Company: ${m.co}${m.site?` (${m.site})`:""}
+When: ${m.time||"not given"}
+Meeting type: ${m.type}
+Meeting invite or email:
+"""
+${clip(f.invite,4000)}
+"""
+What the salesperson sells: ${f.sell||"not given: infer it from the invite's sender if you can, else keep it general"}
+What the salesperson already knows:
+${f.notes||"nothing yet"}
+Company research: ${JSON.stringify({about:m.about,facts:m.facts,news:m.news})}
+People: ${JSON.stringify(m.people.map(p=>({n:p.n,r:p.r,p:p.p})))}
+
+Reply with only JSON: {"type":"${m.type}","last":"First meeting, or 'Last call <date>' if the notes mention one","tldr":{"why":"one sentence","goal":"one sentence: the single outcome to get","risk":"one sentence"},"history":[["Oct 30","event from the notes",1,0]],"points":["","",""],"qs":["","","",""],"obj":[["\\"objection\\"","response"],["\\"objection\\"","response"]]}
+Rules: short, plain sentences. 3 talking points, 3-4 questions, 2 objections with responses, each tied to what they sell and to the research. "history" comes only from the notes and the invite, newest first; [] if none; third value 1 if it happened after the last call, fourth 1 if it is a risk. Never invent facts.`}
+
+const ERR={not_granted:"The AI isn't allowed on this page.",sampling_disabled:"The AI isn't available right now.",rate_limited:"Too many requests right now. Try again in a minute.",refused:"The AI couldn't draft this one. Rephrase your notes and try again.",invalid_json:"The draft came back in the wrong shape. Try again.",empty_completion:"The AI returned nothing. Add a few more details and try again.",prompt_too_large:"Your invite or notes are too long. Shorten them and try again."};
+const repaint=m=>{save(KEY,mine);agenda();if(view==="brief"&&cur===m.id)brief()};
 
 async function generate(){
   if(busy)return;const f=readForm();save(DRAFT,f);
-  if(!f.co){setStatus("Add the company name to draft a brief.",true);$("f-co").focus();return}
+  if(!f.invite&&!f.co){setStatus("Paste the meeting invite or email first.",true);$("f-invite").focus();return}
+  if(madeToday().length>=LIMIT){form();return}
   if(!sample){setStatus("AI drafting is switched off right now. Pick a sample meeting on the left to see a finished brief.",true);return}
-  busy=true;ctl=new AbortController();$("gen").disabled=true;$("stop").hidden=false;setStatus("Researching and drafting… this takes 20–60 seconds.");
-  try{
-    const data=await sample.json(prompt(f),{signal:ctl.signal,cache:false,webSearch:!!window.__aiWeb,siteUrl:f.site||""});
-    const m=normalize(data,f);mine.unshift(m);mine=mine.slice(0,20);save(KEY,mine);
-    try{localStorage.removeItem(DRAFT)}catch(e){}
-    cur=m.id;view="brief";onlyNew=false;agenda();brief();
-  }catch(e){
-    if(e&&e.code==="cancelled")setStatus("Stopped.");
-    else{setStatus(ERR[e&&e.code]||"Something went wrong reaching Claude. Try again.",true);if(e&&(e.code==="not_granted"||e.code==="sampling_disabled"))$("gen").hidden=true}
-  }finally{busy=false;const g=$("gen"),s=$("stop");if(g)g.disabled=false;if(s)s.hidden=true}
+  busy=true;$("gen").disabled=true;setStatus("Reading the invite…");
+  const web=!!window.__aiWeb, fail=t=>{busy=false;const g=$("gen");if(g)g.disabled=false;setStatus(t,true)};
+  // 1. read the invite
+  let x={};
+  try{x=await sample.json(pExtract(f),{task:"copy",cache:false})||{}}catch(e){if(!f.co)return fail(ERR[e&&e.code]||"Something went wrong reaching the AI. Try again.")}
+  const co=clip(f.co||x.company,80);
+  if(!co)return fail("I couldn't tell which company this meeting is with. Add it under 'Add details'.");
+  const people=arr(x.people).map(p=>({n:clip(p&&p.n,60),r:clip(p&&p.r,90),email:clip(p&&p.email,90),p:""})).filter(p=>p.n).slice(0,5);
+  const m={id:"u"+Date.now().toString(36),gen:1,day:"",time:clip(x.when,60),co,site:clip(f.site||x.website,80),type:f.type||(TYPES.includes(x.type)?x.type:"Discovery call"),last:"First meeting",
+    tldr:{},people,facts:[],about:"",news:[],history:[],points:[],qs:[],obj:[],pending:{company:1,people:people.length?1:0,strategy:1},failed:{}};
+  const made=madeToday();made.push(Date.now());save(LKEY,made);
+  mine.unshift(m);mine=mine.slice(0,20);try{localStorage.removeItem(DRAFT)}catch(e){}
+  cur=m.id;view="brief";onlyNew=false;repaint(m);
+  try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:"precall/brief",title:"Drafted a pre-call brief",event:true})}catch(e){}
+  // 2. research the company and the people at the same time; each section fills in when ready
+  const company=(async()=>{
+    try{const d=await sample.json(pCompany(m),{task:"research",webSearch:web,siteUrl:m.site||"",cache:false})||{};
+      m.facts=arr(d.facts).filter(Array.isArray).map(v=>[str(v[0]),str(v[1])]).filter(v=>v[0]&&v[1]).slice(0,6);m.about=clip(d.about,500);m.news=items(d.news)}
+    catch(e){m.failed.company="Couldn't research the company just now. Search it before the call."}
+    m.pending.company=0;repaint(m)})();
+  const ppl=(async()=>{if(!people.length)return;
+    try{const d=await sample.json(pPeople(m),{task:"research",webSearch:web,cache:false})||{};
+      const got=arr(d.people);m.people=m.people.map((p,i)=>{const g=got.find(q=>q&&str(q.n).toLowerCase()===p.n.toLowerCase())||got[i]||{};return{n:p.n,r:clip(g.r,100)||p.r,email:p.email,p:clip(g.p,300)||"Look them up on LinkedIn before the call."}})}
+    catch(e){m.people=m.people.map(p=>({...p,p:"Couldn't research this person just now. Look them up on LinkedIn before the call."}))}
+    m.pending.people=0;repaint(m)})();
+  await Promise.all([company,ppl]);
+  // 3. write the strategy from the research
+  try{const d=await sample.json(pStrategy(m,f),{task:"copy",cache:false})||{};const t=d.tldr||{};
+    m.tldr={why:clip(t.why,240),goal:clip(t.goal,240),risk:clip(t.risk,240)};m.last=clip(d.last,40)||"First meeting";m.history=items(d.history);
+    m.points=arr(d.points).map(str).filter(Boolean).slice(0,5);m.qs=arr(d.qs).map(str).filter(Boolean).slice(0,5);m.obj=arr(d.obj).filter(Array.isArray).map(v=>[str(v[0]),str(v[1])]).filter(v=>v[0]).slice(0,3)}
+  catch(e){m.failed.strategy=(ERR[e&&e.code]||"Couldn't write this part just now.")+" The research above is still useful."}
+  delete m.pending;busy=false;repaint(m);
 }
+
+/* Copy / PDF / Email */
+function asText(m){
+  const L=[],t=m.tldr||{};
+  L.push(`${m.co} · ${[m.day,m.time,m.type].filter(Boolean).join(" · ")}`,"");
+  if(t.why||t.goal||t.risk)L.push("30-SECOND VERSION",`Why this meeting: ${t.why||"—"}`,`Get from the call: ${t.goal||"—"}`,`Watch out: ${t.risk||"—"}`,"");
+  if(m.people.length){L.push("WHO YOU'RE MEETING");m.people.forEach(p=>L.push(`- ${p.n}${p.r?`, ${p.r}`:""}${p.p?`: ${p.p}`:""}`));L.push("")}
+  if(m.facts.length||m.about){L.push("COMPANY");m.facts.forEach(([k,v])=>L.push(`${k}: ${v}`));if(m.about)L.push(m.about);L.push("")}
+  if(m.news.length){L.push("RECENT NEWS");m.news.forEach(n=>L.push(`- ${n[0]}: ${n[1]}`));L.push("")}
+  if(m.history.length){L.push("YOUR HISTORY");m.history.forEach(n=>L.push(`- ${n[0]}: ${n[1]}`));L.push("")}
+  if(m.points.length){L.push("TALKING POINTS");m.points.forEach((p,i)=>L.push(`${i+1}. ${p}`));L.push("")}
+  if(m.qs.length){L.push("QUESTIONS TO ASK");m.qs.forEach(q=>L.push(`- ${q}`));L.push("")}
+  if(m.obj.length){L.push("LIKELY OBJECTIONS");m.obj.forEach(([o,a])=>L.push(`- ${o} → ${a}`))}
+  return L.join("\n").trim();
+}
+$("brief").addEventListener("click",async e=>{
+  const id=e.target&&e.target.id;if(!["copybtn","pdfbtn","mailbtn"].includes(id))return;
+  const m=all().find(x=>x.id===cur);if(!m)return;
+  if(id==="copybtn"){const b=e.target;try{await navigator.clipboard.writeText(asText(m));b.textContent="Copied ✓"}catch(x){b.textContent="Copy failed"}setTimeout(()=>{b.textContent="Copy brief"},1800)}
+  if(id==="pdfbtn")window.print();
+  if(id==="mailbtn"){let body=asText(m);if(body.length>1800)body=body.slice(0,1800)+"\n…";location.href="mailto:?subject="+encodeURIComponent("Pre-call brief: "+m.co+(m.time?" · "+m.time:""))+"&body="+encodeURIComponent(body)}
+});
 
 function show(){agenda();view==="form"?form():brief()}
 $("agenda").addEventListener("click",e=>{
@@ -301,7 +373,6 @@ $("brief").addEventListener("change",e=>{if(e.target.id==="onlynew"){onlyNew=e.t
 $("brief").addEventListener("submit",e=>{e.preventDefault();generate()});
 $("brief").addEventListener("input",e=>{if(view==="form"&&e.target.closest("#f"))save(DRAFT,readForm())});
 $("brief").addEventListener("click",e=>{
-  if(e.target.id==="stop"&&ctl){ctl.abort();return}
   if(e.target.id==="delbtn"){
     if(!confirmDel){confirmDel=true;e.target.textContent="Click again to remove";return}
     mine=mine.filter(m=>m.id!==cur);save(KEY,mine);cur="m1";confirmDel=false;show();

@@ -37,10 +37,7 @@ TWEAKS = {
         ('KEY?localStorage.setItem("adcopilot.key",KEY):localStorage.removeItem("adcopilot.key")',
          'KEY&&KEY!=="__site__"?localStorage.setItem("adcopilot.key",KEY):localStorage.removeItem("adcopilot.key")'),
     ],
-    "pre-call-brief": [
-        ("Drafting needs Claude, which isn't available in this view.",
-         "AI drafting is switched off right now. Pick a sample meeting on the left to see a finished brief."),
-    ],
+    # Pre-Call Brief: master copy lives in sources/pre-call-brief.html
 }
 
 
