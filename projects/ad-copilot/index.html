@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=9"></script>
+<head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><script src="../../assets/claude-shim.js?v=9"></script><script>if(/(^|\.)lironsofer\.online$/.test(location.hostname)){var g=document.createElement("script");g.async=true;g.dataset.goatcounter="https://lironsofer.goatcounter.com/count";g.src="https://gc.zgo.at/count.js";document.head.appendChild(g)}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ad Performance Copilot</title>
@@ -49,6 +49,16 @@ select,input[type=number],input[type=text]{font:13px var(--f-ui);padding:6px 8px
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
 .drop b{font-size:15px}
 .files{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.impsum{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.impsum b{margin-right:6px}
+.askfab{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:60;border:0;border-radius:999px;padding:11px 16px;font:600 14px var(--f-ui,system-ui);background:var(--accent);color:var(--bg,#0b0d12);cursor:pointer;box-shadow:0 6px 22px rgba(0,0,0,.45)}
+.askclose{display:none}
+body.ask-open .askfab{display:none}
+body.ask-open #askPanel{position:fixed;z-index:61;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(460px,calc(100vw - 28px));max-height:min(78vh,640px);overflow:auto;margin:0!important;box-shadow:0 18px 50px rgba(0,0,0,.55)}
+body.ask-open #askPanel .askclose{display:inline-flex}
+body.ask-open #askPanel h2{position:sticky;top:-16px;background:var(--panel);padding-top:4px;z-index:1}
+body.ask-open .pf-back{display:none!important}
+#importPanel.open .impsum{padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
 .file{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .file .fh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 .file .fh b{word-break:break-all}
@@ -168,7 +178,7 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
 @media (max-width:860px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-<script>if(/(^|\.)lironsofer\.online$/.test(location.hostname)){var g=document.createElement("script");g.async=true;g.dataset.goatcounter="https://lironsofer.goatcounter.com/count";g.src="https://gc.zgo.at/count.js";document.head.appendChild(g)}</script></head>
+</head>
 <body>
 <div class="wrap">
   <header class="top">
@@ -184,7 +194,9 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
     </div>
   </header>
 
-  <section class="panel noprint">
+  <section class="panel noprint" id="importPanel">
+    <div class="impsum" id="impSum" hidden><span><b>Data</b> <span class="sub" id="impLine"></span></span><span class="controls"><button class="btn" type="button" id="impEdit" aria-expanded="false">Edit files</button></span></div>
+    <div id="impBody">
     <h2>1. Import data <small>CSV or Excel · one or several files</small></h2>
     <div class="drop" id="drop">
       <b>Drop export files here</b>
@@ -208,6 +220,7 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
       <p class="note">Tip: name campaigns with country and OS (e.g. “App – iOS – US”) and the tool will spot patterns even when your export has no Country or OS column.</p>
     </details>
     <div class="files" id="files"></div>
+    </div>
   </section>
 
   <div id="dash" hidden>
@@ -215,7 +228,7 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
     <div class="focusbar" id="focusBar" hidden><span>Showing only: <b id="focusLbl"></b></span><button type="button" class="btn" id="focusClear">Show everything</button></div>
 
     <section class="panel" id="insPanel" style="margin-bottom:16px">
-      <h2><span>What to do now <small id="insSub"></small></span><span class="controls noprint"><button class="btn" type="button" id="aiSumBtn" hidden>Summarize with Claude</button><button class="btn" type="button" id="copyBtn">Copy</button></span></h2>
+      <h2><span>What to do now <small id="insSub"></small></span><span class="controls noprint"><button class="btn" type="button" id="aiSumBtn" hidden>Summarize for my manager</button><button class="btn" type="button" id="copyBtn">Copy</button></span></h2>
       <ol class="ins" id="ins"></ol>
       <p class="sim" id="sim" hidden></p>
       <div class="aisum" id="aiSum" hidden></div>
@@ -254,8 +267,8 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
       <p class="note" id="ruleNote"></p>
     </section>
 
-    <section class="panel noprint" style="margin-top:16px">
-      <h2>Ask your data</h2>
+    <section class="panel noprint askpanel" id="askPanel" style="margin-top:16px">
+      <h2><span>Ask your data</span><button type="button" class="btn askclose" id="askClose" aria-label="Close">Close</button></h2>
       <form class="ask" id="askform">
         <input id="q" type="text" placeholder="e.g. Why did Meta get worse this week? What should I do with the BR campaigns?" autocomplete="off">
         <button class="btn primary" type="submit">Ask</button>
@@ -267,6 +280,7 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
   </div>
 </div>
 
+<button type="button" class="askfab noprint" id="askFab" hidden aria-controls="askPanel">💬 Ask your data</button>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" hidden aria-labelledby="drTitle" role="dialog">
   <div class="drh"><div><h2 id="drTitle"></h2><div class="sub" id="drSub"></div></div><button type="button" class="btn" id="drClose" aria-label="Close">Close</button></div>
@@ -284,7 +298,7 @@ input[type=password]{font:13px var(--f-num);padding:6px 8px;border:1px solid var
       <label>Spend elasticity <input id="sEl" type="number" step="0.05" min="0.3" max="1"> <span class="sub">(1 = results grow 1:1 with spend; 0.7 = each extra dollar buys less)</span></label>
       <button type="button" class="linkbtn" id="sReset">Reset to defaults</button>
     </fieldset>
-    <fieldset><legend>Claude (optional)</legend>
+    <fieldset id="sAI"><legend>Claude (optional)</legend>
       <label>Anthropic API key <input id="sKey" type="password" autocomplete="off" placeholder="sk-ant-…" style="width:100%"></label>
       <label>Model <select id="sModel"></select></label>
       <p class="note">The key is stored only in this browser and sent only to api.anthropic.com. Claude receives aggregated figures and campaign names through tool calls, never your raw files. Usage is billed to your Anthropic account. <button type="button" class="linkbtn" id="sForget">Remove key</button> <span id="sMsg"></span></p>
@@ -666,7 +680,7 @@ if(typeof module!=="undefined")module.exports=ENGINE;
 if(typeof document==="undefined")return;
 const E=ENGINE,$=id=>document.getElementById(id);
 const COLORS=["--c1","--c2","--c3","--c4","--c5"];
-let FILES=[],ROWS=[],STATS={},NOTES=[],range=null,HIDDEN=new Set(),sortKey="spend",sortDir=-1,isSample=false,tgtTouched=false,FOCUS=null;
+let IMP_OPEN=false,FILES=[],ROWS=[],STATS={},NOTES=[],range=null,HIDDEN=new Set(),sortKey="spend",sortDir=-1,isSample=false,tgtTouched=false,FOCUS=null;
 let curr="$",mixed=null,PREV=null,NEW=new Set(),UPD="",pendingUpload=null,LAST_INS=[],CARDS={},RATES={},restored="",AISUM="";
 let SET={th:{...E.DEF_TH},model:"claude-sonnet-5-5"};
 let KEY="";try{KEY=localStorage.getItem("adcopilot.key")||""}catch(e){}
@@ -775,7 +789,10 @@ function shown(rows){return[...new Set((rows||view()).map(r=>r.channel))].filter
 function setFocus(fc){FOCUS=fc;render();$("dash").scrollIntoView({behavior:"smooth",block:"start"})}
 function render(){const has=ROWS.length>0;$("dash").hidden=!has;$("rangeCtl").hidden=!has||!E.dateList(ROWS).length;$("printBtn").hidden=!has;
   $("srcTag").textContent=!has?"No data":isSample?"Sample data":"Your data";$("srcTag").className="tag"+(isSample?" sample":"");
-  $("aiTag").textContent=KEY?"Claude on":"Claude off";$("aiTag").className="tag"+(KEY?"":" off");
+  $("aiTag").textContent=KEY?"Claude on":"Claude off";$("aiTag").className="tag"+(KEY?"":" off");$("aiTag").hidden=KEY==="__site__";
+  {const fold=has&&!IMP_OPEN;$("impSum").hidden=!has;$("impBody").hidden=fold;$("importPanel").classList.toggle("open",has&&IMP_OPEN);$("impEdit").textContent=IMP_OPEN?"Done":"Edit files";$("impEdit").setAttribute("aria-expanded",String(!!IMP_OPEN));
+   if(has){const ch=[...new Set(ROWS.map(r=>r.channel))].sort();$("impLine").textContent=`${FILES.length} file${FILES.length>1?"s":""} from ${ch.join(", ")}${FILES.some(f=>f.role==="conv")?" + conversions file":""}`}}
+  $("askFab").hidden=!has;
   if(!has){$("srcLine").textContent="Upload Google Ads, Meta or TikTok exports, plus an optional MMP or CRM conversions file. Your files stay in this browser.";return}
   const ds=E.dateList(ROWS);$("srcLine").textContent=`${FILES.length} file${FILES.length>1?"s":""} · ${ROWS.length.toLocaleString()} rows · ${ds.length?ds[0]+" to "+ds.at(-1):"no dates"} · files stay in this browser`;
   $("printHead").textContent=`Ad performance report · ${range?`last ${range} days to ${ds.at(-1)}`:ds.length?ds[0]+" to "+ds.at(-1):""}`;
@@ -970,22 +987,22 @@ function md(s){const lines=esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").split(/\
   return h+(ul?"</ul>":"")}
 const STEPL={get_overview:"totals",get_breakdown:"breakdown",get_takeaways:"takeaways",get_anomalies:"recent anomalies",get_daily:"daily trend"};
 function stepText(u){const i=u.input||{};return STEPL[u.name]+(u.name==="get_breakdown"?` by ${i.by}${i.sort_by?`, sorted by ${i.sort_by}`:""}`:"")+(i.metric?` of ${i.metric}`:"")+(i.filter&&Object.values(i.filter).some(Boolean)?` (${Object.values(i.filter).filter(Boolean).join(", ")})`:"")}
-$("aiSumBtn").addEventListener("click",async()=>{const b=$("aiSumBtn");b.disabled=true;b.textContent="Writing…";$("aiSum").hidden=false;$("aiSum").innerHTML='<p class="sub">Claude is reading the numbers…</p>';
+$("aiSumBtn").addEventListener("click",async()=>{const b=$("aiSumBtn");b.disabled=true;b.textContent="Writing…";$("aiSum").hidden=false;$("aiSum").innerHTML='<p class="sub">Reading the numbers…</p>';
   try{const t=await agent("Write a performance summary I can send to my manager, with three short sections: What happened, Why, What we'll do next. Under 150 words. Use the overview and takeaways tools first.");
-    AISUM=`<div class="aihead"><b>Summary by Claude</b><button type="button" class="linkbtn" id="aiSumCopy">Copy</button></div>${md(t)}`;$("aiSum").innerHTML=AISUM;$("aiSum").dataset.raw=t}
+    AISUM=`<div class="aihead"><b>Summary for your manager</b><button type="button" class="linkbtn" id="aiSumCopy">Copy</button></div>${md(t)}`;$("aiSum").innerHTML=AISUM;$("aiSum").dataset.raw=t}
   catch(e){AISUM="";$("aiSum").innerHTML=`<p class="err">${esc(e.message)}</p>`}
-  b.disabled=false;b.textContent="Summarize with Claude"});
+  b.disabled=false;b.textContent="Summarize for my manager"});
 $("aiSum").addEventListener("click",async e=>{if(e.target.id!=="aiSumCopy")return;try{await navigator.clipboard.writeText($("aiSum").dataset.raw||$("aiSum").innerText);e.target.textContent="Copied"}catch(x){e.target.textContent="Copy failed"}});
 
 // ---------- ask ----------
 const QS=["What should I do?","Why did CPA change vs last period?","Where am I wasting money?","Best country by CPA","Which channel is most efficient?","Any creative fatigue?"];
 function suggest(){$("suggest").innerHTML=QS.map(q=>`<button type="button">${q}</button>`).join("");
-  $("askMode").innerHTML=KEY?`Answers by Claude (${esc((MODELS.find(m=>m[0]===SET.model)||[0,SET.model])[1])}). It sees aggregated figures and campaign names, not your files.`:`Quick answers from built-in rules. <button type="button" class="linkbtn" data-open-settings>Add a Claude API key</button> for free-form questions.`}
+  $("askMode").innerHTML=KEY==="__site__"?`Answers by AI, which sees totals and campaign names, never your files.`:KEY?`Answers by Claude (${esc((MODELS.find(m=>m[0]===SET.model)||[0,SET.model])[1])}). It sees aggregated figures and campaign names, not your files.`:`Quick answers from built-in rules. <button type="button" class="linkbtn" data-open-settings>Add a Claude API key</button> for free-form questions.`}
 function mini(rows,label,f){return`<div class="tablewrap"><table><thead><tr><th class="tl">Name</th><th class="tl">Channel</th><th>${esc(label)}</th></tr></thead><tbody>${rows.map(g=>`<tr><td class="tl">${esc(g.key.split(" › ").slice(1).join(" › ")||g.key)}</td><td class="tl">${esc(g.channel)}</td><td class="n">${f(g)}</td></tr>`).join("")}</tbody></table></div>`}
 async function answer(q){if(!q.trim())return;
   if(KEY){const box=$("answer");box.innerHTML='<ul class="steps" id="steps"><li>Thinking…</li></ul><div id="aout"></div>';const st=$("steps");st.innerHTML="";
     try{const t=await agent(q,u=>{st.insertAdjacentHTML("beforeend",`<li>Looked at ${esc(stepText(u))}</li>`)});$("aout").innerHTML=md(t)}
-    catch(e){$("aout").innerHTML=`<p class="err">Claude couldn't answer: ${esc(e.message)}</p>`+ruleAnswer(q)}return}
+    catch(e){$("aout").innerHTML=`<p class="err">The AI couldn't answer: ${esc(e.message)}</p>`+ruleAnswer(q)}return}
   $("answer").innerHTML=ruleAnswer(q)}
 function ruleAnswer(q){q=q.toLowerCase();const t=+$("tgt").value;
   const by=/ad ?set|ad group/.test(q)&&ROWS.some(r=>r.adset)?"adset":/\bads?\b|creative/.test(q)&&ROWS.some(r=>r.ad)?"ad":/country|geo|market/.test(q)&&ROWS.some(r=>r.geo)?"geo":/\bos\b|ios|android|device/.test(q)&&ROWS.some(r=>r.os)?"os":/channel|platform|network/.test(q)?"channel":"campaign";
@@ -1010,6 +1027,7 @@ function ruleAnswer(q){q=q.toLowerCase();const t=+$("tgt").value;
 // ---------- settings ----------
 function openSettings(){const th=SET.th;$("sPause").value=th.pause;$("sCut").value=th.cut;$("sScale").value=th.scale;$("sMin").value=th.minConv;$("sEl").value=th.elastic;
   $("sKey").value=KEY==="__site__"?"":KEY;$("sModel").innerHTML=MODELS.map(([v,l])=>`<option value="${v}" ${v===SET.model?"selected":""}>${l}</option>`).join("");$("sMsg").textContent="";
+  $("sAI").hidden=KEY==="__site__";
   if($("settings").showModal)$("settings").showModal();else $("settings").setAttribute("open","")}
 document.addEventListener("click",e=>{if(e.target.closest("[data-open-settings]"))openSettings()});
 $("settingsBtn").addEventListener("click",openSettings);
@@ -1029,6 +1047,10 @@ $("tgt").addEventListener("input",()=>{tgtTouched=$("tgt").value.trim()!=="";$("
 $("metric").addEventListener("change",chart);
 $("groupBy").addEventListener("change",()=>{digest();table()});$("convName").addEventListener("input",()=>{takeaways();kpis();digest();table();save()});
 $("askform").addEventListener("submit",e=>{e.preventDefault();answer($("q").value)});
+$("impEdit").addEventListener("click",()=>{IMP_OPEN=!IMP_OPEN;render()});
+$("askFab").addEventListener("click",()=>{document.body.classList.add("ask-open");setTimeout(()=>$("q").focus(),30)});
+$("askClose").addEventListener("click",()=>{document.body.classList.remove("ask-open");$("askFab").focus()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.body.classList.contains("ask-open")){document.body.classList.remove("ask-open");$("askFab").focus()}});
 $("suggest").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;$("q").value=b.textContent;answer(b.textContent)});
 $("printBtn").addEventListener("click",()=>window.print());
 $("exportBtn").addEventListener("click",()=>{const cols=lastTable.cols||[];const v=(g,k)=>{const x=g[k];return x==null?"":typeof x==="number"?(["ctr","cpaChg"].includes(k)?(x*100).toFixed(2)+"%":Math.round(x*100)/100):String(x)};
