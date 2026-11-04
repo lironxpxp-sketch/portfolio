@@ -148,6 +148,28 @@ ul.cav{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
   .acct{grid-template-columns:1fr}.acct .angle{grid-column:1}
 }
 @media (prefers-reduced-motion:reduce){.stepl.run .ic{animation:none}}
+.trace{display:none!important}.layout,.layout.done{grid-template-columns:minmax(0,1fr)!important}
+.pend{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px;padding:12px 14px;border:1px dashed var(--line);border-radius:8px}
+.pend::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:mr-sp .8s linear infinite;flex:none}
+@keyframes mr-sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.pend::before{animation-duration:2.4s}}
+.exban{background:var(--chg-bg);color:var(--ink);border-radius:8px;padding:10px 14px;font-size:13.5px}
+.icp{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px}
+.icp div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.icp b{display:block}.icp span{color:var(--muted);font-size:13px}
+.personas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.persona{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.persona .role{font-weight:700}
+.persona .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.persona ul{margin:0;padding-left:18px}
+.persona .msg{font-style:italic;color:var(--muted)}
+.limit{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.limit a{color:var(--accent)}
+@media print{
+  body{background:#fff!important;color:#000!important}
+  .top .views,#coform,#coflow,details.alt,#status,#foot,.actions,.pf-back,.limit,#watch{display:none!important}
+  .report{border:0!important;padding:0!important}
+}
 </style>
 
 <div class="wrap">
@@ -158,7 +180,7 @@ ul.cav{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
     </div>
     <div class="views" role="tablist" aria-label="Views">
       <button role="tab" aria-selected="true" aria-controls="research" id="tab-research" data-v="research">Research</button>
-      <button role="tab" aria-selected="false" aria-controls="watch" id="tab-watch" data-v="watch" tabindex="-1">Watchlist<span class="count" id="wcount"></span></button>
+      <button role="tab" aria-selected="false" aria-controls="watch" id="tab-watch" data-v="watch" tabindex="-1">Saved reports<span class="count" id="wcount"></span></button>
     </div>
   </div>
 
@@ -167,8 +189,9 @@ ul.cav{margin:0;padding-left:18px;font-size:12px;color:var(--muted)}
       <label for="cosite">Your company website</label>
       <div class="corow"><input id="cosite" type="text" inputmode="url" autocomplete="url" placeholder="e.g. yourcompany.com"><button class="btn primary" type="submit" id="cogo">Analyze my company</button></div>
     </form>
+    <p class="limit" id="limitNote"></p>
     <div id="coflow" aria-live="polite"></div>
-    <details class="alt" id="altq"><summary>Or research any market directly</summary>
+    <details class="alt" id="altq"><summary>Or type a market instead</summary>
     <form class="q" id="qform">
       <input id="query" type="text" placeholder="e.g. Cybersecurity training platforms for SMBs in the UK" aria-label="Research question" autocomplete="off">
       <button class="btn primary" type="submit" id="go">Research</button>
@@ -206,6 +229,8 @@ const EXAMPLES={
   players:[{name:"Billora",positioning:"Generic SMB invoicing, strong in DACH",price:"€15/user",funding:"Series B · 2025",read:"Cheap, broad; weak on retainers",src:[3,4]},{name:"Retainly",positioning:"Built for agencies: retainers + time",price:"€39/user",funding:"Series A · 2026",read:"Closest competitor; no payment reminders",src:[3,4]},{name:"Paydesk",positioning:"Payments-first, invoices as add-on",price:"1.4% + €0.25",funding:"Series C · 2024",read:"Strong collections; complex setup",src:[3]},{name:"AgencyOS",positioning:"All-in-one agency management",price:"€55/user",funding:"Seed · 2026",read:"Wide scope; invoicing is shallow",src:[3,4]}],
   pains:[{theme:"Chasing late payments",share:41},{theme:"Manual retainer billing",share:24},{theme:"Multi-currency clients",share:15},{theme:"Syncing with accounting",share:12},{theme:"Approval workflows",share:8}],
   opps:[{text:"Lead with automated reminders and payment links: the top complaint, and the closest competitor lacks it.",src:[2,5]},{text:"Target 10–50-person agencies in DACH and Benelux, where multi-currency clients are common.",src:[1]},{text:"Integrate with the accounting tools agencies already use rather than replacing them.",src:[5]}],
+  icp:[{segment:"10–50-person performance and creative agencies",why:"Enough retainers to feel billing pain, too small for a finance team"},{segment:"Agencies with clients in 2+ currencies",why:"Multi-currency invoicing is still manual in generic tools"},{segment:"Agencies that just signed a large retainer client",why:"Cash flow suddenly matters more than features"}],
+  personas:[{role:"Agency founder",company:"20-person performance agency",pains:["Chasing late payments herself","No clear view of cash coming in"],cares:["Getting paid on time","Spending less time on admin"],message:"Get paid 2 weeks sooner without chasing a single client."},{role:"Finance & operations lead",company:"50-person creative agency",pains:["Building retainer invoices by hand each month","Reconciling with the accounting tool"],cares:["Fewer manual steps","Clean books at month end"],message:"Retainer invoices that build and sync themselves."}],
   sales:{buyer:"Agency founder or finance lead at a 10–80-person agency",trigger:"A cash-flow squeeze, a new retainer client, or outgrowing spreadsheets",accounts:[{name:"Mid-size DACH performance agencies",why:"Multi-currency retainers, invoices still built by hand",angle:"How many days are you waiting on your three biggest retainers?"},{name:"Benelux creative studios",why:"Project + retainer mix; frequent late payers",angle:"Payment links on every invoice cut chasing to one click."}]},
   sources:[{name:"EU business register summary",verify:"Count of agencies by NACE code"},{name:"Agency payment survey (n=640)",verify:"Reported payment delays"},{name:"Vendor pricing pages",verify:"Current list prices"},{name:"Funding announcements",verify:"Round size and date"},{name:"G2-style review sites",verify:"Complaint themes"}],
   caveats:["All companies and figures in this example are fictional."]},
@@ -217,6 +242,8 @@ const EXAMPLES={
   players:[{name:"Fitnio",positioning:"Home workouts, broad audience",price:"€9.99/mo",funding:"Public",read:"Market leader; high churn",src:[3]},{name:"Kraftwerk",positioning:"Strength training plans",price:"€12.99/mo",funding:"Series A · 2026",read:"Fast growth, strong reviews",src:[3]},{name:"Vela Health",positioning:"Women's health & fitness",price:"€7.99/mo",funding:"Seed · 2025",read:"Insurer-backed programme",src:[3,4]},{name:"RunLoop",positioning:"Running & community",price:"Freemium",funding:"Series B · 2024",read:"Strong community; weak strength content",src:[3]}],
   pains:[{theme:"Price vs value",share:34},{theme:"Repetitive workouts",share:26},{theme:"Poor progress tracking",share:18},{theme:"Subscription cancellation",share:14},{theme:"German-language coaching",share:8}],
   opps:[{text:"Insurer partnerships lower acquisition cost, and more insurers are tendering.",src:[4]},{text:"Progress tracking is a top complaint across all four players.",src:[5]},{text:"Strength training is the fastest-growing segment by app-store rank movement.",src:[3]}],
+  icp:[{segment:"Statutory health insurers with digital prevention budgets",why:"Can reimburse certified prevention programmes"},{segment:"Corporate wellbeing teams at 500+ employee companies",why:"Buy app access as a staff benefit"}],
+  personas:[{role:"Head of partnerships",company:"Statutory health insurer",pains:["Low uptake of prevention programmes","Proving health outcomes"],cares:["Certified, measurable programmes","Member engagement"],message:"A certified programme your members actually finish."},{role:"Corporate wellbeing lead",company:"2,000-person employer",pains:["Benefits nobody uses","Rising sick days"],cares:["Usage they can report on","Easy rollout"],message:"A benefit with 60% monthly use, set up in a week."}],
   sales:{buyer:"Head of partnerships at a statutory insurer, or a corporate wellbeing lead",trigger:"Prevention budget renewal or a new employee-benefits cycle",accounts:[{name:"Statutory insurers (Krankenkassen)",why:"Fund certified prevention courses",angle:"A certified strength programme your members actually finish."}]},
   sources:[{name:"Consumer survey",verify:"User and payer counts"},{name:"Mobile ad benchmark report",verify:"Cost per install"},{name:"App store rankings",verify:"Rank movement and prices"},{name:"Insurer press releases",verify:"Partnership launches"},{name:"App Store and Google Play reviews",verify:"Complaint themes"}],
   caveats:["All companies and figures in this example are fictional."]}
@@ -254,31 +281,33 @@ function cell(val,was,label,cls){
 }
 function renderReport(){
   const c=current; if(!c){$("report").innerHTML="";return}
-  const r=c.report, n=(r.sources||[]).length, ch=c.changes||[];
+  const r=c.report, n=(r.sources||[]).length, ch=c.changes||[], P=c.pending||{};
+  const pend=(h,t)=>`<section><h3>${h}</h3><div class="pend">${t}</div></section>`;
   const maxShare=Math.max(1,...(r.pains||[]).map(p=>+p.share||0));
   const onWatch=watch.find(w=>norm(w.query)===norm(c.query));
   const lowCount=(r.signals||[]).filter(s=>s.confidence==="low").length;
   const sigChanged=label=>{const x=ch.find(x=>x.field==="signal"&&x.company===label);return x?x.was:null};
   $("report").innerHTML=`
    <div class="rhead"><div>
-     <div class="meta">${c.example?'<span class="tag ex">Example</span>':'<span class="tag live">Live report</span>'}<span>${n} sources to check</span><span>·</span><span>Run ${esc(c.runAt?new Date(c.runAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):today())}</span>${r.asOf&&!c.example?`<span>·</span><span>Knowledge covers ${esc(r.asOf)}</span>`:""}</div>
+     <div class="meta">${c.example?'<span class="tag ex">Example report</span>':'<span class="tag live">Live report</span>'}${P.core||P.strategy?`<span id="elapsed">Researching… ${Math.round((Date.now()-(c.t0||Date.now()))/1000)}s</span>`:`<span>${n} sources to check</span>`}<span>·</span><span>Run ${esc(c.runAt?new Date(c.runAt).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):today())}</span>${r.asOf&&!c.example?`<span>·</span><span>Knowledge covers ${esc(r.asOf)}</span>`:""}</div>
      <h2>${esc(r.title||c.query)}</h2></div>
-     <div class="actions">
-       <button class="btn small" type="button" id="save" ${onWatch||c.example?"disabled":""}>${onWatch?"On watchlist":"Save to watchlist"}</button>
-       <button class="btn small" type="button" id="copy">Copy as Markdown</button>
-       <button class="btn small" type="button" id="dl" ${downloads?"":"hidden"}>Download .md</button>
+     <div class="actions"${P.core||P.strategy?" hidden":""}>
+       <button class="btn small" type="button" id="save" ${onWatch||c.example?"disabled":""}>${onWatch?"Saved":"Save report"}</button>
+       <button class="btn small" type="button" id="pdf">Download PDF</button>
      </div></div>
+   ${c.example?`<div class="exban"><b>Example report.</b> This is what you get. Add your company's website above to research your own market.</div>`:""}
    ${ch.length?`<div class="banner">${ch.length} change${ch.length>1?"s":""} since the run on ${esc(fmtDate(c.prevRunAt))}. Changed values are highlighted.</div>`:""}
-   <section><h3>Summary</h3><p>${esc(r.summary)}</p></section>
+   ${P.core?pend("Summary","Searching the web and reading the market…")+pend("Size signals","Finding size figures and checking their sources…")+pend("Key players","Mapping competitors, prices and funding…")+pend("What customers complain about","Reading reviews and complaints…"):`<section><h3>Summary</h3><p>${esc(r.summary)}</p></section>`}
    ${(r.signals||[]).length?`<section><h3>Size signals</h3><div class="signals">${r.signals.map(s=>{const was=sigChanged(s.label);return `<div class="sig"><div class="v">${was!=null?`<mark class="was">${esc(s.value)}</mark>`:esc(s.value)}</div><div class="k">${esc(s.label)}${srcRefs(s.src,n)}</div>${was!=null?`<span class="was-note">was ${esc(was)}</span>`:""}<span class="conf ${esc(s.confidence)}">${esc(s.confidence)} confidence</span></div>`}).join("")}</div>${lowCount?`<p class="note">${lowCount} figure${lowCount>1?"s are":" is"} low confidence. Check the named source before quoting it.</p>`:""}</section>`:""}
    ${(r.players||[]).length?`<section><h3>Key players</h3><div class="tablewrap"><table class="players"><thead><tr><th>Company</th><th>Positioning</th><th>Price</th><th>Funding</th><th>Read</th></tr></thead><tbody>${r.players.map(p=>`<tr><td data-l="Company"><b>${esc(p.name)}</b>${srcRefs(p.src,n)}${ch.some(x=>x.field==="new"&&x.company===p.name)?' <span class="flag">New</span>':""}</td><td data-l="Positioning">${esc(p.positioning)}</td>${cell(p.price,wasFor(ch,p.name,"price"),"Price","n")}${cell(p.funding,wasFor(ch,p.name,"funding"),"Funding","n")}<td data-l="Read">${esc(p.read)}</td></tr>`).join("")}</tbody></table></div></section>`:""}
    ${(r.pains||[]).length?`<section><h3>What customers complain about</h3><div class="pains">${r.pains.map(p=>`<div class="pain"><span class="lab">${esc(p.theme)}</span><div><div class="bar"><span style="width:${Math.round((+p.share||0)/maxShare*100)}%"></span></div><span class="pc">~${esc(p.share)}% of complaints</span></div></div>`).join("")}</div><p class="note">Estimated share of negative reviews mentioning each theme.</p></section>`:""}
    ${(r.opps||[]).length?`<section><h3>Opportunities</h3><ul class="opp">${r.opps.map(o=>`<li>${esc(o.text)}${srcRefs(o.src,n)||'<span class="flag">Unsourced</span>'}</li>`).join("")}</ul></section>`:""}
+   ${P.strategy?pend("Opportunities",P.core?"Waiting for the research…":"Working out your opportunities…")+pend("Ideal customer &amp; personas",P.core?"Waiting for the research…":"Describing your best-fit customers and buyers…")+pend("For sales",P.core?"Waiting for the research…":"Picking target accounts…"):""}
+   ${(r.icp||[]).length||(r.personas||[]).length?`<section><h3>Ideal customer &amp; personas</h3>${(r.icp||[]).length?`<div class="icp">${r.icp.map(x=>`<div><b>${esc(x.segment)}</b><span>${esc(x.why)}</span></div>`).join("")}</div>`:""}<div class="personas">${(r.personas||[]).map(x=>`<div class="persona"><div class="role">${esc(x.role)}</div>${x.company?`<div class="meta">${esc(x.company)}</div>`:""}<div class="k">Pains</div><ul>${(x.pains||[]).map(t=>`<li>${esc(t)}</li>`).join("")}</ul><div class="k">Cares about</div><ul>${(x.cares||[]).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>${x.message?`<div class="k">Message that lands</div><div class="msg">“${esc(x.message)}”</div>`:""}</div>`).join("")}</div></section>`:""}
    ${r.sales?`<section><h3>For sales</h3><div class="sales"><dl class="kv"><dt>Buyer</dt><dd>${esc(r.sales.buyer)}</dd><dt>Buying trigger</dt><dd>${esc(r.sales.trigger)}</dd></dl><div class="accts">${(r.sales.accounts||[]).map(a=>`<div class="acct"><b>${esc(a.name)}</b><span class="why">${esc(a.why)}</span><span class="angle">${esc(a.angle)}</span></div>`).join("")}</div></div></section>`:""}
-   <section><h3>Where to verify</h3><ol class="src">${(r.sources||[]).map((s,i)=>`<li id="src-${i+1}">${/^https?:\/\//.test(s.url||"")?`<a href="${esc(s.url)}" target="_blank" rel="noopener"><b>${esc(s.name)}</b></a>`:`<b>${esc(s.name)}</b>`}${s.verify?` — ${esc(s.verify)}`:""}</li>`).join("")}</ol>${(r.caveats||[]).length?`<ul class="cav" style="margin-top:10px">${r.caveats.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</section>`;
+   ${P.core?pend("Where to verify","Collecting the sources…"):""}<section${P.core?" hidden":""}><h3>Where to verify</h3><ol class="src">${(r.sources||[]).map((s,i)=>`<li id="src-${i+1}">${/^https?:\/\//.test(s.url||"")?`<a href="${esc(s.url)}" target="_blank" rel="noopener"><b>${esc(s.name)}</b></a>`:`<b>${esc(s.name)}</b>`}${s.verify?` — ${esc(s.verify)}`:""}</li>`).join("")}</ol>${(r.caveats||[]).length?`<ul class="cav" style="margin-top:10px">${r.caveats.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}</section>`;
   $("save").onclick=saveCurrent;
-  $("copy").onclick=e=>{const md=toMarkdown();const b=e.currentTarget;try{navigator.clipboard.writeText(md).then(()=>{b.textContent="Copied"},()=>showStatus("Copy was blocked here. Use Download .md instead.","err"))}catch(err){showStatus("Copy was blocked here. Use Download .md instead.","err")}};
-  $("dl").onclick=async()=>{try{await downloads.save({filename:slug(c.report.title||c.query)+".md",data:toMarkdown()})}catch(e){if(e&&e.code&&e.code!=="cancelled"&&e.code!=="declined")showStatus("The download didn't start. Try Copy as Markdown.","err")}};
+  $("pdf").onclick=()=>{const t=document.title;document.title=(c.report.title||c.query)+" · market report";window.print();setTimeout(()=>{document.title=t},500)};
 }
 function toMarkdown(){
   const c=current,r=c.report;const L=[];
@@ -297,8 +326,16 @@ const norm=s=>String(s||"").trim().toLowerCase().replace(/\s+/g," ");
 
 function showStatus(msg,kind){$("status").innerHTML=msg?`<div class="banner ${kind==="err"?"err":""}">${esc(msg)}</div>`:""}
 function errCopy(code){
-  return ({not_granted:"Live research needs your OK to use Claude. Run it again and choose Allow.",rate_limited:"You've hit your Claude usage limit for now. Try again later.",session_expired:"Your session expired. Reload the page and sign in.",prompt_too_large:"That question is too long. Shorten it and try again.",refused:"Claude declined this question. Try rephrasing it as a market or competitor question.",invalid_json:"The report came back malformed. Run it again.",empty_completion:"The report came back empty. Run it again.",upstream_error:"Claude didn't answer. Run it again in a moment.",queue_overflow:"Too many requests are queued. Wait a moment, then run it again.",sampling_disabled:"Live research is turned off for this account.",capability_disabled:"Live research is turned off for this page.",capability_removed:"Live research is no longer enabled for this page."})[code]||"The research didn't finish. Run it again.";
+  return ({not_granted:"Live research isn't allowed on this page right now.",rate_limited:"Lots of people are using this right now. Try again in a few minutes.",session_expired:"Your session expired. Reload the page and sign in.",prompt_too_large:"That question is too long. Shorten it and try again.",refused:"The AI declined this question. Try rephrasing it as a market or competitor question.",invalid_json:"The report came back malformed. Run it again.",empty_completion:"The report came back empty. Run it again.",upstream_error:"The AI didn't answer. Run it again in a moment.",queue_overflow:"Too many requests are queued. Wait a moment, then run it again.",sampling_disabled:"Live research is turned off for this account.",capability_disabled:"Live research is turned off for this page.",capability_removed:"Live research is no longer enabled for this page."})[code]||"The research didn't finish. Run it again.";
 }
+
+/* ---------- Daily limit for the test version ---------- */
+const LIMIT=2, LKEY="mr.runs.v1", DAY=24*60*60*1000;
+const runsToday=()=>{try{const v=JSON.parse(localStorage.getItem(LKEY)||"[]");return (Array.isArray(v)?v:[]).filter(t=>Date.now()-t<DAY)}catch(e){return[]}};
+const markRun=()=>{try{const v=runsToday();v.push(Date.now());localStorage.setItem(LKEY,JSON.stringify(v))}catch(e){}};
+const unmarkRun=()=>{try{const v=runsToday();v.pop();localStorage.setItem(LKEY,JSON.stringify(v))}catch(e){}};
+function limitHTML(){const left=LIMIT-runsToday().length;return left>0?`Test version: ${left} of ${LIMIT} reports left today.`:`You've run today's ${LIMIT} test reports. Only the tool owner can run unlimited reports. Feel free to <a href="../../index.html#contact">contact Liron</a>.`}
+function showLimit(){const el=$("limitNote");if(el)el.innerHTML=limitHTML()}
 
 /* ---------- Live research ---------- */
 function ctxText(c){if(!c)return"";const P=c.profile;
@@ -308,6 +345,22 @@ What it sells: ${P.product}
 Customers: ${P.customers}
 Where it sells: ${P.geography}
 Business model: ${P.model}${P.competitors&&P.competitors.length?`\nCompetitors it is known to face: ${P.competitors.join(", ")}`:""}${c.answers&&c.answers.length?`\nThe company's answers to clarifying questions:\n${c.answers.map(a=>`- ${a.q} ${a.a}`).join("\n")}`:""}\n`}
+function strategyPrompt(q,r,c){
+  const src=(r.sources||[]).map((x,i)=>`${i+1}. ${x.name}`).join("\n");
+  return `You are a senior go-to-market strategist. Using only the research below, write the strategy part of a market brief.
+Research question: "${q}"${ctxText(c)}
+Today is ${today()}.
+Research so far: ${JSON.stringify({summary:r.summary,signals:r.signals,players:r.players,pains:r.pains})}
+Numbered sources (cite these numbers in "src"):
+${src||"(none)"}
+
+Reply with only this JSON object:
+{"opps":[{"text":string,"src":[int]}] (3 items, each citing the sources it rests on),
+"icp":[{"segment":string,"why":string}] (2-3 best-fit customer segments: industry, size, stage),
+"personas":[{"role":string,"company":string (the kind of company they work at),"pains":[string] (2-3),"cares":[string] (2-3),"message":string (one sentence that would make them reply)}] (2-3 buyer personas),
+"sales":{"buyer":string,"trigger":string,"accounts":[{"name":string,"why":string,"angle":string}] (3-5 named target companies or tightly defined account segments, each with why they fit and a one-sentence opener)}}
+Plain, direct English. No markdown inside strings. Never invent figures.`;
+}
 function planPrompt(q,c){
   return `You are planning market research. Question: "${q}"\nToday is ${today()}.${ctxText(c)}\nBreak it into 6 to 8 concrete sub-questions an analyst would answer (market size, buyers, key players and pricing, funding and recent moves, customer complaints, go-to-market). Reply with only a JSON array of short strings.`;
 }
@@ -322,10 +375,8 @@ Rules:
 - Name only real companies you are confident exist and operate in this market. Prefer 4-6 players. If unsure of a price or funding detail write "Unknown" rather than guessing.
 - Every figure gets a confidence: "high" (well documented), "medium" (reasonable estimate), "low" (rough or possibly outdated). Prefix estimates with "~".
 - "sources" are named, real publications, datasets, registries or page types where a reader can verify the figures (e.g. "Eurostat structural business statistics", "Vendor pricing pages"). ${window.__aiWeb?"Put the page URL you used in \"url\".":"No URLs; leave \"url\" empty."} "src" fields are 1-based indexes into "sources".
-- Each opportunity must cite the sources it rests on.
 - "asOf": the latest period your knowledge reliably covers, e.g. "early 2026".
 - "pains": 4-6 complaint themes with an estimated share (integers summing to about 100).
-- "sales.accounts": 3-5 named target companies or tightly defined account segments, with why they fit and a one-sentence opening line a rep could use.
 - Plain, direct English. No markdown inside strings.
 
 Reply with only this JSON object:
@@ -333,8 +384,6 @@ Reply with only this JSON object:
 "signals":[{"value":string,"label":string,"confidence":"high"|"medium"|"low","src":[int]}] (4 items),
 "players":[{"name":string,"positioning":string,"price":string,"funding":string,"read":string,"src":[int]}],
 "pains":[{"theme":string,"share":int}],
-"opps":[{"text":string,"src":[int]}] (3 items),
-"sales":{"buyer":string,"trigger":string,"accounts":[{"name":string,"why":string,"angle":string}]},
 "sources":[{"name":string,"verify":string,"url":string}],
 "caveats":[string] (1-3 items)}`;
 }
@@ -355,36 +404,44 @@ function verify(r){
 }
 async function research(q,opts={}){
   if(running)return;
-  if(!sample){showStatus(liveOK===false?"Live research is switched off right now. The examples still work.":"Connecting to Claude… try again in a moment.","err");return}
-  running=true;showStatus("");$("go").disabled=true;$("stop").hidden=false;
+  if(!sample){showStatus(liveOK===false?"Live research is switched off right now. The examples still work.":"Connecting to the AI… try again in a moment.","err");return}
+  if(runsToday().length>=LIMIT){showStatus("");$("status").innerHTML=`<div class="banner">${limitHTML()}</div>`;showLimit();return}
+  running=true;showStatus("");$("go").disabled=true;$("stop").hidden=false;markRun();showLimit();
   ctl=new AbortController();const signal=ctl.signal;const t0=Date.now();
-  resetSteps();setStep(0,"run","Breaking the question into sub-questions");
-  $("report").innerHTML=`<div class="loading"><p class="note">Researching “${esc(q)}”. The first run asks you to allow Claude; reports usually take 30–90 seconds.</p><div class="skel" style="width:60%"></div><div class="skel" style="width:90%"></div><div class="skel" style="width:75%"></div></div>`;
+  try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:"market/report",title:"Ran a market report",event:true})}catch(e){}
+  resetSteps();setStep(0,"run","Planning");
+  const prev=current;
+  current={query:q,report:{title:q},runAt:Date.now(),example:false,changes:[],pending:{core:1,strategy:1},t0};renderReport();
+  tick=setInterval(()=>{const el=$("elapsed");if(el)el.textContent=`Researching… ${Math.round((Date.now()-t0)/1000)}s`},1000);
+  $("report").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
   try{
     let subqs=await sample.json(planPrompt(q,opts.context),{modelTier:"quick",signal});
     subqs=(Array.isArray(subqs)?subqs:[]).map(String).filter(Boolean).slice(0,8);
     if(!subqs.length)subqs=["Market size and growth","Buyers and decision makers","Key players, positioning and pricing","Recent funding and moves","Customer complaints","Go-to-market opportunities"];
-    setStep(0,"done",`${subqs.length} sub-questions`,`<ol class="subqs">${subqs.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>`);
-    setStep(1,"run","Thinking…");
-    tick=setInterval(()=>{if(steps[1].state==="run"&&!steps[1].d.startsWith("Writing"))setStep(1,"run",`Thinking… ${Math.round((Date.now()-t0)/1000)}s`)},1000);
-    const r=await sample.json(reportPrompt(q,subqs,opts.context),{signal,webSearch:!!window.__aiWeb,onText:({text})=>{steps[1].d=`Writing · ${text.length.toLocaleString()} characters`;setStep(1,"run")}});
-    clearInterval(tick);
+    const r=await sample.json(reportPrompt(q,subqs,opts.context),{signal,webSearch:!!window.__aiWeb,task:"research"});
     if(!r||typeof r!=="object"||!r.summary)throw {code:"invalid_json"};
-    setStep(1,"done",`${(r.players||[]).length} players, ${(r.sources||[]).length} sources`);
-    setStep(2,"run","Checking sources and confidence");
-    const v=verify(r);
-    const vd=[v.dropped?`dropped ${v.dropped} unsourced figure${v.dropped>1?"s":""}`:"every figure sourced",v.low?`${v.low} low-confidence`:"",v.unsourced?`${v.unsourced} opportunity flagged`:""].filter(Boolean).join(", ");
-    setStep(2,"done",vd);
-    const secs=Math.round((Date.now()-t0)/1000);
-    renderTrace(true,`${subqs.length} sub-questions · ${(r.sources||[]).length} sources · ${secs}s`);
+    r.opps=[];verify(r);
+    current.report=r;current.pending.core=0;renderReport();
+    // strategy: opportunities, ideal customers, personas and sales targets, written from the research
+    try{
+      const st=await sample.json(strategyPrompt(q,r,opts.context),{signal,task:"copy"})||{};
+      r.opps=Array.isArray(st.opps)?st.opps:[];
+      r.icp=(Array.isArray(st.icp)?st.icp:[]).filter(x=>x&&x.segment).slice(0,3);
+      r.personas=(Array.isArray(st.personas)?st.personas:[]).filter(x=>x&&x.role).slice(0,3).map(x=>({role:String(x.role),company:String(x.company||""),pains:(Array.isArray(x.pains)?x.pains:[]).map(String).slice(0,3),cares:(Array.isArray(x.cares)?x.cares:[]).map(String).slice(0,3),message:String(x.message||"")}));
+      if(st.sales&&typeof st.sales==="object")r.sales=st.sales;
+      verify(r);
+    }catch(e){if(e&&e.code==="cancelled")throw e;r.caveats=(r.caveats||[]).concat("The strategy part didn't finish this time; run the report again for opportunities, personas and sales targets.")}
+    clearInterval(tick);
+    delete current.pending;
     if(opts.onDone){await opts.onDone(r)}
     else{current={query:q,report:r,runAt:Date.now(),example:false,changes:[]};renderReport()}
   }catch(e){
     clearInterval(tick);
-    const i=steps.findIndex(s=>s.state==="run");if(i>=0)setStep(i,"fail",e&&e.code==="cancelled"?"Stopped":"Failed");
+    const done=current&&current.pending&&!current.pending.core;
+    if(!done)unmarkRun();showLimit();
     if(e&&e.code==="cancelled"){showStatus("Research stopped.");}
     else showStatus(errCopy(e&&e.code),"err");
-    if(current)renderReport();else $("report").innerHTML="";
+    if(done){delete current.pending;renderReport()}else{current=prev;if(current)renderReport();else $("report").innerHTML=""}
   }finally{running=false;$("go").disabled=false;$("stop").hidden=true;ctl=null}
 }
 
@@ -409,7 +466,7 @@ function diffReports(a,b){
 async function saveCurrent(){
   const c=current;if(!c||c.example||watch.find(w=>norm(w.query)===norm(c.query)))return;
   const item={query:c.query,report:c.report,runAt:c.runAt,prevRunAt:null,changes:[],createdAt:Date.now()};
-  if(coll){try{const ref=coll.doc();await ref.set(item);c.watchId=ref.id;}catch(e){showStatus(e&&e.code==="quota_exceeded"?"Your watchlist is full. Remove an item, then save again.":"Couldn't save to the watchlist. Try again.","err");return}}
+  if(coll){try{const ref=coll.doc();await ref.set(item);c.watchId=ref.id;}catch(e){showStatus(e&&e.code==="quota_exceeded"?"Your saved reports are full. Remove one, then save again.":"Couldn't save this report. Try again.","err");return}}
   else{item.id="local-"+Date.now();watch.unshift(item);renderWatch();}
   renderReport();
 }
@@ -428,12 +485,12 @@ async function rerun(w){
 let confirmDel=null;
 function renderWatch(){
   $("wcount").textContent=watch.length?` ${watch.length}`:"";
-  const head=watchLocal?`<p class="note">${db===null&&liveOK!==null?"Saved markets stay here until you close the page.":"Loading your watchlist…"}</p>`:"";
-  if(!watch.length){$("watch").innerHTML=head+`<div class="empty"><b>No saved markets yet.</b><br>Run a report on the Research tab and choose <b>Save to watchlist</b>. Re-run it any time to see which players, prices, funding and size signals changed.</div>`;return}
+  const head=watchLocal?`<p class="note">${db===null&&liveOK!==null?"Saved reports stay here until you close the page.":"Loading your saved reports…"}</p>`:"";
+  if(!watch.length){$("watch").innerHTML=head+`<div class="empty"><b>No saved reports yet.</b><br>Run a report on the Research tab and choose <b>Save report</b>. Re-run it any time to see which players, prices, funding and size signals changed.</div>`;return}
   $("watch").innerHTML=head+watch.map(w=>{const ch=w.changes||[];return `<div class="wcard"><header><h3>${esc(w.report&&w.report.title||w.query)}</h3>${ch.length?`<span class="badge">${ch.length} change${ch.length>1?"s":""} on last run</span>`:`<span class="note">${w.prevRunAt?"No changes on last run":"Saved"}</span>`}</header>
    <div class="meta">“${esc(w.query)}” · last run ${esc(fmtDate(w.runAt))}${w.prevRunAt?` · previous ${esc(fmtDate(w.prevRunAt))}`:""}</div>
    ${ch.slice(0,6).map(c=>`<div class="chg"><span class="t">${esc(c.kind)}</span><b>${esc(c.company)}</b><span>${esc(c.detail)}</span></div>`).join("")}
-   <div class="actions"><button class="btn small" type="button" data-open="${esc(w.id)}">Open report</button><button class="btn small primary" type="button" data-rerun="${esc(w.id)}" ${sample?"":"disabled"}>Re-run now</button>${confirmDel===w.id?`<button class="btn small danger" type="button" data-del="${esc(w.id)}">Confirm remove</button><button class="btn small" type="button" data-cancel="1">Keep</button>`:`<button class="btn small" type="button" data-askdel="${esc(w.id)}">Remove</button>`}</div></div>`}).join("");
+   <div class="actions"><button class="btn small" type="button" data-open="${esc(w.id)}">Open report</button><button class="btn small primary" type="button" data-rerun="${esc(w.id)}" ${sample?"":"disabled"}>Refresh</button>${confirmDel===w.id?`<button class="btn small danger" type="button" data-del="${esc(w.id)}">Confirm remove</button><button class="btn small" type="button" data-cancel="1">Keep</button>`:`<button class="btn small" type="button" data-askdel="${esc(w.id)}">Remove</button>`}</div></div>`}).join("");
 }
 $("watch").addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;const find=id=>watch.find(w=>String(w.id)===id);
@@ -543,7 +600,7 @@ try{if(localStorage.getItem("mra-tab")==="watch")selectTab("watch")}catch(e){}
   if(!coll)db=null;
   onCaps();
   if(coll){
-    const timer=setTimeout(()=>{if(watchLocal){$("watch").querySelector(".note")&&($("watch").querySelector(".note").textContent="Your watchlist can't be reached yet. It will appear when the connection returns.")}},10000);
+    const timer=setTimeout(()=>{if(watchLocal){$("watch").querySelector(".note")&&($("watch").querySelector(".note").textContent="Your saved reports can't be reached yet. It will appear when the connection returns.")}},10000);
     coll.orderBy("createdAt","desc").onSnapshot(snap=>{
       if(!snap.metadata.fromCache)clearTimeout(timer);
       const local=watch.filter(w=>String(w.id).startsWith("local-"));
@@ -553,6 +610,7 @@ try{if(localStorage.getItem("mra-tab")==="watch")selectTab("watch")}catch(e){}
   }
 })();
 function onCaps(){
+  showLimit();
   $("modeTag").textContent=liveOK?"Live":"Examples only";$("modeTag").className="tag "+(liveOK?"live":"ex");
   renderChips();renderWatch();if(current)renderReport();
   if(!liveOK)showStatus("Live research is switched off right now. The examples below still work.");
