@@ -1,0 +1,313 @@
+<!doctype html><html lang="en"><head><script>try{document.documentElement.dataset.theme="dark"}catch(e){}</script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style><script data-goatcounter="https://lironsofer.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script></head><body>
+<title>Role Radar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="An agent that scans the Israeli job market twice a day, scores every role against my real experience and suggests CV edits for me to approve. Demo with sample data.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: hero with radar sweep → how it works (6-step loop) → demo tracker with suggest/approve → sample digest → build notes. Dark-first. */
+:root{
+  --bg:#0B1214; --panel:#111B1E; --panel2:#152226; --line:#1F3034; --ink:#E4EEEC; --muted:#8FA4A1;
+  --accent:#3FD0BD; --accent-dim:#1B4A44; --warn:#F2A64A; --warn-dim:#3A2A14; --add:#3FD0BD; --del:#F08A6E;
+  --b1:#3FD0BD; --b2:#7FA3F0; --b3:#B993EA; --b4:#F08A6E; --b5:#E3B44A; --b6:#EE88B8;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#F2F5F4; --panel:#FFFFFF; --panel2:#F6F9F8; --line:#D9E2E0; --ink:#13201E; --muted:#56696A;
+  --accent:#0E7A6E; --accent-dim:#D4EEE9; --warn:#A35A00; --warn-dim:#FBEBD5; --add:#0E7A6E; --del:#B4472E;
+  --b1:#0E7A6E; --b2:#2F5BB7; --b3:#7A4CB0; --b4:#B4472E; --b5:#946600; --b6:#B03A74;
+  color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#F2F5F4; --panel:#FFFFFF; --panel2:#F6F9F8; --line:#D9E2E0; --ink:#13201E; --muted:#56696A;
+  --accent:#0E7A6E; --accent-dim:#D4EEE9; --warn:#A35A00; --warn-dim:#FBEBD5; --add:#0E7A6E; --del:#B4472E;
+  --b1:#0E7A6E; --b2:#2F5BB7; --b3:#7A4CB0; --b4:#B4472E; --b5:#946600; --b6:#B03A74;
+  color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:72px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font:500 12px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:700 clamp(26px,3.6vw,34px)/1.15 var(--display);letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:62ch;margin:0}
+section{display:flex;flex-direction:column;gap:20px}
+.hidden-title{filter:blur(5px);user-select:none;-webkit-user-select:none;display:inline-block}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center;padding-top:56px}
+.hero h1{font:700 clamp(40px,6.4vw,68px)/1 var(--display);letter-spacing:-.02em;margin-top:14px}
+.hero p{font-size:17px;color:var(--muted);max-width:54ch;margin:18px 0 0}
+.facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.fact{font:500 12.5px var(--mono);border:1px solid var(--line);border-radius:6px;padding:6px 9px;color:var(--ink);background:var(--panel)}
+.fact b{color:var(--accent);font-weight:500}
+.radar{position:relative;aspect-ratio:1;max-width:100%;width:100%}
+.radar svg{width:100%;height:100%;display:block}
+.sweep{transform-origin:200px 200px;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.blip{animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sweep,.blip{animation:none}}
+
+/* loop */
+.pipe{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.stage.me{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.stage .n{font:500 11px var(--mono);color:var(--accent);letter-spacing:.08em}
+.stage h3{font:600 16px/1.3 var(--body)}
+.stage p{margin:0;font-size:13.5px;color:var(--muted)}
+
+/* demo */
+.demo{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.demohead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.demohead .hint{font-size:13px;color:var(--muted)}
+.sample{font:500 11.5px var(--mono);color:var(--warn);background:var(--warn-dim);border-radius:5px;padding:4px 8px}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;padding:14px 2px;border-top:1px solid var(--line);align-items:start}
+.fit{display:flex;flex-direction:column;align-items:center;gap:4px}
+.fit .num{font:700 24px/1 var(--display);font-variant-numeric:tabular-nums}
+.fit .bar{width:38px;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.fit .bar i{display:block;height:100%;background:var(--accent)}
+.r-main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.r-title{font:600 15.5px/1.3 var(--body);margin:0}
+.r-meta{font-size:13px;color:var(--muted)}
+.r-why{font-size:13.5px;margin:2px 0 0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.tag{font:500 11.5px/1 var(--mono);padding:5px 7px;border-radius:5px;background:var(--panel2);color:var(--muted)}
+.tag.ok{color:var(--accent);background:var(--accent-dim)}
+.tag.warn{color:var(--warn);background:var(--warn-dim)}
+.btn{font:500 12.5px var(--body);border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:7px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--accent);color:var(--bg)}
+.btn.solid{background:var(--accent);color:var(--bg)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.edits{grid-column:2/-1;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:14px;font-size:13.5px;display:flex;flex-direction:column;gap:12px}
+.edits h4{margin:0;font:600 12px var(--mono);color:var(--accent);letter-spacing:.06em}
+.edit{display:flex;flex-direction:column;gap:6px;border-left:2px solid var(--line);padding-left:10px}
+.edit .kw{font:500 12px var(--mono);color:var(--muted)}
+.edit .kw b{color:var(--ink);font-weight:500}
+.edit .from{color:var(--del);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--del) 60%,transparent)}
+.edit .to{color:var(--add)}
+.edit .why{font-size:12.5px;color:var(--muted)}
+.skip{font-size:13px;color:var(--warn)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.approved{font:500 12.5px var(--mono);color:var(--accent)}
+
+/* digest */
+.digest-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.phone{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px;max-width:380px;width:100%;justify-self:center;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 50px -30px rgba(0,0,0,.6)}
+.notif-head{display:flex;justify-content:space-between;font:500 11.5px var(--mono);color:var(--muted)}
+.notif{font:13px/1.6 var(--mono);margin:0;color:var(--ink);display:flex;flex-direction:column;gap:10px}
+.notif .hl{color:var(--accent)}
+.notif .item{display:flex;flex-direction:column}
+.notif .sm{color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:14px;margin:0;padding:0;list-style:none}
+.list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px}
+.list .k{font:500 12px var(--mono);color:var(--accent);padding-top:2px}
+.list b{font-weight:600}
+.list p{margin:2px 0 0;color:var(--muted);font-size:14px}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ncard{border-top:2px solid var(--accent);padding-top:12px;min-width:0}
+.ncard h3{font:600 15.5px/1.3 var(--body);margin-bottom:6px}
+.ncard p{margin:0;font-size:14px;color:var(--muted)}
+.stack{display:flex;flex-wrap:wrap;gap:6px}
+footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:20px;display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+
+@media (max-width:860px){
+  .hero{grid-template-columns:1fr;padding-top:36px}
+  .radar{max-width:320px;justify-self:center}
+  .pipe{grid-template-columns:1fr 1fr}
+  .digest-grid{grid-template-columns:1fr}
+  .notes{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .pipe{grid-template-columns:1fr}
+  .row{grid-template-columns:44px minmax(0,1fr)}
+  .row > .btn{grid-column:2;justify-self:start}
+  .edits{grid-column:1/-1}
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Project · AI agent</div>
+      <h1>Role Radar</h1>
+      <p>Job hunting meant hours a day on job boards and rewriting my CV for every posting. So I built an agent that scans the Israeli market twice a day, scores every role against my real experience, and suggests CV edits for each one. Nothing goes out until I approve it.</p>
+      <div class="facts">
+        <span class="fact"><b>2×</b> daily scans</span>
+        <span class="fact"><b>85</b> companies on watch</span>
+        <span class="fact"><b>EN + HE</b> search</span>
+        <span class="fact"><b>0</b> edits without my OK</span>
+      </div>
+    </div>
+    <div class="radar" aria-hidden="true">
+      <svg viewBox="0 0 400 400">
+        <defs>
+          <radialGradient id="sw" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 200) scale(180)">
+            <stop offset="0" style="stop-color:var(--accent);stop-opacity:.45"/>
+            <stop offset="1" style="stop-color:var(--accent);stop-opacity:0"/>
+          </radialGradient>
+        </defs>
+        <g fill="none" style="stroke:var(--line)" stroke-width="1">
+          <circle cx="200" cy="200" r="180"/><circle cx="200" cy="200" r="130"/><circle cx="200" cy="200" r="80"/><circle cx="200" cy="200" r="30"/>
+          <line x1="20" y1="200" x2="380" y2="200"/><line x1="200" y1="20" x2="200" y2="380"/>
+        </g>
+        <g class="sweep"><path d="M200 200 L380 200 A180 180 0 0 0 327 73 Z" fill="url(#sw)"/></g>
+        <g font-family="IBM Plex Mono, monospace" font-size="10" style="fill:var(--muted)">
+          <text x="206" y="34">ADTECH</text><text x="324" y="196">GAMING</text><text x="206" y="374">FINTECH</text><text x="26" y="196">BRANDS</text>
+        </g>
+        <g>
+          <circle class="blip" cx="268" cy="132" r="6" style="fill:var(--b1)"/>
+          <circle class="blip" cx="300" cy="248" r="5" style="fill:var(--b3);animation-delay:.6s"/>
+          <circle class="blip" cx="152" cy="98" r="4" style="fill:var(--b2);animation-delay:1.2s"/>
+          <circle class="blip" cx="118" cy="270" r="5" style="fill:var(--b6);animation-delay:1.8s"/>
+          <circle class="blip" cx="232" cy="300" r="4" style="fill:var(--b4);animation-delay:2.4s"/>
+          <circle class="blip" cx="96" cy="166" r="3.5" style="fill:var(--b5);animation-delay:.9s"/>
+        </g>
+      </svg>
+    </div>
+  </header>
+
+  <section aria-labelledby="how">
+    <div class="eyebrow">How it works</div>
+    <h2 id="how">The agent does the legwork. I make the calls.</h2>
+    <p class="sub">Each run starts fresh in the cloud, so everything it needs (what I'm looking for, my experience, past roles and my own decisions) lives in a small database it reads first.</p>
+    <div class="pipe">
+      <div class="stage"><span class="n">01 · COLLECT</span><h3>Read the sources</h3><p>Company job feeds (Greenhouse, Ashby, Lever, Comeet), LinkedIn alerts from my inbox, and web search in English and Hebrew.</p></div>
+      <div class="stage"><span class="n">02 · FILTER</span><h3>Keep what's real</h3><p>Based in Israel, the right seniority, the kind of work I'm after. Duplicates across sources are merged.</p></div>
+      <div class="stage"><span class="n">03 · SCORE</span><h3>Fit out of 10</h3><p>Seniority, sector, freshness, companies I follow, and hard requirements I don't meet. Re-weighted weekly from what I mark.</p></div>
+      <div class="stage"><span class="n">04 · SUGGEST</span><h3>Propose CV edits</h3><p>Reads the posting's keywords and finds where my real experience already matches, then proposes rewording and reordering to say it in their language.</p></div>
+      <div class="stage me"><span class="n">05 · VERIFY</span><h3>I approve or change</h3><p>Every edit comes to me first. Anything it can't back with my actual experience is flagged as a gap, never added.</p></div>
+      <div class="stage"><span class="n">06 · DELIVER</span><h3>Digest + tracker</h3><p>Push and email at 07:45 and 13:45. Application status is read from replies, and interview briefs arrive the evening before.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="demo">
+    <div class="eyebrow">Try it</div>
+    <h2 id="demo">The tracker</h2>
+    <p class="sub">A working copy of the interface with made-up companies. Role titles are hidden here on purpose. Open "Suggest CV edits" on a role to see what the agent proposes, and approve it the way I do.</p>
+    <div class="demo">
+      <div class="demohead">
+        <span class="hint">Sorted by fit</span>
+        <span class="sample">Sample data · fictional companies</span>
+      </div>
+      <div class="rows" id="rows"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="digest">
+    <div class="eyebrow">The output</div>
+    <h2 id="digest">What lands on my phone</h2>
+    <div class="digest-grid">
+      <div class="phone">
+        <div class="notif-head"><span>Role Radar</span><span>07:45</span></div>
+        <div class="notif">
+          <span class="hl">3 new roles at fit 7+ · 2 application updates · 1 closed</span>
+          <span class="item"><span>9/10 · <span class="hidden-title" aria-label="Role title hidden">Xxxx xx Xxxxxxxxxxx</span> — Lumora Games</span><span class="sm">3 CV edits ready to review</span></span>
+          <span class="item"><span>8/10 · <span class="hidden-title" aria-label="Role title hidden">Xxxxxxxx xx Xxxxxxxx</span> — Tidepool Ads</span><span class="sm">2 CV edits · you know 1 person there</span></span>
+          <span class="item"><span>7/10 · <span class="hidden-title" aria-label="Role title hidden">Xxxxx Xxxxx</span> — Confidential (consumer app)</span><span class="sm">2 CV edits · 1 gap flagged</span></span>
+          <span><span class="hl">Applications:</span><br>Northline Security · Interviewing<br>Cobalt Pay · Applied</span>
+          <span><span class="hl">Closed:</span> Orchard Commerce</span>
+        </div>
+      </div>
+      <ul class="list">
+        <li><span class="k">01</span><div><b>One CV, sharpened per role.</b><p>I don't keep a pile of CVs. The agent proposes edits to mine for each posting, and I approve, change or reject every line. Approved versions are saved, so similar roles start from a better draft.</p></div></li>
+        <li><span class="k">02</span><div><b>Keywords, never invention.</b><p>It mirrors a posting's language only where my experience already says the same thing. A skill, tool or number I don't have is flagged as a gap, never added. A CV that can't survive the interview isn't worth sending.</p></div></li>
+        <li><span class="k">03</span><div><b>Two runs a day, by design.</b><p>The morning run catches what was posted the previous afternoon, and the midday run catches what HR teams publish in the morning. Applying within the first day matters more than running every hour.</p></div></li>
+        <li><span class="k">04</span><div><b>Email does the bookkeeping.</b><p>"Thanks for applying" emails, interview invites and rejections update each role's status on their own. It's read-only: it never sends or moves anything.</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="notes">
+    <div class="eyebrow">Build notes</div>
+    <h2 id="notes">What made it work</h2>
+    <div class="notes">
+      <div class="ncard"><h3>Feeds beat scraping</h3><p>Most Israeli tech companies post through an applicant tracking system with a public JSON feed. Reading those directly is faster and cleaner, and it catches closed roles the same day.</p></div>
+      <div class="ncard"><h3>Hebrew is a second market</h3><p>Many roles on Israeli job boards are posted only in Hebrew. Searching both languages, with masculine and feminine title forms, finds roles that English-only searches miss.</p></div>
+      <div class="ncard"><h3>A human in the loop</h3><p>The agent is fast at finding and drafting, and I'm the one who knows what's true. Keeping every CV change behind my approval made the output something I can stand behind.</p></div>
+    </div>
+    <div class="stack">
+      <span class="fact">Claude agents · scheduled runs</span><span class="fact">Greenhouse / Ashby / Lever / Comeet feeds</span><span class="fact">Gmail · Calendar (read-only)</span><span class="fact">Document store</span><span class="fact">HTML · CSS · JS</span>
+    </div>
+  </section>
+
+  <footer>
+    <span>Built by Liron Sofer · the live version runs privately on my own data</span>
+    <a href="https://lironsofer.online/">← All projects</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* Placeholder titles only: real role titles never appear in this page. */
+  var ROLES=[
+    {s:9,ph:"Xxxx xx Xxxxxxxxxxx",c:"Lumora Games",l:"Tel Aviv",sec:"Mobile gaming",why:"Strong match on seniority and sector, and on my watchlist.",wl:true,
+     edits:[
+      {kw:"hybrid monetization",from:"Owned all monetization and UA efforts",to:"Owned hybrid monetization (ads and in-app) and UA strategy end to end",why:"The posting says hybrid; my role covered both, so the CV now says so."},
+      {kw:"LTV / ROAS",from:"Led gaming UA and media buying on Google and Facebook",to:"Led gaming UA and media buying on Google and Facebook against LTV and ROAS targets",why:"I optimized to these daily; the CV just didn't name them."},
+      {kw:"team leadership",from:"including the publisher sales team",to:"leading the publisher sales and UA teams",why:"Moves team leadership up front, since the posting lists it first."}],
+     gap:"Asks for RevenueCat experience. I haven't used it, so it's flagged and left off the CV."},
+    {s:8,ph:"Xxxxxxxx xx Xxxxxxxx",c:"Tidepool Ads",l:"Herzliya",sec:"Adtech",why:"Adtech partnerships, one mutual connection.",wl:true,
+     edits:[
+      {kw:"supply partnerships",from:"Expanded the company's monetization sources",to:"Built supply partnerships with DSPs, SDKs, direct publishers and apps",why:"Same work, named the way their posting names it."},
+      {kw:"commercial negotiation",from:"Led hands-on negotiations",to:"Led commercial negotiations and renewals with strategic partners",why:"Their keyword; my experience matches it directly."}],
+     gap:""},
+    {s:8,ph:"Xxxx xx Xxxxxx",c:"Cobalt Pay",l:"Tel Aviv",sec:"Fintech",why:"Already applied. Status read from email.",app:"Applied",
+     edits:[
+      {kw:"revenue ownership",from:"Responsible for all business aspects",to:"Owned company revenue and P&L, reporting to the CEO",why:"States the outcome they're hiring for."}],
+     gap:""},
+    {s:7,ph:"Xxxxx Xxxxx",c:"Confidential (consumer app)",l:"Tel Aviv",sec:"Consumer apps",why:"Found in a Hebrew search. B2C, the right level.",
+     edits:[
+      {kw:"community-led growth",from:"Founded a women's street football team",to:"Built and grew a 500+ member community from scratch",why:"The posting stresses community; this is real and measurable."},
+      {kw:"performance marketing",from:"Led media buying",to:"Ran performance marketing across Google, Meta and TikTok",why:"Uses their exact phrase for work I did."}],
+     gap:"Asks for deep SEO. Not my strength, so it's flagged and I'll address it in the interview."},
+    {s:7,ph:"Xxxx xx Xxxxx Xxxxxxxxxx",c:"Northline Security",l:"Tel Aviv",sec:"Cybersecurity",why:"Interview scheduled. Brief arrives the evening before.",app:"Interviewing",
+     edits:[
+      {kw:"onboarding programs",from:"Designed and delivered sales trainings",to:"Designed onboarding and training programs for a global sales team",why:"Their wording for exactly what I built."}],
+     gap:""},
+    {s:6,ph:"Xxxxxxxxxx Xxxxxxxx",c:"Shefa Foods",l:"Petah Tikva",sec:"Food & beverage",why:"A brand I follow, with a wider business scope.",wl:true,
+     edits:[
+      {kw:"brand partnerships",from:"Managed strategic partners",to:"Managed brand partnerships with leading consumer brands",why:"Shifts the emphasis to brands, which is true for my partners."}],
+     gap:"Lists FMCG category experience as an advantage. I don't have it, so it's flagged, not claimed."},
+    {s:5,ph:"Xxxxxx Xxxx",c:"Orchard Commerce",l:"Ramat Gan",sec:"E-commerce",why:"Closed yesterday. It disappeared from their feed.",closed:true,edits:[],gap:""}
+  ];
+  var open=null, state={};
+  var R=document.getElementById("rows");
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function render(){
+    R.innerHTML=ROLES.map(function(r,i){
+      var st=state[i];
+      var tags=(r.app?'<span class="tag ok">'+r.app+' · from email</span>':'')+(r.wl?'<span class="tag ok">Watchlist</span>':'')+
+        (r.closed?'<span class="tag warn">Closed</span>':'<span class="tag">'+r.edits.length+' CV edit'+(r.edits.length===1?'':'s')+' suggested</span>')+
+        (st==="approved"?'<span class="tag ok">CV approved</span>':'');
+      var html='<div class="row"><div class="fit"><span class="num">'+r.s+'</span><span class="bar"><i style="width:'+r.s*10+'%"></i></span></div>'+
+        '<div class="r-main"><h3 class="r-title"><span class="hidden-title" aria-label="Role title hidden">'+esc(r.ph)+'</span></h3><div class="r-meta">'+esc(r.c)+' · '+esc(r.l)+' · '+esc(r.sec)+'</div><p class="r-why">'+esc(r.why)+'</p><div class="tags">'+tags+'</div></div>'+
+        (r.closed?'<span></span>':'<button type="button" class="btn" data-i="'+i+'" aria-expanded="'+(open===i)+'">'+(open===i?'Hide':'Suggest CV edits')+'</button>');
+      if(open===i){
+        html+='<div class="edits"><h4>SUGGESTED EDITS · BASED ON THE POSTING</h4>'+
+          r.edits.map(function(e){return '<div class="edit"><span class="kw">Posting keyword: <b>'+esc(e.kw)+'</b></span><span class="from">'+esc(e.from)+'</span><span class="to">'+esc(e.to)+'</span><span class="why">'+esc(e.why)+'</span></div>';}).join("")+
+          (r.gap?'<div class="skip">Gap, not added: '+esc(r.gap)+'</div>':'')+
+          '<div class="actions">'+(st==="approved"?'<span class="approved">Approved and saved for similar roles</span><button type="button" class="btn ghost" data-undo="'+i+'">Undo</button>':
+            '<button type="button" class="btn solid" data-ok="'+i+'">Approve edits</button><button type="button" class="btn ghost" data-ask="'+i+'">Ask for changes</button><span class="approved" id="ask-'+i+'"></span>')+'</div></div>';
+      }
+      return html+'</div>';}).join("");
+  }
+  R.addEventListener("click",function(e){
+    var b=e.target.closest("button");if(!b)return;
+    if(b.hasAttribute("data-i")){var i=+b.getAttribute("data-i");open=open===i?null:i;render();return;}
+    if(b.hasAttribute("data-ok")){state[+b.getAttribute("data-ok")]="approved";render();return;}
+    if(b.hasAttribute("data-undo")){delete state[+b.getAttribute("data-undo")];render();return;}
+    if(b.hasAttribute("data-ask")){var el=document.getElementById("ask-"+b.getAttribute("data-ask"));if(el)el.textContent="In the live version, I reply in chat and it redrafts.";}
+  });
+  render();
+})();
+</script>
+
+</body></html>
