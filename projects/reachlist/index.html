@@ -243,7 +243,13 @@ const KEY="rlb.v2";
 let S={step:1,company:null,info:null,product:0,aud:[],roles:[],markets:[],leads:[],reserve:[],seen:[],swaps:0,sel:null,sample:false,tpl:{}};
 try{const v=JSON.parse(sessionStorage.getItem(KEY)||"null");if(v&&v.step)S=Object.assign(S,v)}catch(e){}
 (S.leads||[]).forEach(l=>{delete l._busy;delete l._new});Object.values(S.tpl||{}).forEach(t=>{delete t.loading});
-function save(){try{sessionStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){try{sessionStorage.setItem(KEY,JSON.stringify(S))}catch(e){}try{if(S.step===4&&!S.sample&&S.leads.length)localStorage.setItem(LAST,JSON.stringify(S))}catch(e){}}
+/* one live test per visitor per day */
+const LAST="rlb.last", DAY=24*60*60*1000;
+function lastTest(){try{const t=+localStorage.getItem("rlb.testAt")||0;return Date.now()-t<DAY?t:0}catch(e){return 0}}
+function markTest(){try{localStorage.setItem("rlb.testAt",String(Date.now()))}catch(e){}}
+function savedResults(){try{const v=JSON.parse(localStorage.getItem(LAST)||"null");return v&&v.leads&&v.leads.length?v:null}catch(e){return null}}
+function nextTime(){const t=lastTest();if(!t)return"";const d=new Date(t+DAY);return d.toLocaleString([], {weekday:"long",hour:"2-digit",minute:"2-digit"})}
 let busy="", error="", sample=null, CAPS={};
 const ready=(async()=>{try{sample=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(e){sample=null}})();
 (window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{}}).catch(()=>{});
@@ -289,14 +295,17 @@ function vCompany(){
     </div>
     <p class="hint">Not in the list? Pick “Use …” and it will find the website itself, or type the website address.</p>
     ${error?`<p class="err">${esc(error)}</p>`:""}
+    ${lastTest()?`<div class="sum" style="margin:22px 0 0">You've used today's test. You can run a new one ${esc(nextTime())}.${savedResults()?` <a href="#" id="mine">View your results</a>`:""}</div>`:""}
     <p class="hint" style="margin-top:22px">Just looking? <a href="#" id="demo">See a sample run</a> with made-up data.</p>`}
   </section>`;
 }
 let acItems=[], acIdx=-1, acTimer=0, acSeq=0;
 function bCompany(){
   const q=$("#q"); if(!q)return;
+  acItems=[];acIdx=-1;
   const list=$("#acl");
   $("#demo").onclick=e=>{e.preventDefault();loadSample()};
+  const mine=$("#mine");if(mine)mine.onclick=e=>{e.preventDefault();const v=savedResults();if(v){S=Object.assign(S,v,{sel:null});save();render()}};
   setTimeout(()=>q.focus(),30);
   const close=()=>{list.hidden=true;q.setAttribute("aria-expanded","false");q.removeAttribute("aria-activedescendant")};
   const draw=()=>{
@@ -424,7 +433,7 @@ function vTargets(){
       <form class="add" data-g="roles"><input placeholder="Add a job title" maxlength="60" aria-label="Add a job title"><button class="btn sm">Add</button></form></div>
     <div class="grp"><span class="lbl">Region</span><div class="chips">${mk.map(m=>`<button class="chip mk" aria-pressed="${S.markets.includes(m)}" data-g="markets" data-v="${esc(m)}"><span class="c1">${esc(m)}</span></button>`).join("")}</div></div>
     <div class="cta"><button class="btn ghost" id="back">← Product</button>
-      <span class="row"><span class="dim mono" style="font-size:12.5px">Takes about a minute</span><button class="btn pri" id="go"${S.aud.length&&S.roles.length?"":" disabled"}>Start ${LEADS}-lead test →</button></span></div>
+      <span class="row"><span class="dim mono" style="font-size:12.5px">${lastTest()?"One test per day: today's is used":"One test per day · takes about a minute"}</span><button class="btn pri" id="go"${S.aud.length&&S.roles.length?"":" disabled"}>Start ${LEADS}-lead test →</button></span></div>
     ${error?`<p class="err">${esc(error)}</p>`:""}
   </section>`;
 }
@@ -483,6 +492,8 @@ async function fetchLeads(n,focus){
 async function startLeads(){
   await ready;
   if(!LIVE()){error="The live AI isn't available here. Try the sample run from step 1.";render();return}
+  if(lastTest()){track("daily-limit","Hit the daily test limit");modal("day");return}
+  markTest();
   S.leads=[];S.reserve=[];S.seen=[];S.swaps=0;S.sel=null;S.tpl={};S.step=4;error="";busy=`Searching the web for companies that fit…`;save();render();
   track("start","Started a 20-lead test");
   const want=LEADS+RESERVE, half=Math.ceil(want/2)+1;
@@ -492,7 +503,7 @@ async function startLeads(){
   const errs=(await Promise.all(a.map(run))).filter(Boolean);
   if(got.length<LEADS){try{addUnique(await fetchLeads(want-got.length+3,""),got);place(got)}catch(e){errs.push(e)}}
   busy="";
-  if(!got.length){error=friendly(errs[0]);S.step=3;save();render();return}
+  if(!got.length){try{localStorage.removeItem("rlb.testAt")}catch(e){}error=friendly(errs[0]);S.step=3;save();render();return}
   place(got);save();render();resolveAll();
   track("leads","Got leads");
 }
@@ -708,7 +719,7 @@ function modal(kind){
   const el=document.createElement("div");
   el.className="modal";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");el.setAttribute("aria-labelledby","mt");
   el.innerHTML=`<div class="box"><div class="em" aria-hidden="true">🔒</div><h2 id="mt">This is a test version</h2>
-    <p>${kind==="swap"?"You've swapped the most leads this test allows. ":""}Only the tool owner can generate unlimited leads. Feel free to contact Liron.</p>
+    <p>${kind==="day"?`You've already run today's 20-lead test. You can run a new one ${esc(nextTime())}. `:kind==="swap"?"You've swapped the most leads this test allows. ":""}Only the tool owner can generate unlimited leads. Feel free to contact Liron.</p>
     <div class="row"><a class="btn pri" href="../../index.html#contact">Contact Liron</a><button class="btn ghost" id="mclose">Close</button></div></div>`;
   document.body.appendChild(el);document.body.classList.add("modal-open");
   const close=()=>{el.remove();document.body.classList.remove("modal-open")};
