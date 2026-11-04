@@ -50,7 +50,7 @@ def prepare(raw_path, slug):
         s = s.replace("<head>", "<head>" + HEAD, 1)
     import re
     s = re.sub(r'claude-shim\.js(\?v=[^"]*)?"', 'claude-shim.js?v=' + SHIM_VERSION + '"', s)
-    if "pf-back" not in s:
+    if 'class="pf-back"' not in s:
         i = s.rfind("</body>")
         s = s[:i] + BACK + s[i + len("</body>"):] if i >= 0 else s + BACK
     for old, new in TWEAKS.get(slug, []):

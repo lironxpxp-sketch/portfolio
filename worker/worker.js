@@ -13,7 +13,7 @@
  *   GEMINI_API_KEY     (Secret, optional)  key from aistudio.google.com: Gemini, used first for web research
  *   GEMINI_MODEL       (Text, optional)    Gemini model, default gemini-3.8-flash
  *   GEMINI_IMAGE_MODEL (Text, optional)    image model, default gemini-nano-banana-2.1 (Nano Banana)
- *   HUNTER_API_KEY     (Secret, optional)  key from hunter.io: finds work emails in Reachlist
+ *   HUNTER_API_KEY     (Secret, optional)  key from hunter.io: finds work emails in Reachlist Builder
  *   GOOGLE_CLIENT_ID   (Text, optional)    OAuth client ID: "Sign in with Google" in Reachlist
  *   GMAIL_SEND         (Text, optional)    set to "on" to send straight from Gmail (needs Google's app review for the public)
  */
@@ -47,6 +47,52 @@ const PER_IP_WINDOW_MS = 10 * 60 * 1000; // ...per 10 minutes (best effort)
 const hits = new Map();
 const imageHits = new Map();
 const PER_IP_IMAGES = 40; // ad images per visitor per 10 minutes
+const suggestHits = new Map();
+const PER_IP_SUGGEST = 300; // company-name autocomplete lookups per visitor per 10 minutes
+const peopleHits = new Map();
+const PER_IP_PEOPLE = 80;   // email lookups per visitor per 10 minutes
+const peopleCache = new Map(); // domain -> Hunter result, saves credits on repeat lookups
+const suggestCache = new Map();
+const UA = "LironSoferPortfolio/1.0 (https://lironsofer.online; lironsofer.online tools)";
+
+// Company-name autocomplete from Wikidata (free, no key): companies that list an official website
+async function suggestCompanies(q) {
+  const key = q.toLowerCase();
+  if (suggestCache.has(key)) return suggestCache.get(key);
+  const api = "https://www.wikidata.org/w/api.php?format=json&origin=*&";
+  let found = [];
+  try {
+    const r = await fetch(api + new URLSearchParams({ action: "wbsearchentities", search: q, language: "en", uselang: "en", type: "item", limit: "15" }), { headers: { "user-agent": UA }, signal: AbortSignal.timeout(5000) });
+    found = ((await r.json()).search || []).filter((x) => x && x.id);
+  } catch { return []; }
+  if (!found.length) return [];
+  let ents = {};
+  try {
+    const r = await fetch(api + new URLSearchParams({ action: "wbgetentities", ids: found.map((x) => x.id).join("|"), props: "claims", languages: "en" }), { headers: { "user-agent": UA }, signal: AbortSignal.timeout(5000) });
+    ents = (await r.json()).entities || {};
+  } catch { return []; }
+  const NOT = new Set(["Q5", "Q515", "Q6256", "Q3624078", "Q1549591", "Q482994", "Q7366", "Q11424", "Q5398426", "Q486972", "Q532", "Q3957", "Q13442814", "Q4167410"]);
+  const BIZ = /(company|compan|corporation|business|enterprise|software|technology|startup|brand|manufacturer|retailer|platform|firm|provider|bank|airline|agency|service|developer|publisher|network|marketplace|app|operator|chain|group|conglomerate|maker|producer|studio|media|insurer|fintech|saas)/i;
+  const out = [];
+  for (const x of found) {
+    const c = (ents[x.id] || {}).claims || {};
+    const site = c.P856?.[0]?.mainsnak?.datavalue?.value;
+    if (!site || !/^https?:\/\//i.test(site)) continue;
+    const kinds = (c.P31 || []).map((k) => k.mainsnak?.datavalue?.value?.id).filter(Boolean);
+    if (kinds.some((k) => NOT.has(k))) continue;
+    const desc = String(x.description || "");
+    if (/(city|town|village|municipality|human|album|song|film|footballer|singer|actor|river|mountain|novel|episode|family name|given name)/i.test(desc)) continue;
+    let domain = "";
+    try { domain = new URL(site).hostname.replace(/^www\./, ""); } catch { continue; }
+    out.push({ name: String(x.label || x.match?.text || "").slice(0, 80), description: desc.slice(0, 90), website: site, domain, biz: BIZ.test(desc) ? 1 : 0 });
+  }
+  out.sort((a, b) => b.biz - a.biz);
+  const seen = new Set();
+  const list = out.filter((o) => !seen.has(o.domain) && seen.add(o.domain)).slice(0, 7).map(({ biz, ...o }) => o);
+  if (suggestCache.size > 2000) suggestCache.clear();
+  suggestCache.set(key, list);
+  return list;
+}
 
 function cors(origin) {
   return {
@@ -180,13 +226,51 @@ export default {
     }
 
     const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-    if (overLimit(ip)) {
-      return reply(429, { code: "rate_limited", message: "Too many requests. Try again in a few minutes." }, origin);
-    }
 
     let body;
     try { body = JSON.parse(raw); } catch {
       return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin);
+    }
+    if (!body || typeof body !== "object") return reply(400, { code: "invalid_request", message: "Body must be a JSON object" }, origin);
+
+    // Company-name autocomplete (Reachlist Builder): its own, generous limit
+    if (typeof body.companySuggest === "string") {
+      const q = body.companySuggest.trim().slice(0, 60);
+      if (q.length < 2) return reply(200, { companies: [] }, origin);
+      if (overLimit(ip, suggestHits, PER_IP_SUGGEST)) return reply(429, { code: "rate_limited", message: "Slow down a little" }, origin);
+      return reply(200, { companies: await suggestCompanies(q) }, origin);
+    }
+
+    const isPeople = !!(body.findPeople || body.findEmail);
+    if (isPeople ? overLimit(ip, peopleHits, PER_IP_PEOPLE) : overLimit(ip)) {
+      return reply(429, { code: "rate_limited", message: "Too many requests. Try again in a few minutes." }, origin);
+    }
+
+    // Everyone with a known work email at a company (Hunter.io domain search), so the tool can
+    // prefer a contact who has an email. Returns { people:[...], generic:[...] }.
+    if (body.findPeople && typeof body.findPeople === "object") {
+      if (!env.HUNTER_API_KEY) return reply(200, { people: [], generic: [], unavailable: true }, origin);
+      const domain = String(body.findPeople.domain || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/[\/?#].*$/, "");
+      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) return reply(400, { code: "invalid_request", message: "Need a company domain" }, origin);
+      if (peopleCache.has(domain)) return reply(200, peopleCache.get(domain), origin);
+      let res, data = {};
+      try {
+        res = await fetch(`https://api.hunter.io/v2/domain-search?${new URLSearchParams({ domain, limit: "10" })}`, { headers: { "X-API-KEY": env.HUNTER_API_KEY }, signal: AbortSignal.timeout(9000) });
+        data = await res.json().catch(() => ({}));
+      } catch { return reply(200, { people: [], generic: [], unavailable: true }, origin); }
+      if (!res.ok) return reply(200, { people: [], generic: [], unavailable: true, reason: res.status === 429 ? "limit" : "error" }, origin);
+      const emails = Array.isArray(data?.data?.emails) ? data.data.emails : [];
+      const out = {
+        people: emails.filter((e) => e && e.type === "personal" && e.value).map((e) => ({
+          name: [e.first_name, e.last_name].filter(Boolean).join(" ").slice(0, 80), title: String(e.position || "").slice(0, 100),
+          seniority: e.seniority || "", department: e.department || "", email: e.value, confidence: Number(e.confidence) || 0,
+          linkedin: /^https:\/\/([a-z]+\.)?linkedin\.com\/in\//i.test(e.linkedin || "") ? e.linkedin : "", verified: e.verification?.status === "valid",
+        })),
+        generic: emails.filter((e) => e && e.type === "generic" && e.value).map((e) => e.value).slice(0, 3),
+      };
+      if (peopleCache.size > 3000) peopleCache.clear();
+      peopleCache.set(domain, out);
+      return reply(200, out, origin);
     }
 
     // Find a person's work email (Hunter.io). Only real, found addresses are returned.

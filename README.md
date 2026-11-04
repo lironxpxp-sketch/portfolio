@@ -95,6 +95,8 @@ Projects are copies of the Claude artifacts. After you change one in Claude, ask
 
 ## Visit stats and personalised links
 
+Reachlist Builder uses two backend helpers: `companySuggest` (company-name autocomplete from Wikidata, free) and `findPeople` (everyone with a known email at a company, via Hunter domain search). Without HUNTER_API_KEY it falls back to LinkedIn for every contact.
+
 Visits are counted with GoatCounter (free, no cookies) at **lironsofer.goatcounter.com**. Sign up at goatcounter.com with the code `lironsofer` to see the dashboard.
 
 Send a company its own link: `https://lironsofer.online/?for=wix` (use dashes for spaces: `?for=check-point`). The page greets "Hi Wix team 👋", the email button gets the subject "Hi Liron (from Wix)", and the open shows up in GoatCounter as `for/wix`. Contact clicks show up as `contact/...`.
