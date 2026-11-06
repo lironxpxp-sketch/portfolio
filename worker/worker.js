@@ -16,6 +16,8 @@
  *   HUNTER_API_KEY     (Secret, optional)  key from hunter.io: finds work emails in Reachlist
  *   GOOGLE_CLIENT_ID   (Text, optional)    OAuth client ID: "Sign in with Google" in Reachlist
  *   GMAIL_SEND         (Text, optional)    set to "on" to send straight from Gmail (needs Google's app review for the public)
+ *   TRIP               (KV binding, optional) shared, editable data for the family trip page (/vietnam-2026/)
+ *   TRIP_EDIT_KEY      (Secret, optional)  the code people type on the trip page to save changes
  */
 
 const ALLOWED_ORIGINS = [
@@ -155,7 +157,16 @@ export default {
     // Image pass-through so the site can draw a brand's own images into its ads
     if (request.method === "GET" && new URL(request.url).searchParams.has("caps")) {
       return reply(200, { images: !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY), emailFinder: !!env.HUNTER_API_KEY,
-        googleClientId: env.GOOGLE_CLIENT_ID || "", gmailSend: env.GMAIL_SEND === "on", models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
+        googleClientId: env.GOOGLE_CLIENT_ID || "", gmailSend: env.GMAIL_SEND === "on", trip: !!(env.TRIP && env.TRIP_EDIT_KEY), models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
+    }
+    // Family trip page: read the shared trip data
+    if (request.method === "GET" && new URL(request.url).searchParams.has("trip")) {
+      if (!env.TRIP || !env.TRIP_EDIT_KEY) return reply(404, { code: "not_configured", message: "Trip storage isn't connected" }, origin);
+      const id = String(new URL(request.url).searchParams.get("trip") || "").replace(/[^a-z0-9-]/gi, "").slice(0, 40);
+      if (!id) return reply(400, { code: "invalid_request", message: "Missing trip id" }, origin);
+      const stored = await env.TRIP.get("trip:" + id, "json");
+      return new Response(JSON.stringify(stored || { rev: 0, data: null }), {
+        status: 200, headers: { "content-type": "application/json", "cache-control": "no-store", ...cors(origin) } });
     }
     if (request.method === "GET") {
       const target = new URL(request.url).searchParams.get("img") || "";
@@ -187,6 +198,23 @@ export default {
     let body;
     try { body = JSON.parse(raw); } catch {
       return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin);
+    }
+
+    // Family trip page: save the shared trip data (needs the edit code; refuses stale saves)
+    if (body.tripSave && typeof body.tripSave === "object") {
+      if (!env.TRIP || !env.TRIP_EDIT_KEY) return reply(400, { code: "not_configured", message: "Trip storage isn't connected" }, origin);
+      const t = body.tripSave;
+      const id = String(t.id || "").replace(/[^a-z0-9-]/gi, "").slice(0, 40);
+      const key = String(t.key || "");
+      let same = key.length === env.TRIP_EDIT_KEY.length;
+      for (let i = 0; i < env.TRIP_EDIT_KEY.length; i++) if (key.charCodeAt(i) !== env.TRIP_EDIT_KEY.charCodeAt(i)) same = false;
+      if (!same) return reply(403, { code: "bad_key", message: "Wrong edit code" }, origin);
+      if (!id || !t.data || typeof t.data !== "object" || !Array.isArray(t.data.days)) return reply(400, { code: "invalid_request", message: "Missing trip data" }, origin);
+      const current = (await env.TRIP.get("trip:" + id, "json")) || { rev: 0 };
+      if (Number(t.rev) !== Number(current.rev || 0)) return reply(409, { code: "conflict", message: "Someone saved a newer version", rev: current.rev }, origin);
+      const next = { rev: (current.rev || 0) + 1, data: t.data, savedAt: new Date().toISOString() };
+      await env.TRIP.put("trip:" + id, JSON.stringify(next));
+      return reply(200, { rev: next.rev }, origin);
     }
 
     // Find a person's work email (Hunter.io). Only real, found addresses are returned.

@@ -98,3 +98,16 @@ Projects are copies of the Claude artifacts. After you change one in Claude, ask
 Visits are counted with GoatCounter (free, no cookies) at **lironsofer.goatcounter.com**. Sign up at goatcounter.com with the code `lironsofer` to see the dashboard.
 
 Send a company its own link: `https://lironsofer.online/?for=wix` (use dashes for spaces: `?for=check-point`). The page greets "Hi Wix team 👋", the email button gets the subject "Hi Liron (from Wix)", and the open shows up in GoatCounter as `for/wix`. Contact clicks show up as `contact/...`.
+
+## Family trip page (unlisted)
+
+`vietnam-2026/` is a private family page: not linked from the homepage, and marked so search engines skip it. Anyone with the link can open it. The master copy is `sources/vietnam-trip.html` (also the Claude artifact); rebuild the page with `python3 tools/build_trip.py`.
+
+It works with no setup: schedule, live weather (Open-Meteo, no key), AI questions through the Worker, and offline viewing. To let people edit it live from the site:
+
+1. Cloudflare → **Storage & Databases → KV → Create**, name it `trip`.
+2. Your Worker → **Settings → Bindings → Add → KV namespace**: Variable name `TRIP`, namespace `trip`.
+3. Your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `TRIP_EDIT_KEY`, value = an edit code (e.g. 4–6 digits) to share with the family.
+4. Paste the new `worker/worker.js` (Edit code → paste → Deploy).
+
+An "Edit" button then appears on the page; the first save asks for the edit code. A save made from an older copy is refused, so two people can't overwrite each other.

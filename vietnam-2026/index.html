@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0d6857">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="וייטנאם">
+<title>וייטנאם 2026</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Suez+One&family=Be+Vietnam+Pro:wght@500;700&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script src="../assets/claude-shim.js?v=9"></script>
+</head>
+<body>
+<style id="app-style">
+/* Layout: one-column phone app, RTL. Sticky header + day strip, day timeline, fixed bottom tab bar. Ha Long jade + Hoi An lantern yellow on rice-paper neutral. */
+:root{
+  --bg:#f1f4ef; --surface:#ffffff; --sunk:#e6ece7; --ink:#14211c; --muted:#56675f; --line:#d3ddd6;
+  --jade:#0d6857; --on-jade:#ffffff; --jade-soft:#d9ece6; --lantern:#c98a12; --lantern-soft:#fbeed0; --warn:#9c4410;
+  --f-display:'Suez One','Frank Ruhl Libre',Georgia,serif;
+  --f-body:'Assistant','Segoe UI',system-ui,-apple-system,sans-serif;
+  --f-vn:'Be Vietnam Pro','Segoe UI',system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1613; --surface:#16211d; --sunk:#1d2a25; --ink:#e6eee9; --muted:#9bb0a6; --line:#2a3933;
+  --jade:#4cbfa5; --on-jade:#06231c; --jade-soft:#173a32; --lantern:#efbb4f; --lantern-soft:#3a2f14; --warn:#f0a06c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1613; --surface:#16211d; --sunk:#1d2a25; --ink:#e6eee9; --muted:#9bb0a6; --line:#2a3933;
+  --jade:#4cbfa5; --on-jade:#06231c; --jade-soft:#173a32; --lantern:#efbb4f; --lantern-soft:#3a2f14; --warn:#f0a06c; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;direction:rtl}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--jade)}
+*{box-sizing:border-box}
+a{color:inherit}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--lantern);outline-offset:2px}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--jade);color:var(--on-jade)}
+header.top .wrap{padding-block:12px 10px;display:flex;align-items:center;gap:12px;justify-content:space-between}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1.1;margin:0}
+.brand p{margin:2px 0 0;font-size:14px;opacity:.85}
+.clocks{text-align:left;font-size:13px;line-height:1.35;font-variant-numeric:tabular-nums;opacity:.95;white-space:nowrap}
+.clocks b{font-size:16px}
+.strip{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:4}
+.strip-scroll{display:flex;gap:8px;overflow-x:auto;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));scrollbar-width:none;max-width:680px;margin:0 auto}
+.strip-scroll::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:6px 10px;min-width:64px;text-align:center;cursor:pointer;line-height:1.2}
+.chip .n{display:block;font-weight:800;font-size:15px}
+.chip .d{display:block;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip .c{display:block;font-size:12px}
+.chip[aria-current="true"]{background:var(--jade);border-color:var(--jade);color:var(--on-jade)}
+.chip[aria-current="true"] .d{color:inherit;opacity:.85}
+.chip.today{box-shadow:inset 0 -3px 0 var(--lantern)}
+main{padding-block:16px 120px}
+.dayhead h2{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+.eyebrow{font-size:14px;color:var(--muted);font-weight:700;letter-spacing:.02em}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{font-size:14px;padding:2px 10px;border-radius:999px;background:var(--sunk)}
+.tag.yes{background:var(--jade-soft)}
+.countdown{background:var(--lantern-soft);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-weight:700}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:14px}
+.panel h3{margin:0 0 6px;font-size:16px;color:var(--muted);font-weight:800;letter-spacing:.02em}
+.weather{display:flex;gap:14px;align-items:center}
+.temp{font-family:var(--f-display);font-size:30px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;direction:ltr}
+.weather p{margin:0}
+.small{font-size:14px;color:var(--muted)}
+.timeline{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px}
+.item.done{opacity:.6}
+.time{font-weight:800;font-variant-numeric:tabular-nums;min-width:52px;color:var(--jade);direction:ltr;text-align:right}
+.time.unk{color:var(--warn);font-size:14px}
+.item .body{min-width:0}
+.item h4{margin:0;font-size:18px;line-height:1.3}
+.item p{margin:2px 0 0;color:var(--muted);font-size:16px}
+.actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:7px 12px;font-size:15px;font-weight:700;text-decoration:none;cursor:pointer;min-height:40px}
+.btn.primary{background:var(--jade);color:var(--on-jade);border-color:var(--jade)}
+.btn.lantern{background:var(--lantern-soft);border-color:transparent}
+.btn.ghost{background:transparent}
+.pin{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--lantern);color:#1d1503;font-size:13px;font-weight:800;flex:none}
+.map svg{width:100%;height:auto;display:block}
+.map .note{margin:6px 0 10px}
+.hotel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.hotel strong{font-size:18px}
+nav.tabs{position:fixed;inset:auto 0 0 0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+nav.tabs .row{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+nav.tabs button{border:0;background:transparent;border-radius:10px;padding:8px 4px;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted)}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="true"]{color:var(--jade);background:var(--jade-soft)}
+.sectiontitle{font-family:var(--f-display);font-weight:400;font-size:26px;margin:0 0 4px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv .k{font-size:14px;color:var(--muted);font-weight:700}
+.kv .v{font-size:18px;font-weight:700;word-break:break-word;direction:ltr;text-align:right;unicode-bidi:plaintext}
+.kv .v.he{direction:rtl}
+.legs{list-style:none;padding:0;margin:0}
+.legs li{display:grid;grid-template-columns:72px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.legs li:last-child{border-bottom:0}
+.legs .dt{font-weight:800;color:var(--jade);font-variant-numeric:tabular-nums}
+textarea,input[type=text]{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font-size:17px}
+textarea{min-height:90px;resize:vertical}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.answer{white-space:pre-wrap;background:var(--jade-soft);border-radius:var(--r);padding:14px;margin-top:12px;font-size:17px}
+.driver{position:fixed;inset:0;z-index:20;background:var(--surface);display:flex;flex-direction:column;justify-content:center;gap:18px;padding:calc(24px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));text-align:center}
+.driver .vn{font-family:var(--f-vn);font-weight:700;font-size:clamp(30px,9vw,52px);line-height:1.2;direction:ltr;color:var(--ink)}
+.driver .req{font-family:var(--f-vn);font-size:20px;direction:ltr;color:var(--muted)}
+.editbar{position:fixed;inset:auto 0 calc(70px + env(safe-area-inset-bottom,0px)) 0;z-index:7;display:flex;justify-content:center;padding:0 16px;pointer-events:none}
+.editbar .inner{pointer-events:auto;background:var(--ink);color:var(--bg);border-radius:14px;padding:8px 8px 8px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 6px 24px rgb(0 0 0 / .25)}
+.editbar .btn{background:var(--lantern);color:#1d1503;border:0}
+.edit-fields{grid-column:1/-1;display:grid;grid-template-columns:90px 1fr;gap:8px}
+.edit-fields textarea,.edit-fields .full{grid-column:1/-1}
+.toggle-edit{background:transparent;border:1px solid currentColor;color:inherit;border-radius:10px;padding:4px 10px;font-weight:700;font-size:14px;cursor:pointer}
+.status{font-size:14px;color:var(--muted);margin-top:8px}
+.item.warn{border-color:var(--warn);box-shadow:inset -4px 0 0 var(--warn)}
+.item.warn .time{color:var(--warn)}
+.wx-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.wx-head h3{margin:0}
+.wx-head .btn{min-height:34px;padding:4px 12px;font-size:14px}
+.wx-row{display:flex;gap:14px;align-items:center}
+.wx-row p{margin:0}
+.wx-sub{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.pinbox{display:flex;gap:8px;margin-top:8px}
+.pinbox input{flex:1;min-width:0}
+@media (prefers-reduced-motion:no-preference){.chip,.btn,nav.tabs button{transition:background .15s,color .15s}}
+</style>
+<div id="app"></div>
+<script id="trip-data" type="application/json">
+{"v":1,"updated":"2026-11-06T18:30:00Z",
+"hotels":{"hanoi":"May De Ville Corner Hotel, Hanoi","halong":"Heritage Cruises · Delta Suite","hoian":"Hoian Central Boutique Hotel & Spa","saigon":"Orchids Saigon Hotel","phuquoc":"Dusit Princess Moonrise Beach Resort, Phu Quoc","hanoi2":"May De Ville Corner Hotel, Hanoi"},
+"hotelUrls":{"hanoi":"https://maydevillecornerhotel.com/","halong":"https://heritagecruises.com/","hoian":"https://hoiancentral.com/","saigon":"http://orchidshotelsaigon.com/en/","phuquoc":"https://www.dusit.com/dusitprincess/moonrisebeachresort/","hanoi2":"https://maydevillecornerhotel.com/"},
+"docs":[
+{"id":"d1","k":"טיסה הלוך, Etihad (עצירה אחת)","v":"16.11 · 00:50 TLV T3 → 18:10 HAN T2"},
+{"id":"d2","k":"טיסה חזור, Etihad (עצירה אחת)","v":"3.12 · 20:10 HAN T2 → 4.12 · 05:05 TLV T3"},
+{"id":"d3","k":"טיסה האנוי → דא נאנג (19/11)","v":"VN169 · 16:45–18:15"},
+{"id":"d4","k":"טיסה דא נאנג → סייגון (23/11)","v":"VN123 · 12:15–13:45"},
+{"id":"d5","k":"טיסה סייגון → פו קוק (26/11)","v":"VN1827 · 13:00–14:00"},
+{"id":"d6","k":"טיסה פו קוק → האנוי (2/12)","v":"VN6400 · 15:15–17:30"},
+{"id":"d8","k":"מזוודה בטיסות פנים (Vietnam Airlines)","v":"23 ק\"ג"},
+{"id":"d9","k":"טיפ למדריך ולנהג (חובה, לא כלול)","v":"5$ לאדם ליום מודרך, ישירות למדריך"},
+{"id":"d7","k":"ביטוח נסיעות (חברה וטלפון חירום)","v":""}
+],
+"days":[
+{"d":"2026-11-16","c":"hanoi","ti":"נחיתה וסיור ברובע העתיק","meals":"","guide":1,"car":1,"items":[
+ {"id":"a0","t":"00:50","ti":"המראה מנתב\"ג, Etihad","de":"טרמינל 3, עצירה אחת בדרך. יוצאים מהבית ביום ראשון 15.11 בערב, כדי להיות בשדה בערך ב-21:50."},
+ {"id":"a1","t":"18:10","ti":"נחיתה בהאנוי, טרמינל 2","de":"תהליך ויזה בנחיתה. המדריך והנהג מחכים ביציאה מהאולם.","p":"noibai"},
+ {"id":"a2","t":"","ti":"נסיעה למלון וצ'ק-אין","de":"מנוחה קצרה לפני הסיור."},
+ {"id":"a3","t":"ערב","ti":"סיור ברגל ברובע העתיק","de":"36 הרחובות, אלפי חנויות קטנות. הרבה הזדמנויות לצילום.","p":"oldq"},
+ {"id":"a4","t":"","ti":"שוק האנג בה","de":"","p":"hangbe"},
+ {"id":"a5","t":"","ti":"אגם הואן קיאם","de":"ואז חזרה למלון.","p":"hoankiem"}]},
+{"d":"2026-11-17","c":"hanoi","ti":"סיור בעיר וקפה ביצים","meals":"B","guide":1,"car":1,"items":[
+ {"id":"b1","t":"בוקר","ti":"מתחם הו צ'י מין וכיכר בא דין","de":"צפייה מבחוץ במאוזוליאום, בכיכר שבה הוכרזה העצמאות ב-1945, ובבתים הקולוניאליים הצרפתיים.","p":"mausoleum"},
+ {"id":"b2","t":"","ti":"מקדש הספרות","de":"האוניברסיטה הראשונה של וייטנאם (1076). גנים ואדריכלות עתיקה.","p":"literature"},
+ {"id":"b3","t":"","ti":"האגם המערבי ופגודת טראן קוק","de":"פגודה בודהיסטית מהמאה השישית.","p":"tranquoc"},
+ {"id":"b4","t":"צהריים","ti":"המוזיאון האתנולוגי","de":"הקבוצות האתניות של וייטנאם.","p":"ethno"},
+ {"id":"b5","t":"","ti":"מקדש נגוק סון","de":"על אגם הואן קיאם, ואדריכלות וייטנאמית וצרפתית סביבו.","p":"ngocson"},
+ {"id":"b6","t":"סיום","ti":"שעה בריקשה (סיקלו)","de":"נסיעה איטית ברחובות השוק. בהמשך היום: קפה ביצים, המשקה המפורסם של האנוי."}]},
+{"d":"2026-11-18","c":"halong","ti":"שייט במפרץ הא לונג","meals":"BLD","guide":0,"car":1,"items":[
+ {"id":"c1","t":"בוקר","ti":"נסיעה פרטית למפרץ","de":"כשעתיים וחצי. נהג בלבד, בלי מדריך.","p":"halong"},
+ {"id":"c2","t":"צהריים","ti":"עלייה לספינה וארוחת פירות ים","de":"שייט בין אלפי איי גיר. נמל העגינה המדויק מופיע בשובר של הספינה."},
+ {"id":"c3","t":"אחה\"צ","ti":"פעילויות: מערה, קיאקים או שחייה","de":""},
+ {"id":"c4","t":"ערב","ti":"ארוחת ערב וקורס בישול קצר","de":""},
+ {"id":"c5","t":"לילה","ti":"דיג דיונונים עם המקומיים","de":"לינה בספינה."}]},
+{"d":"2026-11-19","c":"hoian","ti":"זריחה במפרץ, טיסה להויאן","meals":"B","guide":1,"car":1,"items":[
+ {"id":"e1","t":"זריחה","ti":"טאי צ'י על הסיפון העליון","de":"ארוחת בוקר על המים."},
+ {"id":"e2","t":"","ti":"ארוחת צהריים מוקדמת וירידה מהספינה","de":""},
+ {"id":"e3","t":"","ti":"נסיעה לשדה התעופה בהאנוי","de":"נהג בלבד, בלי מדריך."},
+ {"id":"e4","t":"16:45","ti":"טיסה VN169 לדא נאנג","de":"Vietnam Airlines. נחיתה ב-18:15. מזוודה עד 23 ק\"ג.","p":"noibai"},
+ {"id":"e5","t":"18:15","ti":"מדריך ונהג בשדה התעופה, נסיעה להויאן","de":"העיר העתיקה והיפה.","p":"danang"}]},
+{"d":"2026-11-20","c":"hoian","ti":"בא נא הילס וגשר הזהב","meals":"B","guide":1,"car":1,"items":[
+ {"id":"f1","t":"בוקר","ti":"נסיעה לבא נא הילס","de":"בהרים מעל דא נאנג. למעלה קריר יותר, כדאי לקחת שכבה.","p":"bana"},
+ {"id":"f2","t":"","ti":"רכבל ענק מעל יער הגשם","de":""},
+ {"id":"f3","t":"","ti":"גשר הזהב והידיים הענקיות","de":"","p":"golden"},
+ {"id":"f4","t":"","ti":"חזרה להויאן","de":"","p":"hoian"}]},
+{"d":"2026-11-21","c":"hoian","ti":"בין הנהר לים: סיור כפרים","meals":"B","guide":1,"car":1,"items":[
+ {"id":"g1","t":"09:00","ti":"איסוף מהמלון","de":"המדריך מגיע ברכב."},
+ {"id":"g2","t":"","ti":"דרכי כפר, שדות אורז ויער דקלי מים","de":"ומקדש עתיק בדרך."},
+ {"id":"g3","t":"","ti":"בית מקומי בכפר הירקות","de":"משקה קבלת פנים.","p":"traque"},
+ {"id":"g4","t":"","ti":"שייט בנהר לכפר קאם קים","de":"","p":"camkim"}]},
+{"d":"2026-11-22","c":"hoian","ti":"יום חופשי בהויאן","meals":"B","guide":0,"car":0,"items":[
+ {"id":"h1","t":"","ti":"יום חופשי","de":"העיר העתיקה יפה במיוחד בערב, כשהפנסים נדלקים.","p":"hoian"}]},
+{"d":"2026-11-23","c":"saigon","ti":"טיסה לסייגון","meals":"B","guide":1,"car":1,"items":[
+ {"id":"i1","t":"12:15","ti":"טיסה VN123 לסייגון","de":"Vietnam Airlines, מדא נאנג. נחיתה ב-13:45.","p":"danang"},
+ {"id":"i2","t":"13:45","ti":"מדריך ונהג בשדה התעופה","de":"נסיעה למלון.","p":"tsn"},
+ {"id":"i3","t":"","ti":"סיור ברגל: שדרת נגוין הואה ופינת דונג קוי","de":"מרכז העיר התוססת.","p":"nguyenhue"}]},
+{"d":"2026-11-24","c":"saigon","ti":"סיור בעיר ובשווקים","meals":"B","guide":1,"car":1,"items":[
+ {"id":"j1","t":"בוקר","ti":"צ'יינה טאון ושוק בין טאי","de":"מסחר מקומי ותרבות סינית.","p":"binhtay"},
+ {"id":"j2","t":"","ti":"מקדש תיין האו","de":"מתחילת המאה ה-19, לאלת יורדי הים.","p":"thienhau"},
+ {"id":"j3","t":"","ti":"טיילת הנהר ומזח נה רונג","de":"משם יצא הו צ'י מין מווייטנאם ב-1911.","p":"nharong"},
+ {"id":"j4","t":"","ti":"מוזיאון שרידי המלחמה","de":"","p":"warmuseum"},
+ {"id":"j5","t":"","ti":"ארמון האיחוד","de":"סמל סוף המלחמה.","p":"palace"},
+ {"id":"j6","t":"","ti":"קתדרלת נוטרדאם ובניין הדואר המרכזי","de":"אדריכלות צרפתית קולוניאלית. ואז חזרה למלון.","p":"notredame"}]},
+{"d":"2026-11-25","c":"saigon","ti":"דלתת המקונג: בן טרה","meals":"B","guide":1,"car":1,"items":[
+ {"id":"k1","t":"בוקר","ti":"איסוף לנמל הונג וונג בבן טרה","de":"","p":"bentre"},
+ {"id":"k2","t":"","ti":"שייט בנהר בן טרה","de":"דייגים והובלת סחורות על המים."},
+ {"id":"k3","t":"","ti":"מפעל לבנים מסורתי","de":""},
+ {"id":"k4","t":"","ti":"סדנת סוכריות קוקוס","de":"פירות טרופיים ותה דבש."},
+ {"id":"k5","t":"","ti":"עגלה ממונעת בין הכפרים","de":"גינות ירק וחיי כפר."},
+ {"id":"k6","t":"אחה\"צ","ti":"סירת משוטים בתעלת דקלי מים","de":"ואז חזרה לסייגון."}]},
+{"d":"2026-11-26","c":"phuquoc","ti":"טיסה לאי פו קוק","meals":"B","guide":1,"car":1,"items":[
+ {"id":"l1","t":"","ti":"זמן חופשי עד האיסוף","de":""},
+ {"id":"l2","t":"13:00","ti":"טיסה VN1827 לפו קוק","de":"Vietnam Airlines. נחיתה ב-14:00.","p":"tsn"},
+ {"id":"l3","t":"14:00","ti":"הסעת המלון בשדה התעופה","de":"למלון על חוף הים.","p":"pqc"}]},
+{"d":"2026-11-27","c":"phuquoc","ti":"יום חופשי באי","meals":"B","guide":0,"car":0,"items":[{"id":"m1","t":"","ti":"מנוחה וים","de":""}]},
+{"d":"2026-11-28","c":"phuquoc","ti":"יום חופשי באי","meals":"B","guide":0,"car":0,"items":[{"id":"m2","t":"","ti":"מנוחה וים","de":""}]},
+{"d":"2026-11-29","c":"phuquoc","ti":"יום חופשי באי","meals":"B","guide":0,"car":0,"items":[{"id":"m3","t":"","ti":"מנוחה וים","de":""}]},
+{"d":"2026-11-30","c":"phuquoc","ti":"יום חופשי באי","meals":"B","guide":0,"car":0,"items":[{"id":"m4","t":"","ti":"מנוחה וים","de":""}]},
+{"d":"2026-12-01","c":"phuquoc","ti":"יום חופשי באי","meals":"B","guide":0,"car":0,"items":[{"id":"m5","t":"","ti":"מנוחה וים","de":""}]},
+{"d":"2026-12-02","c":"hanoi2","ti":"חזרה להאנוי","meals":"B","guide":0,"car":1,"items":[
+ {"id":"n1","t":"","ti":"הסעת המלון לשדה התעופה","de":"כדאי להיות בשדה כשעתיים לפני הטיסה."},
+ {"id":"n2","t":"15:15","ti":"טיסה VN6400 להאנוי","de":"Vietnam Airlines. נחיתה ב-17:30.","p":"pqc"},
+ {"id":"n3","t":"17:30","ti":"נהג בשדה התעופה, נסיעה למלון","de":"נהג בלבד, בלי מדריך.","p":"noibai"},
+ {"id":"n4","t":"ערב","ti":"ערב חופשי בהאנוי","de":""}]},
+{"d":"2026-12-03","c":"hanoi2","ti":"יום אחרון וטיסה הביתה","meals":"B","guide":0,"car":1,"items":[
+ {"id":"o1","t":"","ti":"בוקר חופשי","de":"צ'ק-אאוט מאוחר עד 17:00 כלול."},
+ {"id":"o2","t":"20:00","ti":"איסוף מהמלון לשדה התעופה (לפי הסוכן)","de":"הטיסה ממריאה כבר ב-20:10, אז האיסוף חייב להיות מוקדם יותר, בערך ב-16:30. צריך לבקש מהסוכן לעדכן.","p":"noibai","warn":1},
+ {"id":"o3","t":"20:10","ti":"טיסת Etihad הביתה","de":"מטרמינל 2 בנוי באי, עצירה אחת. נחיתה בנתב\"ג ביום שישי 4.12 ב-05:05, טרמינל 3."}]}
+]}
+</script>
+<script id="app-script">
+(function(){
+"use strict";
+var DATA = JSON.parse(document.getElementById('trip-data').textContent);
+var RESET = ':root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}';
+var FONTS = 'https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Suez+One&family=Be+Vietnam+Pro:wght@500;700&display=swap';
+
+var CITIES = {
+  hanoi:{n:'האנוי',vn:'Hà Nội',q:'Hanoi',ll:[21.03,105.85],temp:'19°–26°',w:'בדרך כלל יבש ונעים. הערבים קרירים, כדאי שכבה.'},
+  halong:{n:'מפרץ הא לונג',vn:'Vịnh Hạ Long',q:'Ha Long',ll:[20.95,107.08],temp:'18°–24°',w:'לרוב יבש. ערפל בבוקר ורוח על הסיפון, קחו מעיל קל.'},
+  hoian:{n:'הויאן',vn:'Hội An',q:'Hoi An',ll:[15.88,108.33],temp:'21°–26°',w:'שיא עונת הגשמים: מטרייה ומעיל גשם. לפעמים יש הצפות בעיר העתיקה.'},
+  saigon:{n:'סייגון',vn:'TP. Hồ Chí Minh',q:'Ho Chi Minh City',ll:[10.78,106.70],temp:'24°–32°',w:'חם ולח, סוף עונת הגשמים. ממטרים קצרים אחר הצהריים.'},
+  phuquoc:{n:'פו קוק',vn:'Phú Quốc',q:'Phu Quoc',ll:[10.22,103.96],temp:'24°–31°',w:'תחילת העונה היבשה. ים חם ונעים, קרם הגנה.'},
+  hanoi2:{n:'האנוי',vn:'Hà Nội',q:'Hanoi',ll:[21.03,105.85],temp:'17°–24°',w:'קריר יותר בתחילת דצמבר, במיוחד בערב.'}
+};
+var PLACES = {
+  noibai:['שדה התעופה נוי באי','Sân bay Quốc tế Nội Bài','Noi Bai International Airport',21.2187,105.8042],
+  oldq:['הרובע העתיק','Phố cổ Hà Nội','Hanoi Old Quarter',21.0340,105.8500],
+  hangbe:['שוק האנג בה','Chợ Hàng Bè','Hang Be Market Hanoi',21.0338,105.8545],
+  hoankiem:['אגם הואן קיאם','Hồ Hoàn Kiếm','Hoan Kiem Lake',21.0287,105.8524],
+  mausoleum:["מאוזוליאום הו צ'י מין",'Lăng Chủ tịch Hồ Chí Minh','Ho Chi Minh Mausoleum',21.0368,105.8347],
+  literature:['מקדש הספרות','Văn Miếu – Quốc Tử Giám','Temple of Literature Hanoi',21.0283,105.8355],
+  tranquoc:['פגודת טראן קוק','Chùa Trấn Quốc','Tran Quoc Pagoda',21.0479,105.8368],
+  ethno:['המוזיאון האתנולוגי','Bảo tàng Dân tộc học Việt Nam','Vietnam Museum of Ethnology',21.0405,105.7987],
+  ngocson:['מקדש נגוק סון','Đền Ngọc Sơn','Ngoc Son Temple',21.0307,105.8523],
+  halong:['מפרץ הא לונג','Vịnh Hạ Long','Ha Long Bay',20.9101,107.1839],
+  danang:['שדה התעופה דא נאנג','Sân bay Quốc tế Đà Nẵng','Da Nang International Airport',16.0439,108.1994],
+  hoian:['העיר העתיקה הויאן','Phố cổ Hội An','Hoi An Ancient Town',15.8771,108.3280],
+  bana:['בא נא הילס','Sun World Bà Nà Hills','Ba Na Hills',15.9977,107.9880],
+  golden:['גשר הזהב','Cầu Vàng, Bà Nà Hills','Golden Bridge Ba Na Hills',15.9950,107.9966],
+  traque:['כפר הירקות טרה קוואה','Làng rau Trà Quế','Tra Que Vegetable Village',15.9022,108.3333],
+  camkim:['כפר קאם קים','Cẩm Kim, Hội An','Cam Kim Island Hoi An',15.8890,108.3140],
+  tsn:['שדה התעופה טאן סון נהאט','Sân bay Quốc tế Tân Sơn Nhất','Tan Son Nhat International Airport',10.8185,106.6588],
+  nguyenhue:['שדרת נגוין הואה','Phố đi bộ Nguyễn Huệ','Nguyen Hue Walking Street',10.7741,106.7038],
+  binhtay:['שוק בין טאי','Chợ Bình Tây','Binh Tay Market',10.7499,106.6510],
+  thienhau:['מקדש תיין האו','Chùa Bà Thiên Hậu','Thien Hau Temple Ho Chi Minh City',10.7532,106.6613],
+  nharong:['מזח נה רונג','Bến Nhà Rồng','Nha Rong Wharf',10.7680,106.7068],
+  warmuseum:['מוזיאון שרידי המלחמה','Bảo tàng Chứng tích Chiến tranh','War Remnants Museum',10.7795,106.6921],
+  palace:['ארמון האיחוד','Dinh Độc Lập','Independence Palace Ho Chi Minh City',10.7770,106.6953],
+  notredame:['קתדרלת נוטרדאם','Nhà thờ Đức Bà Sài Gòn','Saigon Notre-Dame Cathedral',10.7798,106.6990],
+  bentre:['נמל הונג וונג, בן טרה','Bến tàu Hùng Vương, Bến Tre','Hung Vuong Pier Ben Tre',10.2370,106.3780],
+  pqc:['שדה התעופה פו קוק','Sân bay Quốc tế Phú Quốc','Phu Quoc International Airport',10.1698,103.9931]
+};
+var DOW = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+var MON = ['בינואר','בפברואר','במרץ','באפריל','במאי','ביוני','ביולי','באוגוסט','בספטמבר','באוקטובר','בנובמבר','בדצמבר'];
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function enc(s){return encodeURIComponent(s);}
+function vnDateStr(){ try{return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}catch(e){return new Date().toISOString().slice(0,10);} }
+function parseD(s){var p=s.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));}
+function fmtDay(s){var d=parseD(s);return 'יום '+DOW[d.getUTCDay()]+', '+d.getUTCDate()+' '+MON[d.getUTCMonth()];}
+function shortD(s){var d=parseD(s);return d.getUTCDate()+'.'+(d.getUTCMonth()+1);}
+function todayIdx(){var t=vnDateStr();for(var i=0;i<DATA.days.length;i++){if(DATA.days[i].d===t)return i;}return -1;}
+function hotelKey(day){return day.c;}
+function placeOf(it){ if(it.p&&PLACES[it.p]){var P=PLACES[it.p];return {n:P[0],vn:P[1],q:P[2],lat:P[3],lon:P[4]};} if(it.a){return {n:it.a,vn:it.a,q:it.a};} return null; }
+function wazeUrl(q){return 'https://waze.com/ul?q='+enc(q)+'&navigate=yes';}
+function gmapsUrl(q){return 'https://www.google.com/maps/search/?api=1&query='+enc(q);}
+
+var store = {get:function(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}}, set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+
+var ON_SITE = /(^|\.)lironsofer\.online$/.test(location.hostname);
+var TRIP_ID = 'vietnam-2026';
+var LIVE = {on:false, rev:0, pin:''};
+if(ON_SITE){
+  var cachedLive=store.get('vt-live',null);
+  if(cachedLive&&cachedLive.data&&cachedLive.data.days&&(cachedLive.data.updated||'')>(DATA.updated||'')){DATA=cachedLive.data;LIVE.rev=cachedLive.rev||0;}
+  LIVE.pin=store.get('vt-pin','');
+}
+var ti0 = todayIdx();
+var S = {tab:store.get('vt-tab','day'), day: ti0>=0?ti0:store.get('vt-day',0), edit:false, canEdit:false, dirty:false, saving:false, saveMsg:'', done:store.get('vt-done',{}), driver:null, ai:{q:'',ans:'',busy:false,err:''}};
+if(S.day>=DATA.days.length) S.day=0;
+var artifactNs=null, sampleNs=null, sampleReady=false;
+var app = document.getElementById('app');
+
+/* ---------- icons ---------- */
+var IC = {
+  day:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></svg>',
+  docs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+  ai:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>'
+};
+
+/* ---------- header & strip ---------- */
+function clocks(){
+  function t(tz){try{return new Intl.DateTimeFormat('he-IL',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());}catch(e){return '';}}
+  return '<div class="clocks" aria-label="שעון"><div>וייטנאם <b>'+t('Asia/Ho_Chi_Minh')+'</b></div><div>ישראל '+t('Asia/Jerusalem')+'</div></div>';
+}
+function header(){
+  return '<header class="top"><div class="wrap"><div class="brand"><h1>וייטנאם 2026</h1><p>16.11 – 3.12 · 18 ימים'+(S.canEdit?' · <button class="toggle-edit" data-act="toggleEdit">'+(S.edit?'סיום עריכה':'עריכה')+'</button>':'')+'</p></div>'+clocks()+'</div></header>';
+}
+function strip(){
+  if(S.tab!=='day') return '';
+  var t=todayIdx(), h='';
+  DATA.days.forEach(function(d,i){
+    h+='<button class="chip'+(i===t?' today':'')+'" data-act="day" data-i="'+i+'" aria-current="'+(i===S.day)+'"><span class="n">יום '+(i+1)+'</span><span class="d">'+shortD(d.d)+'</span><span class="c">'+esc(CITIES[d.c].n)+'</span></button>';
+  });
+  return '<div class="strip"><div class="strip-scroll" id="strip">'+h+'</div></div>';
+}
+
+/* ---------- day view ---------- */
+function includedTags(d){
+  var m={'':'בלי ארוחות כלולות','B':'ארוחת בוקר','BLD':'בוקר, צהריים וערב'}[d.meals]||d.meals;
+  var h='<span class="tag'+(d.meals?' yes':'')+'">'+m+'</span>';
+  h+='<span class="tag'+(d.guide?' yes':'')+'">'+(d.guide?'עם מדריך':'בלי מדריך')+'</span>';
+  h+='<span class="tag'+(d.car?' yes':'')+'">'+(d.car?'רכב ונהג':'בלי רכב')+'</span>';
+  return '<div class="tags">'+h+'</div>';
+}
+function countdown(){
+  var t=vnDateStr(), start=DATA.days[0].d, end=DATA.days[DATA.days.length-1].d;
+  if(t<start){var n=Math.round((parseD(start)-parseD(t))/864e5);return '<div class="countdown">עוד '+n+' ימים לטיסה. ההמראה ב-16.11 בשעה 00:50, אז יוצאים מהבית ביום ראשון 15.11 בערב.</div>';}
+  if(t>end) return '<div class="countdown">ברוכים השבים הביתה!</div>';
+  return '';
+}
+function hotelPanel(d){
+  var k=hotelKey(d), v=DATA.hotels[k]||'';
+  if(S.edit){
+    return '<div class="panel"><h3>המלון ב'+esc(CITIES[d.c].n)+'</h3><input type="text" id="hotel-'+k+'" data-bind="hotel" data-k="'+k+'" value="'+esc(v)+'" placeholder="שם המלון וכתובת (באנגלית)"><div class="status">השם משותף לכל הימים בעיר הזו.</div></div>';
+  }
+  if(!v) return '<div class="panel"><h3>המלון</h3><div class="small">שם המלון עוד לא הוזן. הוא מופיע בשוברים מהסוכן.</div></div>';
+  var nav = k==='halong'?'':'<a class="btn primary" target="_blank" rel="noopener" href="'+wazeUrl(v)+'">Waze</a><a class="btn" target="_blank" rel="noopener" href="'+gmapsUrl(v)+'">מפות</a><button class="btn lantern" data-act="driverText" data-t="'+esc(v)+'">להראות לנהג</button>';
+  var url=(DATA.hotelUrls||{})[k]; if(url) nav+='<a class="btn ghost" target="_blank" rel="noopener" href="'+esc(url)+'">אתר המלון</a>';
+  return '<div class="panel"><h3>המלון</h3><div class="hotel"><strong>'+esc(v)+'</strong><div class="actions" style="margin:0">'+nav+'</div></div></div>';
+}
+var WXLOC={hanoi:[21.03,105.85],halong:[20.91,107.18],hoian:[15.88,108.33],saigon:[10.78,106.70],phuquoc:[10.22,103.96],bana:[15.998,107.988]};
+var WX=store.get('vt-wx',{}), WXS={};
+function wxKey(c){return c==='hanoi2'?'hanoi':c;}
+function wxKeys(d){var k=[wxKey(d.c)];if(d.items.some(function(it){return it.p==='bana';}))k.push('bana');return k;}
+function wxDesc(c){if(c==null)return '';if(c===0)return 'בהיר';if(c<=2)return 'מעונן חלקית';if(c===3)return 'מעונן';if(c===45||c===48)return 'ערפל';if(c>=51&&c<=57)return 'טפטוף';if(c>=61&&c<=67)return 'גשם';if(c>=71&&c<=77)return 'שלג';if(c>=80&&c<=82)return 'ממטרים';if(c>=95)return 'סופת רעמים';return '';}
+function fetchWx(k,force){
+  var c=WXLOC[k], cur=WX[k]; if(!c) return;
+  if(!force&&cur&&Date.now()-cur.t<30*60*1000) return;
+  if(WXS[k]==='busy') return;
+  WXS[k]='busy'; paintWx();
+  var url='https://api.open-meteo.com/v1/forecast?latitude='+c[0]+'&longitude='+c[1]+'&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=16';
+  function fin(ok){WXS[k]=ok?'':'err';paintWx();}
+  try{
+    fetch(url).then(function(r){if(!r.ok)throw new Error('http');return r.json();})
+    .then(function(j){if(!j||!j.daily||!j.daily.time)throw new Error('shape');WX[k]={t:Date.now(),d:j};store.set('vt-wx',WX);fin(true);})
+    .catch(function(){fin(false);});
+  }catch(e){fin(false);}
+}
+function ensureWx(force){ if(S.tab!=='day') return; wxKeys(DATA.days[S.day]).forEach(function(k){fetchWx(k,force);}); }
+function wxFor(k,date){
+  var w=WX[k]; if(!w||!w.d||!w.d.daily) return null;
+  var dl=w.d.daily, i=dl.time.indexOf(date);
+  if(i<0) return {miss:true};
+  var isToday=date===vnDateStr()&&w.d.current;
+  return {max:Math.round(dl.temperature_2m_max[i]),min:Math.round(dl.temperature_2m_min[i]),code:dl.weather_code[i],
+    rain:dl.precipitation_probability_max?dl.precipitation_probability_max[i]:null,
+    now:isToday?Math.round(w.d.current.temperature_2m):null, nowCode:isToday?w.d.current.weather_code:null};
+}
+function wxRow(f,label){
+  var desc=wxDesc(f.code)+(f.rain!=null?' · סיכוי לגשם '+f.rain+'%':'');
+  var now=f.now!=null?'עכשיו '+f.now+'°, '+wxDesc(f.nowCode)+'. ':'';
+  return '<div class="wx-row"><div class="temp">'+f.min+'°–'+f.max+'°</div><div><p>'+(label?'<b>'+esc(label)+':</b> ':'')+esc(now+desc)+'</p></div></div>';
+}
+function weatherPanel(d){
+  var c=CITIES[d.c], keys=wxKeys(d), k=keys[0], f=wxFor(k,d.d), st=WXS[k], w=WX[k];
+  var stamp='';
+  if(st==='busy') stamp='טוען…';
+  else if(w&&f&&!f.miss){try{stamp='עודכן ב-'+new Date(w.t).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});}catch(e){}}
+  var h='<div class="panel" id="wx"><div class="wx-head"><h3>מזג האוויר ב'+esc(c.n)+'</h3><button class="btn" data-act="wxRefresh"'+(st==='busy'?' disabled':'')+'>רענון</button></div>';
+  if(f&&!f.miss){
+    h+=wxRow(f,'');
+    h+='<p class="small" style="margin:6px 0 0">'+esc(c.w)+'</p>';
+    if(keys[1]){var fb=wxFor('bana',d.d);if(fb&&!fb.miss)h+='<div class="wx-sub">'+wxRow(fb,'בראש ההר בבא נא הילס')+'</div>';}
+    h+='<p class="small" style="margin:6px 0 0">תחזית חיה מ-Open-Meteo. '+stamp+'</p>';
+  } else {
+    var extra=keys[1]?' בבא נא הילס, בגובה של כ-1,400 מטר, קר יותר בכמה מעלות.':'';
+    var why;
+    if(f&&f.miss){var av=parseD(d.d);av.setUTCDate(av.getUTCDate()-15);why='התחזית לתאריך הזה תופיע בערך מ-'+av.getUTCDate()+'.'+(av.getUTCMonth()+1)+'. בינתיים: ממוצע לעונה.';}
+    else if(st==='err') why='לא הצלחתי לטעון תחזית חיה כרגע. מוצג ממוצע לעונה.';
+    else if(st==='busy') why='טוען תחזית…';
+    else why='ממוצע לעונה.';
+    h+='<div class="wx-row"><div class="temp">'+c.temp+'</div><div><p>'+esc(c.w+extra)+'</p></div></div><p class="small" style="margin:6px 0 0">'+why+' <a target="_blank" rel="noopener" href="https://www.google.com/search?q='+enc('weather '+c.q)+'">תחזית בגוגל</a></p>';
+  }
+  return h+'</div>';
+}
+function paintWx(){ if(S.tab!=='day') return; var el=document.getElementById('wx'); if(el) el.outerHTML=weatherPanel(DATA.days[S.day]); }
+function itemHtml(d,it,idx,pinNo){
+  var key=d.d+'|'+it.id, done=!!S.done[key], pl=placeOf(it);
+  if(S.edit){
+    return '<li class="item"><div class="edit-fields">'+
+      '<input type="text" id="t-'+it.id+'" data-bind="t" data-id="'+it.id+'" value="'+esc(it.t)+'" placeholder="שעה">'+
+      '<input type="text" id="ti-'+it.id+'" data-bind="ti" data-id="'+it.id+'" value="'+esc(it.ti)+'" placeholder="מה עושים">'+
+      '<textarea id="de-'+it.id+'" data-bind="de" data-id="'+it.id+'" placeholder="פרטים">'+esc(it.de)+'</textarea>'+
+      (it.p?'<div class="full small">מיקום: '+esc(PLACES[it.p][0])+'</div>':'<input class="full" type="text" id="a-'+it.id+'" data-bind="a" data-id="'+it.id+'" value="'+esc(it.a||'')+'" placeholder="כתובת או שם מקום לניווט (לא חובה)">')+
+      '<div class="full actions" style="margin:0"><button class="btn" data-act="up" data-id="'+it.id+'">למעלה</button><button class="btn" data-act="down" data-id="'+it.id+'">למטה</button><button class="btn ghost" data-act="del" data-id="'+it.id+'">מחיקה</button></div>'+
+      '</div></li>';
+  }
+  var time = it.t ? '<div class="time">'+esc(it.t)+'</div>' : '<div class="time" aria-hidden="true">·</div>';
+  var acts='';
+  if(pl){
+    acts+= (pinNo?'<span class="pin" title="מספר על המפה">'+pinNo+'</span>':'')+
+      '<a class="btn primary" target="_blank" rel="noopener" href="'+wazeUrl(pl.q)+'">Waze</a>'+
+      '<a class="btn" target="_blank" rel="noopener" href="'+gmapsUrl(pl.q)+'">מפות</a>'+
+      '<button class="btn lantern" data-act="driver" data-id="'+it.id+'">להראות לנהג</button>';
+  }
+  acts+='<button class="btn ghost" data-act="done" data-k="'+esc(key)+'" aria-pressed="'+done+'">'+(done?'✓ עשינו':'סמנו שעשינו')+'</button>';
+  return '<li class="item'+(done?' done':'')+(it.warn?' warn':'')+'">'+time+'<div class="body"><h4>'+esc(it.ti)+'</h4>'+(it.de?'<p>'+esc(it.de)+'</p>':'')+'</div><div class="actions">'+acts+'</div></li>';
+}
+function dayMap(d){
+  var pts=[];
+  d.items.forEach(function(it){var pl=placeOf(it);if(pl&&pl.lat!=null){pts.push(pl);}});
+  if(pts.length<2) return '';
+  var lats=pts.map(function(p){return p.lat;}), lons=pts.map(function(p){return p.lon;});
+  var mnA=Math.min.apply(0,lats),mxA=Math.max.apply(0,lats),mnO=Math.min.apply(0,lons),mxO=Math.max.apply(0,lons);
+  var W=320,H=190,pad=26, sx=(mxO-mnO)||0.01, sy=(mxA-mnA)||0.01;
+  var k=Math.min((W-2*pad)/sx,(H-2*pad)/sy);
+  var ox=(W-sx*k)/2, oy=(H-sy*k)/2;
+  function X(p){return ox+(p.lon-mnO)*k;} function Y(p){return H-(oy+(p.lat-mnA)*k);}
+  var line=pts.map(function(p){return X(p).toFixed(1)+','+Y(p).toFixed(1);}).join(' ');
+  var dots=pts.map(function(p,i){return '<g><circle cx="'+X(p).toFixed(1)+'" cy="'+Y(p).toFixed(1)+'" r="11" fill="var(--lantern)" stroke="var(--surface)" stroke-width="2"/><text x="'+X(p).toFixed(1)+'" y="'+(Y(p)+4.5).toFixed(1)+'" text-anchor="middle" font-size="13" font-weight="800" fill="#1d1503" font-family="Assistant,sans-serif">'+(i+1)+'</text></g>';}).join('');
+  var span=Math.max(sx*102,sy*111);
+  var scale = span<1.5?'כ-'+Math.round(span*1000)+' מטר מקצה לקצה':'כ-'+Math.round(span)+' ק"מ מקצה לקצה';
+  var q=pts.map(function(p){return p.q;});
+  var url='https://www.google.com/maps/dir/?api=1&origin='+enc(q[0])+'&destination='+enc(q[q.length-1])+(q.length>2?'&waypoints='+q.slice(1,-1).map(enc).join('%7C'):'');
+  return '<div class="panel map"><h3>המפה של היום</h3><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="מיקום העצירות של היום"><rect x="0" y="0" width="'+W+'" height="'+H+'" rx="10" fill="var(--sunk)"/><polyline points="'+line+'" fill="none" stroke="var(--jade)" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round"/>'+dots+'<text x="'+(W-10)+'" y="'+(H-10)+'" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Assistant,sans-serif">צפון ↑</text></svg><div class="note small">המספרים תואמים לפעילויות ברשימה. '+scale+'.</div><a class="btn primary" target="_blank" rel="noopener" href="'+url+'">כל העצירות בגוגל מפות</a></div>';
+}
+function dayView(){
+  var d=DATA.days[S.day], pin=0, h='';
+  h+=countdown();
+  h+='<div class="dayhead"><div class="eyebrow">יום '+(S.day+1)+' · '+fmtDay(d.d)+' · '+esc(CITIES[d.c].n)+'</div><h2>'+esc(d.ti)+'</h2>'+includedTags(d)+'</div>';
+  h+='<ol class="timeline">';
+  d.items.forEach(function(it,i){var pl=placeOf(it);var no=(pl&&pl.lat!=null)?++pin:0;h+=itemHtml(d,it,i,no);});
+  h+='</ol>';
+  if(S.edit) h+='<div class="actions"><button class="btn primary" data-act="add">+ הוספת פעילות</button></div>';
+  h+=hotelPanel(d)+dayMap(d)+weatherPanel(d);
+  h+='<div class="panel"><h3>להתנייד בעיר</h3><p style="margin:0">רוב המקומיים נוסעים ב-Grab, אפליקציית המוניות של וייטנאם. המחיר ידוע מראש ואין צורך להסביר לנהג לאן. אם לוקחים מונית ברחוב, לחצו על "להראות לנהג" ליד המקום.</p></div>';
+  return h;
+}
+
+/* ---------- route view ---------- */
+var COAST=[[21.55,108.0],[21.0,107.4],[20.6,106.8],[20.0,106.4],[19.3,105.8],[18.6,105.8],[17.9,106.5],[17.0,107.1],[16.3,108.0],[15.8,108.4],[14.9,108.9],[13.8,109.2],[12.7,109.4],[11.9,109.2],[11.2,108.8],[10.6,107.6],[10.4,107.0],[9.9,106.6],[9.3,106.1],[8.6,104.8],[9.3,104.8],[10.1,104.5],[10.4,104.45]];
+function routeView(){
+  var W=300,H=440;
+  function X(lon){return 20+(lon-103.2)/(110-103.2)*(W-40);} function Y(lat){return 20+(22.2-lat)/(22.2-8.4)*(H-40);}
+  var coast=COAST.map(function(p){return X(p[1]).toFixed(1)+','+Y(p[0]).toFixed(1);}).join(' ');
+  var stops=[['האנוי',21.03,105.85,'end'],['הא לונג',20.95,107.08,'start'],['הויאן',15.88,108.33,'start'],['סייגון',10.78,106.70,'start'],['בן טרה',10.24,106.37,'end'],['פו קוק',10.22,103.96,'end']];
+  var legs=[[0,1,'car'],[1,0,'car'],[0,2,'fly'],[2,3,'fly'],[3,4,'car'],[3,5,'fly'],[5,0,'fly']];
+  var lines=legs.map(function(l){var a=stops[l[0]],b=stops[l[1]];var x1=X(a[2]),y1=Y(a[1]),x2=X(b[2]),y2=Y(b[1]);var mx=(x1+x2)/2-(y2-y1)*0.12,my=(y1+y2)/2+(x2-x1)*0.12;return '<path d="M'+x1.toFixed(1)+' '+y1.toFixed(1)+' Q'+mx.toFixed(1)+' '+my.toFixed(1)+' '+x2.toFixed(1)+' '+y2.toFixed(1)+'" fill="none" stroke="'+(l[2]==='fly'?'var(--jade)':'var(--lantern)')+'" stroke-width="2.5" '+(l[2]==='fly'?'stroke-dasharray="5 5"':'')+' stroke-linecap="round"/>';}).join('');
+  var dots=stops.map(function(s){var x=X(s[2]),y=Y(s[1]);var dx=s[3]==='start'?10:-10;return '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/><text x="'+(x+dx).toFixed(1)+'" y="'+(y+5).toFixed(1)+'" text-anchor="'+s[3]+'" direction="rtl" font-size="15" font-weight="700" fill="var(--ink)" font-family="Assistant,sans-serif">'+s[0]+'</text>';}).join('');
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="מפת המסלול בווייטנאם"><rect width="'+W+'" height="'+H+'" rx="12" fill="var(--sunk)"/><polyline points="'+coast+'" fill="none" stroke="var(--line)" stroke-width="3" stroke-linejoin="round"/><ellipse cx="'+X(103.96)+'" cy="'+Y(10.22)+'" rx="5" ry="10" fill="none" stroke="var(--line)" stroke-width="3"/>'+lines+dots+'<text x="'+(W-14)+'" y="'+(H-14)+'" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Assistant,sans-serif">מפה סכמטית · צפון ↑</text></svg>';
+  var L=[['16.11','נחיתה בהאנוי','2 לילות'],['18.11','נסיעה למפרץ הא לונג','לילה בספינה'],['19.11','טיסה מהאנוי לדא נאנג, נסיעה להויאן','4 לילות'],['23.11','טיסה לסייגון','3 לילות, כולל יום במקונג'],['26.11','טיסה לאי פו קוק','6 לילות על החוף'],['2.12','טיסה חזרה להאנוי','לילה אחרון'],['3.12','טיסה הביתה','יציאה ב-20:00']];
+  var list='<ul class="legs">'+L.map(function(l){return '<li><span class="dt">'+l[0]+'</span><span><b>'+l[1]+'</b><br><span class="small">'+l[2]+'</span></span></li>';}).join('')+'</ul>';
+  return '<h2 class="sectiontitle">המסלול</h2><p class="small" style="margin:0 0 12px">קו מקווקו ירוק: טיסה. קו צהוב: נסיעה ברכב.</p><div class="panel map" style="margin-top:0">'+svg+'</div><div class="panel">'+list+'</div><div class="panel"><h3>הפרש שעות</h3><p style="margin:0">וייטנאם מקדימה את ישראל ב-5 שעות. כשבהאנוי 18:00, בישראל 13:00.</p></div>';
+}
+
+/* ---------- docs view ---------- */
+function copyBtn(v){return '<button class="btn" data-act="copy" data-v="'+esc(v)+'">העתקה</button>';}
+function docsView(){
+  var h='<h2 class="sectiontitle">מסמכים ופרטים</h2>';
+  h+='<div class="panel"><h3>חברת הטיולים Vietnam247</h3>'+
+    '<div class="kv"><div><div class="k">טלפון בישראל</div><div class="v">+972 52 379 7237</div></div>'+copyBtn('+972523797237')+'</div>'+
+    '<div class="kv"><div><div class="k">טלפון בווייטנאם (גם וואטסאפ, כדאי לבדוק)</div><div class="v">+84 81 679 7237</div></div>'+copyBtn('+84816797237')+'</div>'+
+    '<div class="kv"><div><div class="k">מייל</div><div class="v">Info@vietnam247.co.il</div></div>'+copyBtn('Info@vietnam247.co.il')+'</div>'+
+    '<div class="kv"><div><div class="k">קוד הטיול</div><div class="v">VN247005775-13-07</div></div>'+copyBtn('VN247005775-13-07')+'</div>'+
+    '<div class="kv"><div><div class="k">הזמנה</div><div class="v he">זוג, חדר אחד · 16.11–3.12</div></div><span></span></div>'+
+    '</div>';
+  h+='<div class="panel"><h3>חשוב לפני הטיסה</h3><p style="margin:0">דרכון בתוקף לחצי שנה לפחות מיום הנחיתה, עם 2 עמודים ריקים לפחות, בלי דפים קרועים. ויזה אלקטרונית לכניסה אחת כלולה במחיר. כדאי לשמור עותק מודפס שלה.</p></div>';
+  if(ON_SITE) h+='<div class="panel"><h3>להוסיף למסך הבית</h3><p style="margin:0">באייפון: בספארי לוחצים על כפתור השיתוף ואז "הוספה למסך הבית". באנדרואיד: בכרום לוחצים על שלוש הנקודות ואז "הוספה למסך הבית". הדף נפתח כמו אפליקציה ועובד גם בלי אינטרנט, עם הנתונים מהפעם האחרונה.</p></div>';
+  h+='<div class="panel"><h3>טיסות וביטוח</h3>';
+  DATA.docs.forEach(function(x){
+    if(S.edit){
+      h+='<div class="kv" style="grid-template-columns:1fr"><input type="text" id="dk-'+x.id+'" data-bind="dk" data-id="'+x.id+'" value="'+esc(x.k)+'" placeholder="מה זה"><input type="text" id="dv-'+x.id+'" data-bind="dv" data-id="'+x.id+'" value="'+esc(x.v)+'" placeholder="מספר, שעה או פרט"><div><button class="btn ghost" data-act="ddel" data-id="'+x.id+'">מחיקה</button></div></div>';
+    } else {
+      h+='<div class="kv"><div><div class="k">'+esc(x.k)+'</div><div class="v'+(x.v?'':' he small')+'">'+(x.v?esc(x.v):'עוד לא הוזן')+'</div></div>'+(x.v?copyBtn(x.v):'<span></span>')+'</div>';
+    }
+  });
+  if(S.edit) h+='<div class="actions"><button class="btn primary" data-act="dadd">+ הוספת פרט</button></div>';
+  h+='<p class="small" style="margin:10px 0 0">לא לשמור כאן מספר דרכון או כרטיס אשראי. הקישור לדף הזה יכול לעבור הלאה.</p></div>';
+  return h;
+}
+
+/* ---------- AI view ---------- */
+function tripContext(){
+  var d=DATA.days[S.day], c=CITIES[d.c];
+  var items=d.items.map(function(it){return (it.t?it.t+' ':'')+it.ti+(it.de?' ('+it.de+')':'');}).join('; ');
+  var all=DATA.days.map(function(x,i){return 'יום '+(i+1)+' '+x.d+' '+CITIES[x.c].n+': '+x.ti;}).join('\n');
+  return 'היום שנבחר באפליקציה: יום '+(S.day+1)+', '+fmtDay(d.d)+', ב'+c.n+' ('+c.q+').\nהמלון: '+(DATA.hotels[d.c]||'לא ידוע')+'.\nתוכנית היום: '+items+'\nכל המסלול:\n'+all;
+}
+function buildPrompt(q){
+  return 'אתה עוזר טיולים לזוג ישראלי מבוגר שמטייל בווייטנאם עם חברת טיולים. ענה בעברית פשוטה וחמה, קצר (עד 7 שורות), מעשי ובלי מונחים טכניים. '+
+  'כשהשאלה היא איך להגיע ממקום למקום: הצע Grab (אפליקציית המוניות בווייטנאם) או הליכה אם קרוב, תן זמן משוער ומחיר משוער בדונג, ואמור במפורש שאלה הערכות. '+
+  'אל תמציא פרטי הזמנות, שעות טיסה או שמות מלונות. אם משהו לא ידוע, המלץ לשאול את המדריך או את הסוכן.\n\n'+tripContext()+'\n\nהשאלה: '+q;
+}
+function aiView(){
+  var d=DATA.days[S.day], c=CITIES[d.c];
+  var firstPlace=null; d.items.some(function(it){var p=placeOf(it);if(p){firstPlace=p;return true;}return false;});
+  var quick=[
+    firstPlace?'איך מגיעים מהמלון אל '+firstPlace.n+'?':'איך מתניידים ב'+c.n+'?',
+    'מה כדאי לאכול ב'+c.n+'?',
+    'מה ללבוש ולקחת היום?',
+    'כמה טיפ מקובל לתת?'
+  ];
+  var h='<h2 class="sectiontitle">לשאול את Claude</h2><p class="small" style="margin:0">Claude מכיר את התוכנית של יום '+(S.day+1)+' ב'+esc(c.n)+'. אפשר לשאול כל שאלה.</p>';
+  h+='<div class="quick">'+quick.map(function(q){return '<button class="btn lantern" data-act="quick" data-q="'+esc(q)+'">'+esc(q)+'</button>';}).join('')+'</div>';
+  h+='<label for="ai-q" class="small">השאלה שלכם</label><textarea id="ai-q" data-bind="aiq" placeholder="לדוגמה: איך מגיעים מהמלון לשוק בין טאי?">'+esc(S.ai.q)+'</textarea>';
+  if(sampleNs){
+    h+='<div class="actions"><button class="btn primary" data-act="ask"'+(S.ai.busy?' disabled':'')+'>'+(S.ai.busy?'חושב…':'לשאול')+'</button></div>';
+  } else {
+    h+='<div class="actions"><a class="btn primary" id="ai-link" target="_blank" rel="noopener" href="'+claudeLink(S.ai.q)+'">לשאול באפליקציית Claude</a></div><p class="status">'+(sampleReady?'העוזר המובנה לא זמין בתצוגה הזו, אז השאלה תיפתח באפליקציה עם כל פרטי הטיול.':'טוען את העוזר…')+'</p>';
+  }
+  if(S.ai.err) h+='<p class="status" style="color:var(--warn)">'+esc(S.ai.err)+'</p>';
+  if(S.ai.ans) h+='<div class="answer" aria-live="polite">'+esc(S.ai.ans)+'</div>';
+  return h;
+}
+function claudeLink(q){return 'https://claude.ai/new?q='+enc(buildPrompt(q||'(כתבו כאן את השאלה)'));}
+
+/* ---------- render ---------- */
+function tabs(){
+  var T=[['day','היום'],['route','המסלול'],['docs','מסמכים'],['ai','לשאול']];
+  return '<nav class="tabs" aria-label="ניווט"><div class="row">'+T.map(function(t){return '<button data-act="tab" data-tab="'+t[0]+'" aria-current="'+(S.tab===t[0])+'">'+IC[t[0]]+t[1]+'</button>';}).join('')+'</div></nav>';
+}
+function editbar(){
+  if(!S.edit&&!S.saveMsg) return '';
+  var msg='<span>'+esc(S.saveMsg||(S.dirty?'יש שינויים שלא נשמרו':'מצב עריכה'))+'</span>';
+  var btn=S.dirty?'<button class="btn" data-act="save"'+(S.saving?' disabled':'')+'>'+(S.saving?'שומר…':'שמירה')+'</button>':'';
+  return '<div class="editbar"><div class="inner">'+msg+btn+'</div></div>';
+}
+function pinPanel(){
+  if(!(S.edit&&LIVE.on&&!LIVE.pin)) return '';
+  return '<div class="panel" style="margin-top:0;margin-bottom:14px"><h3>קוד עריכה</h3><p style="margin:0">כדי לשמור שינויים צריך את קוד העריכה של הטיול.</p><div class="pinbox"><input type="text" id="pin-input" inputmode="numeric" autocomplete="off" placeholder="הקוד"><button class="btn primary" data-act="pinOk">אישור</button></div></div>';
+}
+function driverOverlay(){
+  if(!S.driver) return '';
+  return '<div class="driver" role="dialog" aria-label="להראות לנהג"><div class="small">הראו את המסך לנהג</div><div class="req">Xin vui lòng đưa tôi đến:</div><div class="vn">'+esc(S.driver.vn)+'</div><div class="small" style="direction:ltr">'+esc(S.driver.q)+'</div><div class="small">'+esc(S.driver.n)+'</div><div><button class="btn primary" data-act="closeDriver">סגירה</button></div></div>';
+}
+function render(){
+  var stripEl=document.getElementById('strip'), sx=stripEl?stripEl.scrollLeft:null;
+  var view = S.tab==='route'?routeView():S.tab==='docs'?docsView():S.tab==='ai'?aiView():dayView();
+  app.innerHTML = header()+strip()+'<main><div class="wrap">'+pinPanel()+view+'</div></main>'+tabs()+editbar()+driverOverlay();
+  var ns=document.getElementById('strip');
+  ensureWx(false);
+  if(ns){ if(sx!=null) ns.scrollLeft=sx; else { var cur=ns.querySelector('[aria-current="true"]'); if(cur) cur.scrollIntoView({block:'nearest',inline:'center'}); } }
+}
+
+/* ---------- edit helpers ---------- */
+function curItems(){return DATA.days[S.day].items;}
+function findItem(id){var a=curItems();for(var i=0;i<a.length;i++) if(a[i].id===id) return i;return -1;}
+function newId(p){return p+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36);}
+function markDirty(){ if(!S.dirty){S.dirty=true;S.saveMsg='';var eb=document.querySelector('.editbar');if(eb){eb.outerHTML=editbar();}else{app.insertAdjacentHTML('beforeend',editbar());}} }
+
+app.addEventListener('input',function(e){
+  var el=e.target, b=el.getAttribute('data-bind'); if(!b) return;
+  if(b==='aiq'){S.ai.q=el.value;var l=document.getElementById('ai-link');if(l)l.href=claudeLink(el.value);return;}
+  if(b==='hotel'){DATA.hotels[el.getAttribute('data-k')]=el.value;markDirty();return;}
+  if(b==='dk'||b==='dv'){var id=el.getAttribute('data-id');DATA.docs.forEach(function(x){if(x.id===id){x[b==='dk'?'k':'v']=el.value;}});markDirty();return;}
+  var i=findItem(el.getAttribute('data-id')); if(i<0) return;
+  curItems()[i][b]=el.value; markDirty();
+});
+
+app.addEventListener('click',function(e){
+  var el=e.target.closest('[data-act]'); if(!el) return;
+  var a=el.getAttribute('data-act'), id=el.getAttribute('data-id');
+  if(a==='tab'){S.tab=el.getAttribute('data-tab');store.set('vt-tab',S.tab);render();window.scrollTo(0,0);return;}
+  if(a==='day'){S.day=+el.getAttribute('data-i');store.set('vt-day',S.day);render();window.scrollTo(0,0);return;}
+  if(a==='done'){var k=el.getAttribute('data-k');if(S.done[k])delete S.done[k];else S.done[k]=1;store.set('vt-done',S.done);render();return;}
+  if(a==='driver'){var it=curItems()[findItem(id)];S.driver=placeOf(it);render();return;}
+  if(a==='driverText'){var t=el.getAttribute('data-t');S.driver={n:'המלון',vn:t,q:''};render();return;}
+  if(a==='closeDriver'){S.driver=null;render();return;}
+  if(a==='copy'){var v=el.getAttribute('data-v');var ok=function(){el.textContent='הועתק';setTimeout(function(){el.textContent='העתקה';},1500);};
+    try{navigator.clipboard.writeText(v).then(ok,function(){selectNear(el);});}catch(err){selectNear(el);} return;}
+  if(a==='quick'){S.ai.q=el.getAttribute('data-q');if(sampleNs){ask();}else{render();}return;}
+  if(a==='ask'){ask();return;}
+  if(a==='toggleEdit'){S.edit=!S.edit;if(!S.edit&&!S.dirty)S.saveMsg='';render();return;}
+  if(a==='add'){curItems().push({id:newId('x'),t:'',ti:'',de:''});markDirty();render();return;}
+  if(a==='del'){var i=findItem(id);if(i>=0){curItems().splice(i,1);markDirty();render();}return;}
+  if(a==='up'||a==='down'){var arr=curItems(),j=findItem(id),k2=a==='up'?j-1:j+1;if(j>=0&&k2>=0&&k2<arr.length){var tmp=arr[j];arr[j]=arr[k2];arr[k2]=tmp;markDirty();render();}return;}
+  if(a==='dadd'){DATA.docs.push({id:newId('d'),k:'',v:''});markDirty();render();return;}
+  if(a==='ddel'){DATA.docs=DATA.docs.filter(function(x){return x.id!==id;});markDirty();render();return;}
+  if(a==='save'){save();return;}
+  if(a==='wxRefresh'){ensureWx(true);return;}
+  if(a==='pinOk'){var pv=(document.getElementById('pin-input')||{}).value||'';pv=pv.trim();if(pv){LIVE.pin=pv;store.set('vt-pin',pv);S.saveMsg='';render();}return;}
+});
+function selectNear(el){var v=el.parentNode.querySelector('.v');if(!v)return;var r=document.createRange();r.selectNodeContents(v);var s=getSelection();s.removeAllRanges();s.addRange(r);}
+
+/* ---------- AI ---------- */
+var aiCtrl=null;
+function ask(){
+  var q=(S.ai.q||'').trim(); if(!q||!sampleNs||S.ai.busy) return;
+  if(aiCtrl) aiCtrl.abort(); aiCtrl=new AbortController();
+  S.ai.busy=true;S.ai.ans='';S.ai.err='';render();
+  sampleNs(buildPrompt(q),{signal:aiCtrl.signal,cache:false,onText:function(p){S.ai.ans=p.text;var box=document.querySelector('.answer');if(box){box.textContent=p.text;}else if(S.tab==='ai'){render();}}})
+  .then(function(r){S.ai.ans=r.text;S.ai.busy=false;render();})
+  .catch(function(err){S.ai.busy=false;var c=err&&err.code;
+    if(c==='not_granted'){sampleNs=null;S.ai.err='העוזר לא קיבל אישור בתצוגה הזו. אפשר לשאול דרך אפליקציית Claude.';}
+    else if(c==='rate_limited'){S.ai.err='יותר מדי שאלות ברצף. נסו שוב בעוד דקה.';}
+    else if(err&&err.name==='AbortError'){S.ai.err='';}
+    else {S.ai.err='לא הצלחתי לקבל תשובה. בדקו את החיבור לאינטרנט ונסו שוב.';}
+    if(err&&err.text) S.ai.ans=err.text; render();});
+}
+
+/* ---------- save (republish page with new data) ---------- */
+function buildDoc(){
+  var style=document.getElementById('app-style').textContent;
+  var script=document.getElementById('app-script').textContent;
+  var json=JSON.stringify(DATA).replace(/</g,'\\u003c');
+  var SC='scr'+'ipt';
+  return '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>'+RESET+'</style></head><body>'+
+    '<title>וייטנאם 2026</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<link rel="stylesheet" href="'+FONTS+'">\n'+
+    '<style id="app-style">'+style+'</style>\n<div id="app"></div>\n'+
+    '<'+SC+' id="trip-data" type="application/json">'+json+'</'+SC+'>\n'+
+    '<'+SC+' id="app-script">'+script+'</'+SC+'>\n</body></html>';
+}
+function save(){
+  if(S.saving) return;
+  DATA.updated=new Date().toISOString();
+  if(LIVE.on) return saveWorker();
+  if(!artifactNs) return;
+  S.saving=true;render();
+  artifactNs.publish(buildDoc()).then(function(){S.saving=false;S.dirty=false;S.saveMsg='נשמר';render();clearMsgSoon();})
+  .catch(function(err){S.saving=false;var c=err&&err.code;
+    S.saveMsg = c==='conflict'?'מישהו אחר שמר שינוי באותו רגע. הדף נטען מחדש עם הגרסה שלו.': (c==='not_granted'||c==='not_writer')?'אין לכם הרשאה לשמור שינויים בדף הזה.':'השמירה לא הצליחה. נסו שוב.';
+    if(c==='not_granted'||c==='not_writer'){S.canEdit=false;S.edit=false;S.dirty=false;}
+    render();});
+}
+function clearMsgSoon(){setTimeout(function(){if(!S.dirty){S.saveMsg='';render();}},4000);}
+function saveWorker(){
+  if(!LIVE.pin){S.edit=true;S.saveMsg='הזינו את קוד העריכה ואז לחצו שמירה.';render();return;}
+  S.saving=true;render();
+  fetch(window.__aiEndpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tripSave:{id:TRIP_ID,key:LIVE.pin,rev:LIVE.rev,data:DATA}})})
+  .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,status:r.status,j:j};});})
+  .then(function(x){
+    S.saving=false;
+    if(x.ok){LIVE.rev=x.j.rev||LIVE.rev+1;S.dirty=false;S.saveMsg='נשמר לכולם';store.set('vt-live',{rev:LIVE.rev,data:DATA});clearMsgSoon();}
+    else if(x.j.code==='bad_key'){LIVE.pin='';store.set('vt-pin','');S.saveMsg='הקוד לא נכון. הזינו אותו שוב.';}
+    else if(x.status===409){S.dirty=false;S.edit=false;S.saveMsg='מישהו אחר שמר שינוי בינתיים, אז הגרסה שלו נטענה. אפשר לערוך שוב.';loadLive(true);}
+    else S.saveMsg='השמירה לא הצליחה. נסו שוב בעוד רגע.';
+    render();
+  },function(){S.saving=false;S.saveMsg='אין חיבור לאינטרנט. השינויים עדיין כאן, שמרו שוב כשיהיה חיבור.';render();});
+}
+function loadLive(force){
+  var ep=window.__aiEndpoint; if(!ON_SITE||!ep) return;
+  try{
+    fetch(ep+'?trip='+TRIP_ID,{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+      if(!j) return;
+      LIVE.on=true; S.canEdit=true;
+      if(S.dirty){render();return;}
+      if(j.data&&j.data.days&&(force||(j.data.updated||'')>=(DATA.updated||''))){DATA=j.data;if(S.day>=DATA.days.length)S.day=0;store.set('vt-live',{rev:j.rev||0,data:DATA});}
+      LIVE.rev=j.rev||0;
+      render();
+    },function(){});
+  }catch(e){}
+}
+
+/* ---------- boot ---------- */
+render();
+setInterval(function(){var c=document.querySelector('.clocks');if(c)c.outerHTML=clocks();ensureWx(false);},60000);
+if(ON_SITE){
+  loadLive(false);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){if(!S.dirty)loadLive(false);ensureWx(false);}});
+  if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}}
+}
+if(window.claude&&window.claude.use){
+  window.claude.use('sample').then(function(s){sampleNs=s;sampleReady=true;if(S.tab==='ai'&&!S.ai.busy)render();},function(){sampleReady=true;if(S.tab==='ai')render();});
+  Promise.all([window.claude.use('artifact'),window.claude.use('user')]).then(function(r){
+    artifactNs=r[0]; var u=r[1];
+    var can = artifactNs && u && typeof u.canEdit==='function' ? u.canEdit() : false;
+    Promise.resolve(can).then(function(v){ if(v){S.canEdit=true;render();} });
+  },function(){});
+} else { sampleReady=true; }
+})();
+</script>
+</body>
+</html>
