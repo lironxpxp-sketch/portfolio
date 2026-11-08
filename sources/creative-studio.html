@@ -133,6 +133,31 @@ canvas.adc{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow
 .imgrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .imgrow .ph{width:72px;height:72px;border-radius:8px;border:1px dashed var(--line);display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center}
 @media (max-width:760px){.creative{grid-template-columns:1fr}.panel{padding:16px}}
+.kit{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.kit .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.kit .logo{width:120px;height:56px;border:1px dashed var(--line);border-radius:8px;display:grid;place-items:center;background:var(--bg);overflow:hidden;font-size:11px;color:var(--muted);text-align:center}
+.kit .logo img{max-width:100%;max-height:100%;object-fit:contain}
+.kit input.font{width:200px}
+.kit .fprev{font-size:20px;font-weight:700;line-height:1.1}
+.ab{align-self:flex-start;width:auto;display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;gap:2px;margin-left:8px;vertical-align:middle}
+.ab button{border:0;background:none;color:var(--muted);font:700 11px var(--f-body);padding:3px 10px;border-radius:999px;cursor:pointer}
+.ab button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
+.more{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:var(--muted);width:100%}
+.plan{display:flex;flex-direction:column;gap:18px}
+.plan h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.split{display:flex;flex-direction:column;gap:8px}
+.split .r{display:grid;grid-template-columns:140px minmax(0,1fr) 48px;gap:10px;align-items:center;font-size:13px}
+.split .bar{height:10px;border-radius:6px;background:var(--line);overflow:hidden}
+.split .bar span{display:block;height:100%;background:var(--accent)}
+.ptable{width:100%;border-collapse:collapse;font-size:13px}
+.ptable th,.ptable td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.ptable th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tw{overflow-x:auto}
+.plan ul{margin:0;padding-left:18px}
+.plan .wk{display:grid;grid-template-columns:90px minmax(0,1fr);gap:10px;font-size:13px;padding:4px 0}
+.limitnote{font-size:12px;color:var(--muted)}
+.limitnote a{color:var(--accent)}
+@media (max-width:560px){.split .r{grid-template-columns:90px minmax(0,1fr) 40px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -140,7 +165,7 @@ canvas.adc{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow
   <header class="top">
     <div>
       <h1>Creative Studio</h1>
-      <div class="sub">From a website to ready-to-launch ad creatives for Meta, LinkedIn, Google and TikTok.</div>
+      <div class="sub">On-brand ad campaigns for any company: creatives for Meta, LinkedIn, Google and TikTok, A/B copy and a launch plan.</div>
     </div>
     <span class="mode" id="mode">Checking AI…</span>
   </header>
@@ -180,27 +205,29 @@ const ANGLES=["Pain","Outcome","Social proof","Curiosity","Objection","Urgency",
 /* ---------- worked examples (fictional brands) ---------- */
 const EXAMPLES={
   private:{url:"pulsefit-coaching.com",profile:{name:"PulseFit Coaching",what:"Online personal training with weekly plans and video check-ins",audience:"busy professionals in their 30s and 40s",pain:"no time to get to the gym consistently",proof:"clients train 3x a week on average after the first month",tone:"Friendly",bg:"#14213d",accent:"#fca311",confidence:"high"}},
-  company:{url:"ledgerly.app",company:{company:"Ledgerly",bg:"#1d3b2f",accent:"#d8f26b",confidence:"high",products:[
+  company:{url:"ledgerly.app",company:{company:"Ledgerly",tone:"Direct",bg:"#1d3b2f",accent:"#d8f26b",font:"Space Grotesk",confidence:"high",products:[
     {name:"Ledgerly Invoicing",what:"Automated invoicing and payment reminders",audience:"agency owners and finance leads",pain:"chasing late client payments",proof:"clients get paid 11 days faster on average"},
     {name:"Ledgerly Expenses",what:"Receipt capture and expense approvals from your phone",audience:"teams of 10 to 200 people",pain:"month-end expense reports nobody wants to do",proof:"approvals in under a day"},
     {name:"Ledgerly Payroll",what:"Payroll and contractor payments in one run",audience:"founders and operations managers",pain:"paying staff and contractors across three tools",proof:""}]}}
 };
 
+/* ---------- daily limit for the test version ---------- */
+const LIMIT=2, LKEY="cs.runs.v1", DAY=24*60*60*1000;
+const runsToday=()=>{try{const v=JSON.parse(localStorage.getItem(LKEY)||"[]");return (Array.isArray(v)?v:[]).filter(t=>Date.now()-t<DAY)}catch(e){return[]}};
+const markRun=()=>{try{const v=runsToday();v.push(Date.now());localStorage.setItem(LKEY,JSON.stringify(v))}catch(e){}};
+
 /* ---------- state ---------- */
-const S={step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,
+const S={step:0,mode:"company",url:"",paste:"",profile:null,company:null,product:-1,brief:null,
   platforms:new Set(["meta","google_search"]),goal:"trial",concepts:[],picked:new Set(),creatives:[],tab:null,
   busy:null,ctl:null,notice:"",usedAI:false};
 let sample=null,downloads=null,aiChecked=false;
 const ART={},PHOTO={},IMGS={};let CAPS={images:false};
 (window.__aiCaps||Promise.resolve({})).then(c=>{CAPS=c||{};if(S.creatives.length&&!Object.keys(IMGS).length)queueImages();else refreshArt()}).catch(()=>{});
 
-const STEPS=()=>S.mode==="company"
-  ?[["type","Project type"],["site","Website & product"],["platforms","Platforms"],["create","Creatives"]]
-  :[["type","Project type"],["site","Website"],["platforms","Platforms"],["concepts","Concepts"],["create","Creatives"]];
+const STEPS=()=>[["site","Brand"],["platforms","Platforms"],["concepts","Concepts"],["create","Creatives"]];
 const stepId=()=>STEPS()[S.step][0];
 function maxReached(){ // highest step the user may jump to
-  if(!S.mode)return 0; if(!S.brief)return 1; if(stepId()==="create"||S.creatives.length)return STEPS().length-1;
-  if(S.mode==="private"&&S.concepts.length)return 3; return 2;}
+  if(!S.brief)return 0; if(stepId()==="create"||S.creatives.length)return 3; if(S.concepts.length)return 2; return 1;}
 
 /* ---------- AI ---------- */
 (async()=>{
@@ -209,12 +236,12 @@ function maxReached(){ // highest step the user may jump to
 })();
 function paintMode(){const m=$("mode");
   if(!aiChecked){m.textContent="Checking AI…";return}
-  m.className="mode"+(sample?" on":""); m.textContent=sample?"AI connected":"Template mode";
+  m.className="mode"+(sample?" on":""); m.textContent=sample?"":"Template mode"; m.hidden=!!sample;
   m.title=sample?"Analysis, copy and artwork are written by AI":"AI isn't available in this view, so the studio uses built-in templates";}
 const FATAL=["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"];
 async function ask(prompt,label,web){
   S.ctl=new AbortController(); S.busy=label; render();
-  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,task:"site"}:{signal:S.ctl.signal,task:"creative"}); }
+  try{ return await sample.json(prompt,web?{signal:S.ctl.signal,webSearch:!!window.__aiWeb,siteUrl:S.url,task:"site",brand:true}:{signal:S.ctl.signal,task:"creative"}); }
   finally{ S.busy=null; S.ctl=null; }
 }
 function aiError(e){const c=e&&e.code;
@@ -245,12 +272,12 @@ async function analyze(){
   S.profile=null;S.company=null;S.product=-1;S.brief=null;S.concepts=[];S.picked.clear();S.creatives=[];
   const ex=EXAMPLES[S.mode]; if(ex&&host===ex.url){applyExample();return}
   if(sample){
-    const company=S.mode==="company";
+    const company=true;
     const shape=company
-      ?`{"company":"Company name","bg":"#hex dark brand color","accent":"#hex accent color","image":"main image URL from the page data, or empty","logo":"logo URL from the page data, or empty","confidence":"high|medium|low","products":[{"name":"","what":"one sentence","audience":"","pain":"main pain, lowercase phrase","proof":"real proof point if you know one, else empty string"}]}  (2 to 6 products or services)`
+      ?`{"company":"Brand or company name","tone":"Direct|Friendly|Bold|Premium","bg":"#hex dark brand color (use the brand signals' colours when present)","accent":"#hex accent color (from the brand signals when present)","font":"the brand's heading font from the brand signals, or empty","image":"main image URL from the page data, or empty","logo":"logo image URL from the page data or brand signals, or empty","confidence":"high|medium|low","products":[{"name":"","what":"one sentence","audience":"","pain":"main pain, lowercase phrase","proof":"real proof point if you know one, else empty string"}]}  (1 product if it's one main offer, up to 6 if the company has several products or services)`
       :`{"name":"brand or person's business name","what":"what they offer, one sentence","audience":"who it's for","pain":"the main pain it solves, lowercase phrase","proof":"real proof point if you know one, else empty string","tone":"Direct|Friendly|Bold|Premium","bg":"#hex dark brand color","accent":"#hex accent color","image":"main image URL from the page data, or empty","logo":"logo URL from the page data, or empty","confidence":"high|medium|low"}`;
     const prompt=`You are a senior performance marketer preparing an ad brief.
-The ${company?"company":"person or small business"} behind this website: ${host}
+The brand or company behind this website: ${host}
 ${S.paste.trim()?`Text copied from their website:\n"""\n${S.paste.slice(0,8000)}\n"""\n`:""}
 ${window.__aiWeb?`If the website's own page text is included below, base the brief on it first. Also search the web for "${host}" and read what the site itself says about its offer, audience and proof. Base the brief only on what you find; the domain name and words in it (like "cafe" or "studio") are not evidence of what the business does. If the search finds nothing about the site, make sensible assumptions and set confidence to "low". `:`Use what you reliably know about this site, plus the domain name${S.paste.trim()?" and the text above":""}. If you can't find or don't know the site, make sensible assumptions from the domain and set confidence to "low". `}Never invent statistics or awards.
 Reply with only JSON in this shape:
@@ -258,7 +285,7 @@ ${shape}`;
     try{
       const r=await ask(prompt,"Reading "+host+"…",true); S.usedAI=true;
       if(company){const p=Array.isArray(r.products)?r.products.filter(x=>x&&x.name).slice(0,6):[];
-        S.company={company:r.company||domainName(host),bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),image:url(r.image),logo:url(r.logo),confidence:r.confidence||"medium",products:p.length?p:[{name:r.company||domainName(host),what:"",audience:"",pain:"",proof:""}]};
+        S.company={company:r.company||domainName(host),tone:["Direct","Friendly","Bold","Premium"].includes(r.tone)?r.tone:"Direct",bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),font:String(r.font||"").slice(0,40),image:url(r.image),logo:url(r.logo),confidence:r.confidence||"medium",products:p.length?p:[{name:r.company||domainName(host),what:"",audience:"",pain:"",proof:""}]};
         if(S.company.products.length===1)pickProduct(0);
       }else{S.profile={name:r.name||domainName(host),what:r.what||"",audience:r.audience||"",pain:r.pain||"",proof:r.proof||"",tone:["Direct","Friendly","Bold","Premium"].includes(r.tone)?r.tone:"Friendly",bg:hex(r.bg,"#1f2a44"),accent:hex(r.accent,"#ffb547"),image:url(r.image),logo:url(r.logo),confidence:r.confidence||"medium"};S.brief={...S.profile}}
       render();return;
@@ -266,18 +293,16 @@ ${shape}`;
   }
   // template mode: name from the domain, the rest filled in by the user
   const name=domainName(host);
-  if(S.mode==="company"){S.company={company:name,bg:"#1f2a44",accent:"#ffb547",confidence:"none",products:[{name:name,what:"",audience:"",pain:"",proof:""}]};pickProduct(0)}
-  else{S.profile={name,what:"",audience:"",pain:"",proof:"",tone:"Friendly",bg:"#1f2a44",accent:"#ffb547",confidence:"none"};S.brief={...S.profile}}
+  S.company={company:name,tone:"Direct",bg:"#1f2a44",accent:"#ffb547",font:"",confidence:"none",products:[{name:name,what:"",audience:"",pain:"",proof:""}]};pickProduct(0);
   render();
 }
 function url(v){v=String(v||"").trim();return /^https?:\/\/\S+$/i.test(v)?v:""}
 function hex(v,d){return /^#[0-9a-f]{6}$/i.test(String(v||"").trim())?String(v).trim():d}
-function applyExample(){const ex=EXAMPLES[S.mode];S.url=ex.url;S.notice="";
-  if(S.mode==="company"){S.company=JSON.parse(JSON.stringify(ex.company));S.product=-1;S.brief=null}
-  else{S.profile={...ex.profile};S.brief={...S.profile}}
+function applyExample(){const ex=EXAMPLES.company;S.url=ex.url;S.notice="";S.mode="company";
+  S.company=JSON.parse(JSON.stringify(ex.company));S.product=-1;S.brief=null;
   render();}
 function pickProduct(i){S.product=i;const c=S.company,p=c.products[i];
-  S.brief={name:p.name,brand:c.company,what:p.what||"",audience:p.audience||"",pain:p.pain||"",proof:p.proof||"",tone:(S.brief&&S.brief.tone)||"Direct",bg:c.bg,accent:c.accent,image:c.image||"",logo:c.logo||"",upload:(S.brief&&S.brief.upload)||""};
+  S.brief={name:p.name,brand:c.company,what:p.what||"",audience:p.audience||"",pain:p.pain||"",proof:p.proof||"",tone:c.tone||(S.brief&&S.brief.tone)||"Direct",bg:c.bg,accent:c.accent,font:c.font||"",image:c.image||"",logo:c.logo||"",logoUpload:c.logoUpload||"",upload:(S.brief&&S.brief.upload)||""};
   S.concepts=[];S.picked.clear();S.creatives=[];}
 
 /* ---------- step: concepts ---------- */
@@ -320,7 +345,9 @@ function templateConcepts(b,shift){
 /* ---------- step: creatives ---------- */
 async function create(){
   S.notice="";const b=S.brief,plats=[...S.platforms];
-  const concepts=S.mode==="private"?[...S.picked].sort().map(i=>S.concepts[i]):null;
+  const concepts=S.picked.size?[...S.picked].sort().map(i=>S.concepts[i]):null;
+  S.limitHit=false;
+  if(sample&&runsToday().length>=LIMIT){S.limitHit=true;S.step=2;render();return}
   if(sample){
     const specs=plats.map(p=>{const P=PLAT[p];return `- "${p}" (${P.name} ${P.long}): fields {${P.fields.map(f=>f.count?`"${f.k}": array of ${f.count} strings, each max ${f.max} chars`:`"${f.k}": max ${f.max} chars`).join("; ")}}`}).join("\n");
     const cTxt=concepts?`Write one creative per platform for EACH of these concepts:\n${concepts.map(c=>`- "${c.title}" (${c.angle}): ${c.message} Hook: ${c.hook}`).join("\n")}`
@@ -339,15 +366,18 @@ Every creative also needs a "visual": the brief for its ad image, which an image
 - "direction": 3-5 sentences of art direction: the visual idea (a scene, object, character, metaphor or moment), composition, style (e.g. editorial photo, bold illustration, 3D, collage, typographic poster, UGC-style), mood, lighting and how the brand colors appear. It must dramatize THIS creative's concept for THIS brand and platform.
 Every creative's direction must be clearly different from all the others in style and idea. No stock-photo clichés (handshakes, people pointing at laptops, generic smiling teams).
 Match the tone. Use the proof point only as given; never invent numbers, awards, reviews or customer names.
-Reply with only JSON: {"creatives":[{"platform":"meta","concept":"concept title","angle":"angle","fields":{...},"visual":{...}}]}`;
+Also write a B version of each creative's copy for an A/B test: "fields_b" has the same keys and limits as "fields", keeps the same concept, but tests a clearly different hook or opening line.
+Reply with only JSON: {"creatives":[{"platform":"meta","concept":"concept title","angle":"angle","fields":{...},"fields_b":{...},"visual":{...}}]}`;
     try{const r=await ask(prompt,"Writing creatives for "+plats.map(p=>PLAT[p].name).join(", ")+"…");S.usedAI=true;
       const list=(r&&Array.isArray(r.creatives)?r.creatives:[]).filter(c=>c&&PLAT[c.platform]&&c.fields);
-      if(list.length){list.forEach(c=>{c.visual={...fillVisual({...(c.visual||{}),format:"bold",_concept:c.concept},b),direction:String((c.visual||{}).direction||"")}});S.creatives=list;S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;Object.keys(IMGS).forEach(k=>delete IMGS[k]);render();queueImages();return}
+      if(list.length){markRun();try{window.goatcounter&&window.goatcounter.count&&window.goatcounter.count({path:"creative/campaign",title:"Created a campaign",event:true})}catch(e){}
+        list.forEach(c=>{c.visual={...fillVisual({...(c.visual||{}),format:"bold",_concept:c.concept},b),direction:String((c.visual||{}).direction||"")};
+          c.fields_b=c.fields_b&&typeof c.fields_b==="object"?{...c.fields,...c.fields_b}:null;c.v="a"});S.creatives=list;S.plan=null;makePlan();S.tab=plats.find(p=>list.some(c=>c.platform===p))||list[0].platform;Object.keys(IMGS).forEach(k=>delete IMGS[k]);render();queueImages();return}
       S.notice="The AI didn't return any creatives. Try again.";render();return;
     }catch(e){const k=aiError(e);if(k!=="fallback"){render();return}}
   }
   const cs=concepts||templateConcepts(b,0).slice(0,3);
-  S.creatives=[];plats.forEach(p=>cs.forEach(c=>S.creatives.push(templateCreative(p,c,b))));
+  S.creatives=[];plats.forEach(p=>cs.forEach(c=>S.creatives.push(templateCreative(p,c,b))));S.plan=null;
   S.tab=plats[0];render();
 }
 function fit(s,max){s=String(s||"").trim();if(s.length<=max)return s;const cut=s.slice(0,max-1);const sp=cut.lastIndexOf(" ");return (sp>max*.6?cut.slice(0,sp):cut).replace(/[,.;:\s]+$/,"")+"…"}
@@ -371,7 +401,8 @@ function rail(){const steps=STEPS(),mx=maxReached();
 function render(){rail();const v=$("view");
   if(S.busy){v.innerHTML=`<div class="busy"><span class="dot" aria-hidden="true"></span><span>${esc(S.busy)}</span><button type="button" class="btn" data-act="stop" style="margin-left:auto">Stop</button></div>`;return}
   const notice=S.notice?`<div class="notice">${esc(S.notice)}</div>`:"";
-  v.innerHTML=({type:vType,site:vSite,platforms:vPlatforms,concepts:vConcepts,create:vCreate})[stepId()](notice);
+  const lim=S.limitHit?`<div class="notice">You've made today's ${LIMIT} test campaigns. Only the tool owner can make unlimited campaigns. Feel free to <a href="../../index.html#contact">contact Liron</a>.</div>`:"";
+  v.innerHTML=({site:vSite,platforms:vPlatforms,concepts:vConcepts,create:vCreate})[stepId()](lim+notice);
   if(stepId()==="create"){document.querySelectorAll("#view .field").forEach(count);paintAll();if(document.fonts){document.fonts.ready.then(paintAll);if(!window.__fontHook){window.__fontHook=1;document.fonts.addEventListener("loadingdone",()=>paintAll())}}}
 }
 
@@ -382,22 +413,22 @@ function vType(n){return `<div class="stack">
     <button type="button" class="choice" data-mode="company" aria-pressed="${S.mode==="company"}"><span class="t">Company</span><span class="d">A company with several products or services. You'll choose which one to promote.</span><span class="eg">e.g. a software company, a brand with product lines</span></button>
   </div>${n}</div>`}
 
-function vSite(n){const company=S.mode==="company",ex=EXAMPLES[S.mode];
+function vSite(n){const ex=EXAMPLES.company;
   let body="";
-  if(company&&S.company){const c=S.company;
+  if(S.company){const c=S.company,many=c.products.length>1;
     body=`<div class="stack">${conf(c.confidence)}
-      <div><h3>Which product are you promoting?</h3><p class="note">Found at ${esc(c.company)}. Pick one to build the brief.</p></div>
-      <div class="products">${c.products.map((p,i)=>`<button type="button" class="chip" data-prod="${i}" aria-pressed="${S.product===i}"><span class="t">${esc(p.name)}</span><span class="d">${esc(p.what||"Add a description below")}</span></button>`).join("")}</div>
+      ${many?`<div><h3>Which product are you promoting?</h3><p class="note">${esc(c.company)} has ${c.products.length} products or services. Pick one to build the brief.</p></div>
+      <div class="products">${c.products.map((p,i)=>`<button type="button" class="chip" data-prod="${i}" aria-pressed="${S.product===i}"><span class="t">${esc(p.name)}</span><span class="d">${esc(p.what||"Add a description below")}</span></button>`).join("")}</div>`:""}
       ${S.brief?briefForm():""}</div>`;
-  }else if(!company&&S.profile){body=`<div class="stack">${conf(S.profile.confidence)}${briefForm()}</div>`}
+  }
   return `<div class="stack">
-    <div><h2>${company?"Your company website":"Your website"}</h2><p class="lead">${company?"Add the company's site. The studio lists its products so you can pick one.":"Add your site. The studio fills in what you do, who it's for and the main pain you solve."}</p></div>
+    <div><h2>Your brand</h2><p class="lead">Add the brand's website so the studio can learn it fast: what it sells, who it's for, and its look and tone.</p></div>
     <form class="stack" id="siteform">
-      <div class="urlrow"><input id="url" type="text" inputmode="url" autocomplete="url" placeholder="${company?"yourcompany.com":"yourwebsite.com"}" value="${esc(S.url)}" aria-label="Website address"><button class="btn primary" type="submit">${S.brief||S.company?"Analyze again":"Analyze"}</button></div>
+      <div class="urlrow"><input id="url" type="text" inputmode="url" autocomplete="url" placeholder="brand.com" value="${esc(S.url)}" aria-label="Brand website"><button class="btn primary" type="submit">${S.brief||S.company?"Analyze again":"Analyze"}</button></div>
       <details ${S.paste?"open":""}><summary>Add text from your site for a more accurate brief (optional)</summary><textarea id="paste" rows="4" placeholder="Paste your homepage or About page text here">${esc(S.paste)}</textarea></details>
       <div class="note">No site handy? <button type="button" class="btn link" data-act="example">Use the example: ${esc(ex.url)}</button></div>
     </form>${n}${body}
-    <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right"><button type="button" class="btn primary" data-act="next" ${S.brief?"":"disabled"}>Choose platforms</button></div></div>
+    <div class="actions"><span></span><div class="right"><button type="button" class="btn primary" data-act="next" ${S.brief?"":"disabled"}>Choose platforms</button></div></div>
   </div>`}
 function conf(c){
   if(c==="none")return `<div class="notice">AI isn't available here, so the studio couldn't read the site. Fill in the details below and the templates do the rest.</div>`;
@@ -420,17 +451,28 @@ function briefForm(){const b=S.brief;
         <label class="btn" for="f-upload" style="margin:0;display:inline-block">Upload image</label><input type="file" id="f-upload" accept="image/*" hidden>
         ${b.upload?'<button type="button" class="btn link" data-act="noupload">Use the site image</button>':""}</div>
         <span class="note">${b.image&&!b.upload?"Found on the website. ":""}Upload a product or team photo to use it in the ads.</span></div>
-      <div><span class="lbl">Brand colors</span><div class="swatches"><input type="color" id="f-bg" data-f="bg" value="${esc(b.bg)}" aria-label="Background color"><input type="color" id="f-accent" data-f="accent" value="${esc(b.accent)}" aria-label="Accent color"><span class="note">background · accent</span></div></div>
+    </div>
+    ${brandKit(b)}</div>`}
+const FONTS=["Inter","Poppins","Montserrat","Space Grotesk","DM Sans","Playfair Display","Bebas Neue","Roboto","Lora","Nunito"];
+function brandKit(b){const logo=b.logoUpload||imgUrl(b.logo);
+  return `<div class="kit"><div><span class="lbl">Brand kit</span><span class="note">${S.company&&S.company.confidence!=="none"?`Detected from ${esc(S.url)}. Change anything that's off; every ad uses it.`:"Set your logo, colours and font; every ad uses them."}</span></div>
+    <div class="row">
+      <div><span class="lbl">Logo</span><div class="imgrow"><div class="logo">${logo?`<img src="${esc(logo)}" alt="Logo">`:"No logo found"}</div>
+        <label class="btn" for="f-logo" style="margin:0;display:inline-block">Upload logo</label><input type="file" id="f-logo" accept="image/png,image/jpeg,image/webp" hidden>
+        ${b.logoUpload?'<button type="button" class="btn link" data-act="nologo">Use the site logo</button>':""}</div></div>
+      <div><span class="lbl">Colours</span><div class="swatches"><input type="color" id="f-bg" data-f="bg" value="${esc(b.bg)}" aria-label="Background colour"><input type="color" id="f-accent" data-f="accent" value="${esc(b.accent)}" aria-label="Accent colour"><span class="note">background · accent</span></div></div>
+      <div><label for="f-font">Font</label><input id="f-font" class="font" data-f="font" list="fontlist" value="${esc(b.font||"")}" placeholder="e.g. Inter"><datalist id="fontlist">${FONTS.map(f=>`<option value="${f}">`).join("")}</datalist></div>
+      <div class="fprev" style="color:${esc(b.accent)};font-family:'${esc(b.font||"inherit")}',var(--f-display)">${esc(b.brand||b.name||"Your brand")}</div>
     </div></div>`}
 
-function vPlatforms(n){const company=S.mode==="company";
+function vPlatforms(n){
   return `<div class="stack">
     <div><h2>Where will the ads run?</h2><p class="lead">Pick one or more platforms. Copy follows each platform's character limits and the visuals come in its main sizes.</p></div>
     <div class="chips">${Object.entries(PLAT).map(([k,P])=>`<button type="button" class="chip" data-plat="${k}" aria-pressed="${S.platforms.has(k)}"><span class="t">${P.name}</span><span class="d">${P.long} · ${P.fmt}</span></button>`).join("")}</div>
     <div style="max-width:320px"><label for="goal">Campaign goal</label><select id="goal">${Object.entries(GOALS).map(([k,g])=>`<option value="${k}" ${S.goal===k?"selected":""}>${g[0]}</option>`).join("")}</select></div>
     ${n}
     <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right">
-      <button type="button" class="btn primary big" data-act="${company?"create":"concepts"}" ${S.platforms.size?"":"disabled"}>${company?"Create creatives":"Suggest concepts"}</button></div></div>
+      <button type="button" class="btn primary big" data-act="concepts" ${S.platforms.size?"":"disabled"}>Suggest concepts</button></div></div>
   </div>`}
 
 function vConcepts(n){
@@ -440,31 +482,68 @@ function vConcepts(n){
     <p class="note">${S.picked.size} of 3 selected</p>${n}
     <div class="actions"><button type="button" class="btn" data-act="back">Back</button><div class="right">
       <button type="button" class="btn" data-act="reconcepts">Suggest new concepts</button>
-      <button type="button" class="btn primary big" data-act="create" ${S.picked.size?"":"disabled"}>Create</button></div></div>
+      <button type="button" class="btn primary big" data-act="create" ${S.picked.size?"":"disabled"}>Create campaign</button></div></div>
+    <p class="limitnote" style="text-align:right">${aiImages()?`Test version: ${Math.max(0,LIMIT-runsToday().length)} of ${LIMIT} campaigns left today.`:""}</p>
   </div>`}
 
 function vCreate(n){
   if(!S.creatives.length)return `<div class="stack">${n||'<p class="note">No creatives yet.</p>'}<div class="actions"><button type="button" class="btn" data-act="back">Back</button><button type="button" class="btn primary" data-act="create">Create</button></div></div>`;
-  const plats=[...S.platforms].filter(p=>S.creatives.some(c=>c.platform===p));if(!plats.includes(S.tab))S.tab=plats[0];
+  const plats=[...S.platforms].filter(p=>S.creatives.some(c=>c.platform===p));if(!plats.includes(S.tab)&&S.tab!=="plan")S.tab=plats[0];
   const list=S.creatives.map((c,i)=>[c,i]).filter(([c])=>c.platform===S.tab);
   return `<div class="stack">
     <div class="actions"><div><h2>Creatives for ${esc(S.brief.name)}</h2><p class="lead">${S.creatives.length} creatives across ${plats.length} platform${plats.length>1?"s":""}. Click any text to edit it.${S.usedAI?"":" Written from templates."}</p></div>
-      <div class="right"><button type="button" class="btn" data-act="create">Regenerate</button><button type="button" class="btn primary" data-act="zip">Download all (ZIP)</button><button type="button" class="btn" data-act="csv">Download copy (CSV)</button><button type="button" class="btn" data-act="restart">New project</button></div></div>
+      <div class="right"><button type="button" class="btn" data-act="create">Regenerate</button>${aiImages()&&S.creatives.some((c,i)=>(PLAT[c.platform].sizes||[]).slice(1).some(([,w,h])=>!IMGS[imgKey(i,w,h)]))?'<button type="button" class="btn" data-act="resizeall">Make all sizes</button>':""}<button type="button" class="btn primary" data-act="zip">Download all (ZIP)</button><button type="button" class="btn" data-act="csv">Download copy (CSV)</button><button type="button" class="btn" data-act="restart">New project</button></div></div>
     ${n}
-    <div class="tabs" role="tablist">${plats.map(p=>`<button type="button" class="tab" role="tab" data-tab="${p}" aria-selected="${p===S.tab}">${PLAT[p].name}</button>`).join("")}</div>
-    ${list.map(([c,i])=>creativeCard(c,i)).join("")}
+    <div class="tabs" role="tablist">${plats.map(p=>`<button type="button" class="tab" role="tab" data-tab="${p}" aria-selected="${p===S.tab}">${PLAT[p].name}</button>`).join("")}<button type="button" class="tab" role="tab" data-tab="plan" aria-selected="${S.tab==="plan"}">Campaign plan</button></div>
+    ${S.tab==="plan"?planView():list.map(([c,i])=>creativeCard(c,i)).join("")}
   </div>`}
 
-function creativeCard(c,i){const P=PLAT[c.platform];
-  const fields=P.fields.map(f=>{const v=c.fields[f.k];
+function F(c){return c.v==="b"&&c.fields_b?c.fields_b:c.fields}
+function creativeCard(c,i){const P=PLAT[c.platform],FF=F(c);
+  const fields=P.fields.map(f=>{const v=FF[f.k];
     if(f.count){const arr=(Array.isArray(v)?v:[v]).filter(x=>x!=null).slice(0,f.count);
       return arr.map((t,j)=>fieldHtml(i,f.k,j,`${f.l} ${j+1}`,f.max,t)).join("")}
     return fieldHtml(i,f.k,-1,f.l,f.max,v)}).join("");
   return `<article class="creative" data-i="${i}">
-    <div class="copy"><span class="tag">${esc(c.angle||"Concept")} · ${esc(c.concept||"")}</span>${fields}
+    <div class="copy"><span class="tag">${esc(c.angle||"Concept")} · ${esc(c.concept||"")}</span>${c.fields_b?`<span class="ab" role="group" aria-label="Copy version"><button type="button" data-ab="a" data-i="${i}" aria-pressed="${c.v!=="b"}">A</button><button type="button" data-ab="b" data-i="${i}" aria-pressed="${c.v==="b"}">B</button></span>`:""}${fields}
       <div><button type="button" class="btn" data-act="copy" data-i="${i}">Copy text</button></div></div>
-    <div class="visuals">${P.sizes.length?P.sizes.map(s=>adHtml(c,s,i)).join(""):serpHtml(c)}</div>
+    <div class="visuals">${P.sizes.length?P.sizes.map((s,n)=>n===0||!aiImages()||IMGS[imgKey(i,s[1],s[2])]?adHtml(c,s,i):"").join("")+moreSizes(c,i):serpHtml(c)}</div>
   </article>`}
+function aiImages(){return !!(window.__aiImage&&CAPS.images&&sample)}
+function moreSizes(c,i){if(!aiImages())return"";const rest=(PLAT[c.platform].sizes||[]).slice(1).filter(([,w,h])=>!IMGS[imgKey(i,w,h)]);
+  return rest.length?`<div class="more">Other sizes: ${rest.map(r=>esc(r[0])).join(", ")} <button type="button" class="btn link" data-act="resize" data-i="${i}">Make all sizes</button></div>`:""}
+function planView(){const p=S.plan;
+  if(!p)return `<p class="note">${sample?"The campaign plan appears here once the creatives are written.":"The campaign plan needs AI, which isn't available in this view."}</p>`;
+  if(p.loading)return `<div class="busy"><span class="dot" aria-hidden="true"></span><span>Writing the campaign plan…</span></div>`;
+  if(p.err)return `<div class="notice">${esc(p.err)} <button type="button" class="btn link" data-act="replan">Try again</button></div>`;
+  const sp=Array.isArray(p.budget&&p.budget.split)?p.budget.split:[],mx=Math.max(1,...sp.map(x=>+x.share||0));
+  return `<div class="plan">
+    <div class="actions"><p class="lead" style="margin:0">${esc(p.summary||"")}</p><div class="right"><button type="button" class="btn" data-act="copyplan">Copy plan</button></div></div>
+    ${sp.length?`<section><h3>Budget${p.budget.total?` · ${esc(p.budget.total)}`:""}</h3><div class="split">${sp.map(x=>`<div class="r"><b>${esc(x.platform)}</b><div class="bar"><span style="width:${Math.round((+x.share||0)/mx*100)}%"></span></div><span>${esc(x.share)}%</span></div>${x.why?`<div class="note" style="margin:-4px 0 4px">${esc(x.why)}</div>`:""}`).join("")}</div></section>`:""}
+    ${(p.platforms||[]).length?`<section><h3>Per platform</h3><div class="tw"><table class="ptable"><thead><tr><th>Platform</th><th>Audience</th><th>Placements</th><th>Bidding</th><th>Main KPI</th></tr></thead><tbody>${p.platforms.map(x=>`<tr><td><b>${esc(x.platform)}</b></td><td>${esc(x.audience)}</td><td>${esc(x.placements)}</td><td>${esc(x.bidding)}</td><td>${esc(x.kpi)}</td></tr>`).join("")}</tbody></table></div></section>`:""}
+    ${(p.tests||[]).length?`<section><h3>Tests to run</h3><ul>${p.tests.map(t=>`<li><b>${esc(t.name)}:</b> ${esc(t.what)}${t.success?` <span class="note">Win if: ${esc(t.success)}</span>`:""}</li>`).join("")}</ul></section>`:""}
+    ${(p.timeline||[]).length?`<section><h3>Timeline</h3>${p.timeline.map(t=>`<div class="wk"><b>${esc(t.when)}</b><span>${esc(t.what)}</span></div>`).join("")}</section>`:""}
+  </div>`}
+function planText(){const p=S.plan||{},L=[`CAMPAIGN PLAN: ${S.brief.name}`,"",p.summary||""];
+  const sp=(p.budget&&p.budget.split)||[];if(sp.length){L.push("","BUDGET"+(p.budget.total?` (${p.budget.total})`:""));sp.forEach(x=>L.push(`- ${x.platform}: ${x.share}%${x.why?` (${x.why})`:""}`))}
+  (p.platforms||[]).length&&L.push("","PER PLATFORM",...p.platforms.map(x=>`- ${x.platform}: audience ${x.audience}; placements ${x.placements}; bidding ${x.bidding}; KPI ${x.kpi}`));
+  (p.tests||[]).length&&L.push("","TESTS",...p.tests.map(t=>`- ${t.name}: ${t.what}${t.success?` (win if: ${t.success})`:""}`));
+  (p.timeline||[]).length&&L.push("","TIMELINE",...p.timeline.map(t=>`- ${t.when}: ${t.what}`));
+  return L.join("\n")}
+async function makePlan(){if(!sample)return;S.plan={loading:true};if(stepId()==="create")render();
+  const b=S.brief,plats=[...S.platforms].map(p=>PLAT[p].name);
+  const cons=[...new Set(S.creatives.map(c=>c.concept))].map(t=>{const c=S.creatives.find(x=>x.concept===t);return `"${t}" (${c.angle||""})`}).join("; ");
+  const prompt=`You are a senior paid-media strategist. Write a practical launch plan for this ad campaign.
+${briefText(b)}
+Campaign goal: ${GOALS[S.goal][0]}
+Platforms: ${plats.join(", ")}
+Concepts being tested: ${cons}
+Each creative has an A and a B copy version.
+Reply with only JSON: {"summary":"two sentences: the strategy","budget":{"total":"a sensible 2-4 week test budget for a brand like this, e.g. '$3,000 over 3 weeks'","split":[{"platform":"one of the platforms","share":40,"why":"one short reason"}]},"platforms":[{"platform":"","audience":"targeting to set up","placements":"","bidding":"bid strategy to start with","kpi":"the one metric to judge it on"}],"tests":[{"name":"","what":"what to test and how","success":"what result means it won"}],"timeline":[{"when":"Week 1","what":""}]}
+Rules: shares are integers that add up to 100 across the platforms. 2-4 tests (include the concept test and the A/B copy test). 3-4 timeline steps. Specific to this brand and audience, plain language, no invented results.`;
+  try{const r=await sample.json(prompt,{task:"creative"});if(!r||typeof r!=="object")throw {code:"invalid_json"};S.plan=r}
+  catch(e){S.plan={err:"Couldn't write the campaign plan just now."}}
+  if(stepId()==="create")render()}
 function fieldHtml(i,k,j,label,max,text){return `<div class="field" data-max="${max}"><div class="k"><span>${esc(label)}</span><span class="cnt"></span></div><div contenteditable="true" role="textbox" aria-label="${esc(label)}" data-i="${i}" data-k="${k}" data-j="${j}">${esc(text||"")}</div></div>`}
 function count(f){const t=f.querySelector("[contenteditable]").textContent.trim(),max=+f.dataset.max,c=f.querySelector(".cnt");c.textContent=t.length+" / "+max;c.className="cnt "+(t.length<=max?"ok":"over")}
 
@@ -497,9 +576,9 @@ function serpHtml(c){const f=c.fields,hs=(Array.isArray(f.headlines)?f.headlines
   return `<div class="vis" style="flex:1 1 280px"><div class="serp"><span class="spon">Sponsored</span><span class="u">${esc(S.url||"yourwebsite.com")}</span><span class="h">${esc(hs.join(" | "))}</span><span class="d">${esc(ds[0]||"")}</span></div>
     <div class="cap">Search result preview · Google rotates up to 15 headlines and 4 descriptions</div></div>`}
 
-function buildCsv(){const rows=[["Platform","Concept","Angle","Field","Text","Characters","Limit"]];
-    S.creatives.forEach(c=>{const P=PLAT[c.platform];P.fields.forEach(f=>{const v=c.fields[f.k];(Array.isArray(v)?v:[v]).forEach((x,j)=>{x=String(x||"");rows.push([P.name,c.concept||"",c.angle||"",f.count?`${f.l} ${j+1}`:f.l,x,x.length,f.max])})});
-      const v=c.visual||{};rows.push([P.name,c.concept||"",c.angle||"","Image headline",v.headline||"",(v.headline||"").length,""]);rows.push([P.name,c.concept||"",c.angle||"","Image button",v.cta||"",(v.cta||"").length,""])});
+function buildCsv(){const rows=[["Platform","Concept","Angle","Version","Field","Text","Characters","Limit"]];
+    S.creatives.forEach(c=>{const P=PLAT[c.platform];[["A",c.fields],...(c.fields_b?[["B",c.fields_b]]:[])].forEach(([ver,FF])=>P.fields.forEach(f=>{const v=FF[f.k];(Array.isArray(v)?v:[v]).forEach((x,j)=>{x=String(x||"");rows.push([P.name,c.concept||"",c.angle||"",ver,f.count?`${f.l} ${j+1}`:f.l,x,x.length,f.max])})}));
+      const v=c.visual||{};rows.push([P.name,c.concept||"",c.angle||"","A/B","Image headline",v.headline||"",(v.headline||"").length,""]);rows.push([P.name,c.concept||"",c.angle||"","A/B","Image button",v.cta||"",(v.cta||"").length,""])});
     const csv=rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\r\n");
     const fn=(S.brief.name||"creatives").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-creatives.csv";
     return {csv,fn}}
@@ -648,7 +727,7 @@ function refreshArt(){if(stepId()==="create")render()}
 const imgKey=(i,w,h)=>`${i}|${w}x${h}`;
 function ratio(w,h){const R=[["1:1",1],["4:5",.8],["5:4",1.25],["9:16",.5625],["16:9",1.778],["21:9",2.333],["8:1",8],["1:4",.25],["3:4",.75],["4:3",1.333],["2:3",.667],["3:2",1.5]];
   const r=w/h;return R.reduce((a,b)=>Math.abs(Math.log(b[1]/r))<Math.abs(Math.log(a[1]/r))?b:a)[0]}
-function adPrompt(c,[name,w,h],resize){const b=S.brief,P=PLAT[c.platform],v=c.visual||{},con=(S.concepts||[]).find(x=>x.title===c.concept)||{};
+function adPrompt(c,[name,w,h],resize,logoIdx){const b=S.brief,P=PLAT[c.platform],v=c.visual||{},con=(S.concepts||[]).find(x=>x.title===c.concept)||{};
   const copy=P.fields.filter(f=>!f.count).map(f=>`${f.l}: ${String(c.fields[f.k]||"").trim()}`).join("\n");
   return `${resize?`Reference image 1 is the approved version of this exact ad. Recreate it as a ${w}x${h} version (${ratio(w,h)}): keep the same idea, scene, style, colors and text, and re-compose for the new shape so nothing is cut off or crowded.\n\n`:""}Design one finished, ready-to-publish ${P.name} ad (${P.long}, placement: ${name}, ${w}x${h} pixels, ${ratio(w,h)}).
 Brand: ${b.brand&&b.brand!==b.name?`${b.name} by ${b.brand}`:b.name}${S.url?` (${S.url})`:""}
@@ -663,14 +742,21 @@ The ad copy that runs with it:
 ${copy}
 Art direction for this ad: ${v.direction||"An original visual idea that dramatizes the concept for this audience."}
 Text on the image, spelled exactly as written: the headline "${v.headline||c.concept}", a button reading "${v.cta||GOALS[S.goal][2]}", and the brand name "${b.brand||b.name}". No other words, no fake statistics, no fake logos of other companies, no watermarks.
-Make it look like a real, high-performing ${P.name} ad created by a top creative agency for this exact brand: original and specific to this product and concept, with one clear focal point, strong contrast, and legible type at phone size. Not a template, not generic stock imagery. Keep all text at least 8% away from every edge.${b.upload&&!resize?"\nReference image 1 is the brand's own product or photo: feature it faithfully in the ad.":""}`}
+Make it look like a real, high-performing ${P.name} ad created by a top creative agency for this exact brand: original and specific to this product and concept, with one clear focal point, strong contrast, and legible type at phone size. Not a template, not generic stock imagery. Keep all text at least 8% away from every edge.${b.upload&&!resize?"\nReference image 1 is the brand's own product or photo: feature it faithfully in the ad.":""}${b.font?`\nBrand typography: set the headline in ${b.font} or a very close match.`:""}${logoIdx?`\nReference image ${logoIdx} is the brand's logo: place it small and unaltered (for example in a corner). Don't redraw or restyle it.`:""}`}
+const LOGO_P={};
+function logoData(){const b=S.brief;if(!b)return Promise.resolve("");if(b.logoUpload)return Promise.resolve(b.logoUpload);const key=b.logo||"";if(!LOGO_P[key])LOGO_P[key]=loadLogo(b);return LOGO_P[key]}
+async function loadLogo(b){b._logoData="";const src=imgUrl(b.logo);if(!src)return"";
+  try{const im=await new Promise((res,rej)=>{const x=new Image();x.crossOrigin="anonymous";x.onload=()=>res(x);x.onerror=rej;x.src=src}),k=Math.min(1,512/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(im.naturalWidth*k));cv.height=Math.max(1,Math.round(im.naturalHeight*k));
+    cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);b._logoData=cv.toDataURL("image/png")}catch(e){b._logoData=""}
+  return b._logoData}
 let IMG_RUNNING=0;const IMG_MAX=3;
-function queueImages(){if(!window.__aiImage||!CAPS.images)return;S.creatives.forEach((c,i)=>{(PLAT[c.platform].sizes||[]).forEach(([,w,h])=>{const k=imgKey(i,w,h);if(!IMGS[k])IMGS[k]={queued:true}})});render();pumpImages()}
+function queueImages(){if(!window.__aiImage||!CAPS.images)return;S.creatives.forEach((c,i)=>{const sz=(PLAT[c.platform].sizes||[])[0];if(!sz)return;const k=imgKey(i,sz[1],sz[2]);if(!IMGS[k])IMGS[k]={queued:true}});render();pumpImages()}
+function queueSizes(i){const c=S.creatives[i];(PLAT[c.platform].sizes||[]).forEach(([,w,h])=>{const k=imgKey(i,w,h);if(!IMGS[k])IMGS[k]={queued:true}})}
 function nextJob(){for(let i=0;i<S.creatives.length;i++){const c=S.creatives[i],sz=PLAT[c.platform].sizes||[];for(let n=0;n<sz.length;n++){const [,w,h]=sz[n],G=IMGS[imgKey(i,w,h)];
     if(!G||!G.queued)continue;if(n>0){const M=IMGS[imgKey(i,sz[0][1],sz[0][2])];if(!M||!M.url){if(M&&M.err){return {i,c,size:sz[n],ref:null}}continue}return {i,c,size:sz[n],ref:M.url}}return {i,c,size:sz[n],ref:null}}}return null}
 async function pumpImages(){while(IMG_RUNNING<IMG_MAX){const job=nextJob();if(!job)return;const [,w,h]=job.size,k=imgKey(job.i,w,h);IMGS[k]={busy:true};IMG_RUNNING++;render();
-    (async()=>{const refs=job.ref?[job.ref]:(S.brief.upload?[S.brief.upload]:[]);
-      try{const url=await window.__aiImage(adPrompt(job.c,job.size,!!job.ref),ratio(w,h),refs);if(S.creatives[job.i]===job.c)IMGS[k]={url}}
+    (async()=>{const refs=job.ref?[job.ref]:(S.brief.upload?[S.brief.upload]:[]);const lg=await logoData();if(lg&&refs.length<2)refs.push(lg);const logoIdx=lg?refs.indexOf(lg)+1:0;
+      try{const url=await window.__aiImage(adPrompt(job.c,job.size,!!job.ref,logoIdx),ratio(w,h),refs);if(S.creatives[job.i]===job.c)IMGS[k]={url}}
       catch(e){IMGS[k]={err:e&&e.code==="rate_limited"?"Image limit reached for now.":e&&e.code==="refused"?"The image model declined this one.":e&&e.code==="not_configured"?"Images aren't connected.":"Couldn't create this image."}}
       IMG_RUNNING--;render();pumpImages()})()}}
 
@@ -678,7 +764,7 @@ async function pumpImages(){while(IMG_RUNNING<IMG_MAX){const job=nextJob();if(!j
 document.addEventListener("click",async e=>{
   const t=e.target.closest("button");if(!t||!t.closest(".wrap"))return;
   if(t.dataset.go){S.step=+t.dataset.go;S.notice="";render();return}
-  if(t.dataset.mode){if(S.mode!==t.dataset.mode){Object.assign(S,{mode:t.dataset.mode,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[]});S.picked.clear()}S.step=1;S.notice="";render();return}
+  if(t.dataset.ab){const c=S.creatives[+t.dataset.i];c.v=t.dataset.ab;render();return}
   if(t.dataset.prod){pickProduct(+t.dataset.prod);render();return}
   if(t.dataset.plat){const k=t.dataset.plat;S.platforms.has(k)?S.platforms.delete(k):S.platforms.add(k);S.creatives=[];render();return}
   if(t.dataset.con){const i=+t.dataset.con;if(S.picked.has(i))S.picked.delete(i);else if(S.picked.size<3)S.picked.add(i);else{S.notice="You can pick up to three concepts. Deselect one first."}render();S.notice="";return}
@@ -688,17 +774,23 @@ document.addEventListener("click",async e=>{
   if(a==="back"){S.step=Math.max(0,S.step-1);S.notice="";render();return}
   if(a==="next"){S.step++;S.notice="";render();return}
   if(a==="example"){applyExample();return}
-  if(a==="concepts"){S.step=3;if(!S.concepts.length){await suggestConcepts(false)}else render();return}
+  if(a==="concepts"){S.step=2;if(!S.concepts.length){await suggestConcepts(false)}else render();return}
   if(a==="reconcepts"){await suggestConcepts(true);return}
   if(a==="create"){Object.keys(IMGS).forEach(k=>delete IMGS[k]);S.step=STEPS().length-1;await create();return}
-  if(a==="restart"){Object.assign(S,{step:0,mode:null,url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[],notice:"",usedAI:false});S.picked.clear();render();return}
-  if(a==="copy"){const c=S.creatives[+t.dataset.i],txt=PLAT[c.platform].fields.map(f=>{const v=c.fields[f.k];return Array.isArray(v)?v.map((x,j)=>`${f.l} ${j+1}: ${x}`).join("\n"):`${f.l}: ${v||""}`}).join("\n");
+  if(a==="restart"){Object.assign(S,{step:0,mode:"company",url:"",paste:"",profile:null,company:null,product:-1,brief:null,concepts:[],creatives:[],notice:"",usedAI:false,plan:null,limitHit:false});S.picked.clear();render();return}
+  if(a==="resize"){queueSizes(+t.dataset.i);render();pumpImages();return}
+  if(a==="resizeall"){S.creatives.forEach((c,i)=>queueSizes(i));render();pumpImages();return}
+  if(a==="replan"){makePlan();return}
+  if(a==="copyplan"){try{await navigator.clipboard.writeText(planText());t.textContent="Copied"}catch(err){t.textContent="Copy failed"}setTimeout(()=>{t.textContent="Copy plan"},1600);return}
+  if(a==="nologo"){S.brief.logoUpload="";if(S.company)S.company.logoUpload="";render();return}
+  if(a==="copy"){const c=S.creatives[+t.dataset.i],txt=PLAT[c.platform].fields.map(f=>{const v=F(c)[f.k];return Array.isArray(v)?v.map((x,j)=>`${f.l} ${j+1}: ${x}`).join("\n"):`${f.l}: ${v||""}`}).join("\n");
     try{await navigator.clipboard.writeText(txt);t.textContent="Copied"}catch(err){t.textContent="Copy failed. Select the text instead."}setTimeout(()=>{t.textContent="Copy text"},1600);return}
   if(a==="csv"){const {csv,fn}=buildCsv();await saveBlob(fn,new Blob(["\ufeff"+csv],{type:"text/csv"}));return}
   if(a==="png"){const c=S.creatives[+t.dataset.i],w=+t.dataset.w,h=+t.dataset.h;t.textContent="Saving…";
     const blob=await adPng(c,w,h);await saveBlob(`${fileSlug(S.brief.name)}-${c.platform}-${fileSlug(c.concept)}-${w}x${h}.png`,blob);t.textContent="Download PNG";return}
   if(a==="zip"){t.disabled=true;t.textContent="Building ZIP…";try{await loadZip();const z=new JSZip(),{csv,fn}=buildCsv();z.file(fn,"\ufeff"+csv);
-      for(const c of S.creatives){for(const [nm,w,h] of PLAT[c.platform].sizes){z.file(`${PLAT[c.platform].name}/${fileSlug(c.concept)}-${w}x${h}.png`,await adPng(c,w,h))}}
+      if(S.plan&&!S.plan.loading&&!S.plan.err)z.file("campaign-plan.txt",planText());
+      for(const c of S.creatives){const i=S.creatives.indexOf(c);for(const [nm,w,h] of PLAT[c.platform].sizes){if(aiImages()&&!(IMGS[imgKey(i,w,h)]||{}).url)continue;z.file(`${PLAT[c.platform].name}/${fileSlug(c.concept)}-${w}x${h}.png`,await adPng(c,w,h))}}
       await saveBlob(`${fileSlug(S.brief.name)}-creatives.zip`,await z.generateAsync({type:"blob"}))}catch(err){S.notice="Couldn't build the ZIP. Try downloading images one by one.";render()}
     t.disabled=false;t.textContent="Download all (ZIP)";return}
   if(a==="noupload"){S.brief.upload="";render();return}
@@ -707,18 +799,23 @@ document.addEventListener("click",async e=>{
 document.addEventListener("submit",e=>{if(e.target.id==="siteform"){e.preventDefault();analyze()}});
 document.addEventListener("change",e=>{const el=e.target;
   if(el.dataset&&el.dataset.fmt!=null){const c=S.creatives[+el.dataset.fmt];c._userFmt=true;c.visual=fillVisual({...c.visual,_concept:c.concept,format:el.value},S.brief);paintAll();return}
+  if(el.id==="f-logo"&&el.files&&el.files[0]){const f=el.files[0];if(!/^image\/(png|jpeg|webp)$/.test(f.type)){S.notice="Upload the logo as a PNG, JPG or WebP image.";render();return}
+    const rd=new FileReader();rd.onload=async()=>{let u=rd.result;try{const im=await loadEl(u),k=Math.min(1,512/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement("canvas");
+      cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);u=cv.toDataURL("image/png")}catch(x){}
+      S.brief.logoUpload=u;if(S.company)S.company.logoUpload=u;render()};rd.readAsDataURL(f);return}
   if(el.id==="f-upload"&&el.files&&el.files[0]){const f=el.files[0];if(!/^image\//.test(f.type)){S.notice="That file isn't an image.";render();return}
     const rd=new FileReader();rd.onload=async()=>{let u=rd.result;try{const im=await loadEl(u),k=Math.min(1,1280/Math.max(im.naturalWidth,im.naturalHeight)),cv=document.createElement("canvas");
       cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);u=cv.toDataURL("image/jpeg",.88)}catch(x){}
       S.brief.upload=u;if(S.company&&S.product>=0)S.company.upload=u;render()};rd.readAsDataURL(f)}});
 document.addEventListener("input",e=>{const el=e.target;
   if(el.dataset&&el.dataset.f&&S.brief){S.brief[el.dataset.f]=el.value;S.concepts=[];S.creatives=[];
-    if(S.mode==="company"&&S.company&&S.product>=0){const p=S.company.products[S.product];if(["name","what","audience","pain","proof"].includes(el.dataset.f))p[el.dataset.f]=el.value;if(el.dataset.f==="bg"||el.dataset.f==="accent")S.company[el.dataset.f]=el.value}
+    if(S.company&&S.product>=0){const p=S.company.products[S.product];if(["name","what","audience","pain","proof"].includes(el.dataset.f))p[el.dataset.f]=el.value;if(["bg","accent","font","tone"].includes(el.dataset.f))S.company[el.dataset.f]=el.value}
+    if(el.dataset.f==="font"||el.dataset.f==="bg"||el.dataset.f==="accent"){const pv=document.querySelector(".kit .fprev");if(pv){pv.style.fontFamily=`'${S.brief.font||"inherit"}',var(--f-display)`;pv.style.color=S.brief.accent}}
     rail();return}
   if(el.id==="goal"){S.goal=el.value;S.creatives=[];return}
   if(el.id==="paste"){S.paste=el.value;return}
-  if(el.isContentEditable){const c=S.creatives[+el.dataset.i],k=el.dataset.k,j=+el.dataset.j,t=el.textContent;
-    if(j>=0){if(!Array.isArray(c.fields[k]))c.fields[k]=[];c.fields[k][j]=t}else c.fields[k]=t;count(el.closest(".field"))}
+  if(el.isContentEditable){const c=S.creatives[+el.dataset.i],k=el.dataset.k,j=+el.dataset.j,t=el.textContent,FF=F(c);
+    if(j>=0){if(!Array.isArray(FF[k]))FF[k]=[];FF[k][j]=t}else FF[k]=t;count(el.closest(".field"))}
 });
 render();
 })();
