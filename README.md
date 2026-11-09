@@ -118,4 +118,10 @@ Works with no setup: ticks, opened tasks and edits are saved on each phone. To s
 3. Your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `TRIP_TOKEN`, value = the `TRIP_TOKEN` line the build script prints.
 4. Paste the new `worker/worker.js` (Edit code → paste → Deploy).
 
-The Worker only ever stores encrypted trip data.
+The Worker only ever stores encrypted trip data, apart from notification texts, which it needs in order to send them on time.
+
+Optional extras, all in the Worker's **Settings**:
+
+- **Variables and Secrets → Add → Secret** `TRIP_EDIT_CODE`: a code only the family editors know. Changing the schedule or posting the daily card then needs it; tapping "Arrived" and scanning tickets don't.
+- **Variables and Secrets → Add → Secret** `VAPID_PRIVATE`: the notification key (a short JSON value made once; keep it private). Without it, phones can register but nothing is sent.
+- **Trigger events → Add → Cron trigger** `*/5 * * * *`: sends the reminders (1 hour before timed tasks, 08:00 morning summary, check-in 24 hours before flights, the 19:00 card).

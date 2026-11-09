@@ -18,11 +18,18 @@
  *   GMAIL_SEND         (Text, optional)    set to "on" to send straight from Gmail (needs Google's app review for the public)
  *   TRIP               (KV binding, optional) shared storage for the private family trip page
  *   TRIP_TOKEN         (Secret, optional)  the trip link's access token (printed by tools/build_trip.py)
+ *   TRIP_EDIT_CODE     (Secret, optional)  code needed to change the trip schedule or post the daily card
+ *   VAPID_PRIVATE      (Secret, optional)  key for trip notifications (JSON printed when it was made)
+ *   Cron trigger       (optional)          every 5 minutes, so trip reminders go out on time
  */
 
 // Family trip page: the page encrypts its data with a key that lives only in the
 // secret link, so this Worker stores data it can't read. Access needs the link's token.
+// Changing the schedule also needs TRIP_EDIT_CODE (when set). Notification texts are
+// the one thing stored readable, because the Worker has to send them on time.
 const tripHits = new Map();
+const scanHits = new Map();
+const enc8 = new TextEncoder();
 function sameText(a, b) {
   a = String(a || ""); b = String(b || "");
   let diff = a.length ^ b.length;
@@ -30,33 +37,175 @@ function sameText(a, b) {
   return diff === 0 && b.length > 0;
 }
 function tripId(v) { return String(v || "").replace(/[^a-z0-9-]/gi, "").slice(0, 40); }
-async function tripPost(body, env, origin) {
+function b64u(buf) { let s = ""; for (const x of new Uint8Array(buf)) s += String.fromCharCode(x); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function unb64u(s) { s = String(s).replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; const bin = atob(s); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+function concatBytes(...parts) { const n = parts.reduce((a, p) => a + p.length, 0); const out = new Uint8Array(n); let o = 0; for (const p of parts) { out.set(p, o); o += p.length; } return out; }
+async function hmac256(key, data) { const k = await crypto.subtle.importKey("raw", key, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]); return new Uint8Array(await crypto.subtle.sign("HMAC", k, data)); }
+async function hkdf(salt, ikm, info, len) { const prk = await hmac256(salt, ikm); return (await hmac256(prk, concatBytes(info, new Uint8Array([1])))).slice(0, len); }
+
+// Web Push (RFC 8291 payload encryption + RFC 8292 VAPID)
+async function encryptPush(sub, text) {
+  const uaPub = unb64u(sub.keys.p256dh), auth = unb64u(sub.keys.auth);
+  const as = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
+  const asPub = new Uint8Array(await crypto.subtle.exportKey("raw", as.publicKey));
+  const uaKey = await crypto.subtle.importKey("raw", uaPub, { name: "ECDH", namedCurve: "P-256" }, false, []);
+  const ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey }, as.privateKey, 256));
+  const ikm = await hkdf(auth, ecdh, concatBytes(enc8.encode("WebPush: info\0"), uaPub, asPub), 32);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const cek = await hkdf(salt, ikm, enc8.encode("Content-Encoding: aes128gcm\0"), 16);
+  const nonce = await hkdf(salt, ikm, enc8.encode("Content-Encoding: nonce\0"), 12);
+  const key = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, concatBytes(enc8.encode(text), new Uint8Array([2]))));
+  const rs = new Uint8Array(4); new DataView(rs.buffer).setUint32(0, 4096);
+  return concatBytes(salt, rs, new Uint8Array([asPub.length]), asPub, ct);
+}
+async function vapidAuth(endpoint, env) {
+  const jwk = JSON.parse(env.VAPID_PRIVATE);
+  const key = await crypto.subtle.importKey("jwk", { kty: "EC", crv: "P-256", x: jwk.x, y: jwk.y, d: jwk.d }, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const h = b64u(enc8.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
+  const p = b64u(enc8.encode(JSON.stringify({ aud: new URL(endpoint).origin, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: "https://lironsofer.online" })));
+  const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, enc8.encode(h + "." + p));
+  return "vapid t=" + h + "." + p + "." + b64u(sig) + ", k=" + b64u(concatBytes(new Uint8Array([4]), unb64u(jwk.x), unb64u(jwk.y)));
+}
+async function sendPush(env, sub, msg) {
+  const body = await encryptPush(sub, JSON.stringify(msg));
+  const r = await fetch(sub.endpoint, { method: "POST", body, headers: {
+    Authorization: await vapidAuth(sub.endpoint, env), "Content-Encoding": "aes128gcm",
+    "Content-Type": "application/octet-stream", TTL: "86400", Urgency: "high" } });
+  return r.status;
+}
+async function pushAll(env, id, msg) {
+  if (!env.VAPID_PRIVATE || !env.TRIP) return 0;
+  const subs = (await env.TRIP.get("subs:" + id, "json")) || {};
+  let sent = 0, changed = false;
+  for (const [k, s] of Object.entries(subs)) {
+    try {
+      const st = await sendPush(env, s, msg);
+      if (st === 404 || st === 410) { delete subs[k]; changed = true; } else if (st < 300) sent++;
+    } catch { /* one phone failing shouldn't stop the others */ }
+  }
+  if (changed) await env.TRIP.put("subs:" + id, JSON.stringify(subs));
+  return sent;
+}
+async function sendDueReminders(env) {
+  if (!env.TRIP || !env.VAPID_PRIVATE) return;
+  const now = Date.now();
+  const keys = await env.TRIP.list({ prefix: "rem:" });
+  for (const k of keys.keys) {
+    const id = k.name.slice(4);
+    const rem = await env.TRIP.get(k.name, "json");
+    if (!rem || !Array.isArray(rem.list)) continue;
+    rem.sent = rem.sent || {};
+    let changed = false;
+    for (const r of rem.list) {
+      if (r.at <= now && r.at > now - 45 * 60_000 && !rem.sent[r.tag]) {
+        await pushAll(env, id, { title: r.title, body: r.body, tag: r.tag });
+        rem.sent[r.tag] = now; changed = true;
+      }
+    }
+    for (const [t, at] of Object.entries(rem.sent)) if (now - at > 3 * 86_400_000) { delete rem.sent[t]; changed = true; }
+    if (changed) await env.TRIP.put(k.name, JSON.stringify(rem));
+  }
+}
+
+const SCAN_PROMPT = `You read one travel document (flight e-ticket, boarding pass, itinerary receipt or hotel voucher).
+Return ONLY a JSON object, no other text:
+{"kind":"flight|hotel|other","flight_no":"","airline":"","date":"YYYY-MM-DD","from":"IATA code","to":"IATA code","dep":"HH:MM","arr":"HH:MM","terminal":"","seat":"","booking_code":"","hotel":"","checkin":"YYYY-MM-DD","notes":""}
+Use "" for anything not printed on the document. Times are the local times printed. booking_code is the airline/booking reference (PNR), usually 6 letters/digits.
+Never include passenger names, passport or ID numbers, e-ticket numbers or payment details. "notes": at most one short line of useful info (e.g. baggage allowance), in English.`;
+
+async function tripPost(body, env, origin, ctx) {
   if (!env.TRIP || !env.TRIP_TOKEN) return reply(404, { code: "not_configured", message: "Trip storage isn't connected" }, origin);
-  const t = body.tripSave || body.tripProg;
-  if (!t || typeof t !== "object" || !sameText(t.tok, env.TRIP_TOKEN)) return reply(403, { code: "bad_token", message: "Not allowed" }, origin);
+  const op = ["tripSave", "tripProg", "tripBlobPut", "tripTickets", "tripPushSub", "tripReminders", "tripScan", "tripPushTest"].find((k) => body[k] && typeof body[k] === "object");
+  const t = op && body[op];
+  if (!t || !sameText(t.tok, env.TRIP_TOKEN)) return reply(403, { code: "bad_token", message: "Not allowed" }, origin);
   const id = tripId(t.id);
   if (!id) return reply(400, { code: "invalid_request", message: "Missing trip id" }, origin);
-  if (body.tripSave) {
+  const later = (p) => (ctx && ctx.waitUntil ? ctx.waitUntil(p.catch(() => {})) : p.catch(() => {}));
+
+  if (op === "tripSave") {
+    if (env.TRIP_EDIT_CODE && !sameText(t.code, env.TRIP_EDIT_CODE)) return reply(403, { code: "bad_code", message: "Wrong edit code" }, origin);
     if (typeof t.enc !== "string" || !t.enc || t.enc.length > 380_000) return reply(400, { code: "invalid_request", message: "Missing trip data" }, origin);
     const current = (await env.TRIP.get("trip:" + id, "json")) || { rev: 0 };
     if (Number(t.rev) !== Number(current.rev || 0)) return reply(409, { code: "conflict", message: "Someone saved a newer version", rev: current.rev }, origin);
+    if (current.enc) {
+      await env.TRIP.put("hist:" + id + ":" + current.rev, JSON.stringify(current));
+      const idx = ((await env.TRIP.get("histidx:" + id, "json")) || []).filter((r) => r !== current.rev);
+      idx.push(current.rev);
+      while (idx.length > 10) await env.TRIP.delete("hist:" + id + ":" + idx.shift());
+      await env.TRIP.put("histidx:" + id, JSON.stringify(idx));
+    }
     const next = { rev: (current.rev || 0) + 1, enc: t.enc, savedAt: new Date().toISOString() };
     await env.TRIP.put("trip:" + id, JSON.stringify(next));
+    if (t.notify) later(pushAll(env, id, { title: "עדכון מהבית", body: String(t.notify).slice(0, 200), tag: "upd-" + next.rev }));
     return reply(200, { rev: next.rev }, origin);
   }
-  const set = t.set && typeof t.set === "object" ? t.set : null;
-  const keys = set ? Object.keys(set) : [];
-  if (!keys.length || keys.length > 200) return reply(400, { code: "invalid_request", message: "Nothing to save" }, origin);
-  const prog = (await env.TRIP.get("prog:" + id, "json")) || {};
-  for (const k of keys) {
-    const v = set[k];
-    if (k.length > 80 || !/^[AD]:/.test(k)) continue;
-    if (v === null) prog[k] = null;
-    else if (typeof v === "string" && v.length <= 12) prog[k] = v;
+  if (op === "tripProg") {
+    const set = t.set && typeof t.set === "object" ? t.set : null;
+    const keys = set ? Object.keys(set) : [];
+    if (!keys.length || keys.length > 200) return reply(400, { code: "invalid_request", message: "Nothing to save" }, origin);
+    const prog = (await env.TRIP.get("prog:" + id, "json")) || {};
+    for (const k of keys) {
+      const v = set[k];
+      if (k.length > 80 || !/^[ADK]:/.test(k)) continue;
+      if (v === null) prog[k] = null;
+      else if (typeof v === "string" && v.length <= 12) prog[k] = v;
+    }
+    if (Object.keys(prog).length > 4000) return reply(413, { code: "too_large", message: "Too many marks" }, origin);
+    await env.TRIP.put("prog:" + id, JSON.stringify(prog));
+    return reply(200, { ok: true }, origin);
   }
-  if (Object.keys(prog).length > 4000) return reply(413, { code: "too_large", message: "Too many marks" }, origin);
-  await env.TRIP.put("prog:" + id, JSON.stringify(prog));
-  return reply(200, { ok: true }, origin);
+  if (op === "tripBlobPut") {
+    if (typeof t.enc !== "string" || !t.enc || t.enc.length > 4_500_000) return reply(400, { code: "invalid_request", message: "File missing or too large" }, origin);
+    const bid = b64u(crypto.getRandomValues(new Uint8Array(12)));
+    await env.TRIP.put("blob:" + id + ":" + bid, t.enc);
+    return reply(200, { blob: bid }, origin);
+  }
+  if (op === "tripTickets") {
+    if (typeof t.enc !== "string" || !t.enc || t.enc.length > 200_000) return reply(400, { code: "invalid_request", message: "Missing tickets" }, origin);
+    await env.TRIP.put("tickets:" + id, JSON.stringify({ enc: t.enc, savedAt: new Date().toISOString() }));
+    return reply(200, { ok: true }, origin);
+  }
+  if (op === "tripPushSub") {
+    const s = t.sub;
+    if (!s || typeof s.endpoint !== "string" || !/^https:\/\//.test(s.endpoint) || !s.keys || !s.keys.p256dh || !s.keys.auth) return reply(400, { code: "invalid_request", message: "Bad subscription" }, origin);
+    const subs = (await env.TRIP.get("subs:" + id, "json")) || {};
+    subs[s.endpoint] = { endpoint: s.endpoint, keys: { p256dh: s.keys.p256dh, auth: s.keys.auth } };
+    if (Object.keys(subs).length > 30) delete subs[Object.keys(subs)[0]];
+    await env.TRIP.put("subs:" + id, JSON.stringify(subs));
+    return reply(200, { ok: true, push: !!env.VAPID_PRIVATE }, origin);
+  }
+  if (op === "tripPushTest") {
+    const sent = await pushAll(env, id, { title: "בדיקה", body: "ההתראות עובדות. נסיעה טובה!", tag: "test" });
+    return reply(200, { sent, push: !!env.VAPID_PRIVATE }, origin);
+  }
+  if (op === "tripReminders") {
+    const list = Array.isArray(t.list) ? t.list.slice(0, 400).filter((r) => r && Number.isFinite(r.at) && typeof r.tag === "string")
+      .map((r) => ({ at: Math.round(r.at), tag: r.tag.slice(0, 60), title: String(r.title || "").slice(0, 120), body: String(r.body || "").slice(0, 300) })) : [];
+    const cur = (await env.TRIP.get("rem:" + id, "json")) || {};
+    await env.TRIP.put("rem:" + id, JSON.stringify({ list, sent: cur.sent || {} }));
+    return reply(200, { ok: true, count: list.length }, origin);
+  }
+  if (op === "tripScan") {
+    if (!env.ANTHROPIC_API_KEY) return reply(400, { code: "not_configured", message: "No AI model is connected" }, origin);
+    const mime = /^image\/(png|jpeg|webp|gif)$/.test(t.mime) ? t.mime : "";
+    if (!mime || typeof t.image !== "string" || t.image.length > 5_500_000) return reply(400, { code: "invalid_request", message: "Send one image up to 4 MB" }, origin);
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: MODELS.default, max_tokens: 700, messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: mime, data: t.image } },
+        { type: "text", text: SCAN_PROMPT }] }] }),
+    });
+    const j = await res.json().catch(() => null);
+    if (!res.ok || !j) return reply(res.status === 429 ? 429 : 502, { code: res.status === 429 ? "rate_limited" : "upstream_error", message: "Couldn't read the document" }, origin);
+    const text = (j.content || []).map((c) => c.text || "").join("");
+    const m = text.match(/\{[\s\S]*\}/);
+    let out = null; try { out = m ? JSON.parse(m[0]) : null; } catch { out = null; }
+    if (!out) return reply(422, { code: "unreadable", message: "No ticket details found" }, origin);
+    return reply(200, { ticket: out }, origin);
+  }
+  return reply(400, { code: "invalid_request", message: "Unknown request" }, origin);
 }
 
 const ALLOWED_ORIGINS = [
@@ -260,7 +409,10 @@ async function readSite(input, deep = false, brand = false) {
 }
 
 export default {
-  async fetch(request, env) {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendDueReminders(env));
+  },
+  async fetch(request, env, ctx) {
     const origin = request.headers.get("Origin") || "";
     // Live site, plus the staging copy on Cloudflare Pages (any project named lironsofer…)
     if (!ALLOWED_ORIGINS.includes(origin) && !/^https:\/\/([a-z0-9-]+\.)?lironsofer[a-z0-9-]*\.pages\.dev$/.test(origin)) {
@@ -280,9 +432,24 @@ export default {
       if (!env.TRIP || !env.TRIP_TOKEN) return reply(404, { code: "not_configured", message: "Trip storage isn't connected" }, origin);
       if (!sameText(u.searchParams.get("tok"), env.TRIP_TOKEN)) return reply(403, { code: "bad_token", message: "Not allowed" }, origin);
       const id = tripId(u.searchParams.get("trip"));
-      const [stored, prog] = await Promise.all([env.TRIP.get("trip:" + id, "json"), env.TRIP.get("prog:" + id, "json")]);
-      return new Response(JSON.stringify({ rev: stored?.rev || 0, enc: stored?.enc || "", savedAt: stored?.savedAt || "", prog: prog || {} }), {
-        status: 200, headers: { "content-type": "application/json", "cache-control": "no-store", ...cors(origin) } });
+      const json = (o) => new Response(JSON.stringify(o), { status: 200, headers: { "content-type": "application/json", "cache-control": "no-store", ...cors(origin) } });
+      const bid = String(u.searchParams.get("blob") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+      if (bid) {
+        const enc = await env.TRIP.get("blob:" + id + ":" + bid);
+        if (!enc) return reply(404, { code: "not_found", message: "File not found" }, origin);
+        return new Response(JSON.stringify({ enc }), { status: 200, headers: { "content-type": "application/json", "cache-control": "private, max-age=31536000, immutable", ...cors(origin) } });
+      }
+      if (u.searchParams.has("hist")) {
+        const rev = u.searchParams.get("hist") === "list" ? 0 : Number(u.searchParams.get("hist"));
+        if (rev > 0) { const h = await env.TRIP.get("hist:" + id + ":" + rev, "json"); return h ? json(h) : reply(404, { code: "not_found", message: "Version not found" }, origin); }
+        const idx = (await env.TRIP.get("histidx:" + id, "json")) || [];
+        const list = [];
+        for (const r of idx.slice().reverse()) { const h = await env.TRIP.get("hist:" + id + ":" + r, "json"); if (h) list.push({ rev: h.rev, savedAt: h.savedAt || "" }); }
+        return json({ list });
+      }
+      const [stored, prog, tickets] = await Promise.all([env.TRIP.get("trip:" + id, "json"), env.TRIP.get("prog:" + id, "json"), env.TRIP.get("tickets:" + id, "json")]);
+      return json({ rev: stored?.rev || 0, enc: stored?.enc || "", savedAt: stored?.savedAt || "", prog: prog || {}, tickets: tickets?.enc || "",
+        editCode: !!env.TRIP_EDIT_CODE, push: !!env.VAPID_PRIVATE });
     }
     if (request.method === "GET") {
       const target = new URL(request.url).searchParams.get("img") || "";
@@ -302,16 +469,18 @@ export default {
 
     const raw = await request.text();
     const isImage = raw.startsWith('{"image"');
-    const isTrip = raw.startsWith('{"tripSave"') || raw.startsWith('{"tripProg"');
-    if (raw.length > (isImage ? 9_000_000 : isTrip ? 400_000 : MAX_BODY_BYTES)) {
+    const isTrip = raw.startsWith('{"trip');
+    const bigTrip = raw.startsWith('{"tripBlobPut"') || raw.startsWith('{"tripScan"');
+    if (raw.length > (isImage ? 9_000_000 : bigTrip ? 6_000_000 : isTrip ? 400_000 : MAX_BODY_BYTES)) {
       return reply(413, { code: "prompt_too_large", message: "Prompt is too long" }, origin);
     }
 
     const ip = request.headers.get("CF-Connecting-IP") || "unknown";
     if (isTrip) {
       if (overLimit(ip, tripHits, 300)) return reply(429, { code: "rate_limited", message: "Too many saves. Try again in a few minutes." }, origin);
+      if (raw.startsWith('{"tripScan"') && overLimit(ip, scanHits, 20)) return reply(429, { code: "rate_limited", message: "Too many scans. Try again in a few minutes." }, origin);
       let tb; try { tb = JSON.parse(raw); } catch { return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin); }
-      return tripPost(tb, env, origin);
+      return tripPost(tb, env, origin, ctx);
     }
 
     let body;
