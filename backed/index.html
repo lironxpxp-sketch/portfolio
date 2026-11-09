@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backed · Hiring with skin in the game</title>
+<meta name="description" content="Clickable concept demo: a confidential hiring marketplace where people pledge money on the candidates they vouch for.">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Backed · Hiring with skin in the game">
+<meta property="og:description" content="A clickable concept demo by Liron Sofer: companies, candidates and backers in one confidential hiring marketplace.">
+<meta property="og:url" content="https://lironsofer.online/backed/">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FFCF3A'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Arial' font-weight='900' font-size='19' fill='%2312132A'%3E%E2%82%AA%3C/text%3E%3C/svg%3E">
+<script>if(/(^|\.)lironsofer\.online$/.test(location.hostname)){var g=document.createElement("script");g.async=true;g.dataset.goatcounter="https://lironsofer.goatcounter.com/count";g.src="https://gc.zgo.at/count.js";document.head.appendChild(g)}</script>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: chunky role switcher on top, one working view per role; money in mono on a yellow "stake" chip */
+:root{
+  --bg:#F3F4FB; --surface:#FFFFFF; --surface-2:#E9ECFA; --ink:#12132A; --muted:#5B5F80; --line:#D8DCF0;
+  --accent:#2B44FF; --accent-ink:#FFFFFF; --accent-soft:#E2E6FF;
+  --sun:#FFCF3A; --sun-ink:#2A2100;
+  --good:#0B8F63; --good-soft:#DDF5EC; --warn:#B26A00; --warn-soft:#FFF1D6; --bad:#C93545; --bad-soft:#FCE3E6;
+  --f-display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --f-body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D0E1C; --surface:#16182C; --surface-2:#1F2240; --ink:#EEF0FF; --muted:#9EA2C6; --line:#2B2F52;
+  --accent:#7385FF; --accent-ink:#0D0E1C; --accent-soft:#232A5C;
+  --sun:#FFD24D; --sun-ink:#231B00;
+  --good:#3DD39C; --good-soft:#123528; --warn:#F6B53F; --warn-soft:#3A2B0E; --bad:#FF7A86; --bad-soft:#3D1A20; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D0E1C; --surface:#16182C; --surface-2:#1F2240; --ink:#EEF0FF; --muted:#9EA2C6; --line:#2B2F52;
+  --accent:#7385FF; --accent-ink:#0D0E1C; --accent-soft:#232A5C;
+  --sun:#FFD24D; --sun-ink:#231B00;
+  --good:#3DD39C; --good-soft:#123528; --warn:#F6B53F; --warn-soft:#3A2B0E; --bad:#FF7A86; --bad-soft:#3D1A20; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(28px,5vw,42px);font-weight:800;line-height:1.05}
+h2{font-size:20px;font-weight:800}
+h3{font-size:17px;font-weight:600}
+p{margin:0}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.sub{color:var(--muted);margin-top:6px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;padding-block:18px 14px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:36px;height:36px;border-radius:10px;background:var(--sun);color:var(--sun-ink);display:grid;place-items:center;font:800 20px var(--f-display);transform:rotate(-6deg)}
+.word{font:800 26px var(--f-display);letter-spacing:-.02em}
+.tag{font-size:12px;color:var(--muted)}
+.roles{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:5px;overflow-x:auto;max-width:100%}
+.roles button{border:0;background:transparent;color:var(--ink);padding:9px 14px;border-radius:10px;font-weight:600;white-space:nowrap}
+.roles button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* generic */
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;padding-block:18px}
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel.hot{border:2px solid var(--accent)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.btn{border:0;border-radius:11px;padding:10px 16px;font-weight:600;background:var(--accent);color:var(--accent-ink)}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--surface-2);color:var(--ink)}
+.btn.sun{background:var(--sun);color:var(--sun-ink)}
+.btn.bad{background:var(--bad-soft);color:var(--bad)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{border:0;background:none;color:var(--accent);font-weight:600;padding:0;text-decoration:underline;text-underline-offset:3px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--ink)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.stake{display:inline-flex;align-items:center;border-radius:8px;padding:2px 8px;background:var(--sun);color:var(--sun-ink);font:500 13px var(--f-mono);font-variant-numeric:tabular-nums;transform:rotate(-1.5deg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+label{font-size:13px;font-weight:600;display:flex;flex-direction:column;gap:6px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{min-height:84px;resize:vertical}
+.check{flex-direction:row;align-items:flex-start;gap:10px;font-weight:500}
+.check input{width:auto;margin-top:3px}
+.note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:12px;padding:10px 12px}
+
+/* tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{border:0;background:none;color:var(--muted);padding:10px 14px;font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent)}
+
+/* slots */
+.slots{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.dots{display:flex;gap:5px}
+.dots i{width:18px;height:18px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line)}
+.dots i.on{background:var(--accent);border-color:var(--accent)}
+
+/* candidate cards */
+.cand{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.cand.disclosed{border-color:var(--accent)}
+.code{font:500 12px var(--f-mono);color:var(--muted)}
+.match{font:800 15px var(--f-display);color:var(--accent)}
+.backing{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.avs{display:flex}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 11px var(--f-body);background:var(--accent);color:var(--accent-ink);border:2px solid var(--surface-2);margin-left:-7px}
+.av:first-child{margin-left:0}
+.av.alt{background:var(--sun);color:var(--sun-ink)}
+.av.more{background:var(--ink);color:var(--bg)}
+.backers{display:flex;flex-direction:column;gap:10px}
+.backer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding-top:10px;border-top:1px solid var(--line)}
+.backer .av{margin:0;width:34px;height:34px;border-color:var(--surface)}
+.q{font-size:14px;margin-top:4px}
+
+/* tracker */
+.track{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.track li{display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--muted);min-width:0}
+.track li::before{content:"";height:6px;border-radius:4px;background:var(--surface-2)}
+.track li.done::before{background:var(--accent)}
+.track li.now::before{background:var(--sun)}
+.track li.now{color:var(--ink);font-weight:600}
+@media (max-width:520px){.track li span{display:none}.track li.now span{display:block;grid-column:1/-1}}
+
+/* money table */
+.money{width:100%;border-collapse:collapse;font-size:14px}
+.money td{padding:7px 0;border-bottom:1px solid var(--line)}
+.money td:last-child{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.money tr.total td{font-weight:600;border-bottom:0}
+
+/* backer flow */
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:5px;border-radius:4px;background:var(--surface-2)}
+.steps i.on{background:var(--accent)}
+.li-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#0A66C2;color:#fff;border:0;border-radius:11px;padding:12px;font-weight:600}
+.li-btn b{background:#fff;color:#0A66C2;border-radius:4px;padding:0 5px;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile b{display:block;font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;margin-top:4px}
+.person{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;padding-block:12px;border-top:1px solid var(--line)}
+.person:first-of-type{border-top:0}
+.person .av{margin:0;width:40px;height:40px;font-size:13px;border-color:var(--surface)}
+
+/* feed */
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.feed li{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:10px;align-items:baseline;font-size:13px}
+.feed li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);transform:translateY(-1px)}
+.feed li.old::before{background:var(--line)}
+
+/* how */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:860px){.cols{grid-template-columns:minmax(0,1fr)}}
+.ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.anon{border:2px dashed var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding-block:28px 24px;color:var(--muted);font-size:13px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:no-preference){.cand,.panel{animation:rise .25s ease-out}@keyframes rise{from{transform:translateY(4px)}to{transform:none}}}
+</style>
+
+</head>
+<body>
+<header class="top wrap">
+  <div class="brand"><div class="mark">₪</div><div><div class="word">Backed</div><div class="tag">Hiring with skin in the game · demo</div></div></div>
+  <nav class="roles" id="roles" aria-label="View as"></nav>
+</header>
+<main id="app" class="wrap"></main>
+<footer class="foot wrap"><span>Clickable demo. All people and companies are fictional.</span><button class="link" data-act="reset">Reset demo</button></footer>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+const STAGES=['Intro requested','Approved','Interviewing','Offer','Hired','Day 90'];
+const PLEDGE=500, FEE_RATE=.10, POOL_SHARE=.25, CAND_BONUS=2000, SLOTS=5, BACK_CAP=5;
+const ROLES=[['company','Company'],['candidate','Candidate'],['backer','Backer'],['how','How it works']];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ils=n=>'₪'+Math.round(n).toLocaleString('en-US');
+const ini=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const B=(n,r,t,q,paid=true)=>({n,r,t,q,paid});
+
+function seed(){return{
+  role:'company', ctab:'matches', open:{'B-0912':true}, preview:false, toast:'',
+  cands:[
+    {id:'B-2741',headline:'Partnerships lead · Fintech',yrs:8,salary:'₪370k–410k',match:94,
+     skills:['Bank & payment partnerships','Deal structuring','EU + LATAM markets','Hebrew · English · Spanish'],
+     name:'Noa Levi',current:'Head of Partnerships, Orbit Payments',
+     backers:[
+      B('Daniel Mizrahi','Former manager','VP Business Development, Orbit Payments','Closed our two biggest bank partnerships. I would hire her again tomorrow.'),
+      B('Maya Ben-David','Former client','COO, Kestrel Bank','Prepared, fair and fast. The partner you want across the table.'),
+      B('Tamar Golan','Former manager','CEO, Nimbus Data','Built our partner program from zero to 30% of revenue in two years.'),
+      B('Ori Shapira','Colleague','Product Lead, Orbit Payments','Turns messy partner requests into clear product requirements.'),
+      B('Eitan Rosen','Mentee','BD Manager, Flowstack','Taught me how to negotiate hard without burning bridges.')],
+     intro:null},
+    {id:'B-0912',headline:'Channel sales lead · Cybersecurity',yrs:5,salary:'₪340k–380k',match:88,
+     skills:['Channel programs','MSSP partners','Enterprise sales'],
+     name:'Itay Peretz',current:'Channel Manager, Sentinel Grid',
+     backers:[B('Hila Avraham','Former manager','VP Sales, Sentinel Grid','Doubled channel revenue in 18 months.'),B('Yoni Katz','Former client','CTO, Shieldware','Our most responsive vendor contact by far.'),B('Dana Erez','Colleague','Sales Engineer, Sentinel Grid','Knows the product as well as the engineers do.'),B('Ron Bar','Former manager','CRO, Vantix','Builds partner trust quickly and keeps it.'),B('Michal Sasson','Colleague','Marketing Lead, Sentinel Grid','Every co-marketing launch with him landed on time.'),B('Asaf Levi','Mentee','SDR Team Lead, Vantix','The best coach I have had.'),B('Nir Oren','Former client','Head of IT, Galil Logistics','Solved problems before we noticed them.')],
+     intro:{status:'approved',stage:2,salary:360000,start:'2026-12-01',outcome:null}},
+    {id:'B-1189',headline:'BD manager · Adtech',yrs:6,salary:'₪320k–360k',match:85,
+     skills:['Publisher partnerships','Revenue share deals','Mobile'],
+     name:'Rotem Azulay',current:'BD Manager, Pixelline',
+     backers:[B('Gal Navon','Former manager','Director of Supply, Pixelline','Opened three new markets on her own.'),B('Keren Levy','Former client','Head of Monetization, Playrise','Fair negotiator with a long memory for details.'),B('Omer Dagan','Colleague','Account Manager, Pixelline','Always the first to help a new hire.'),B('Liat Ziv','Former manager','COO, Adwave','Consistently beat targets without cutting corners.')],
+     intro:null},
+    {id:'B-3307',headline:'Strategic alliances · B2B SaaS',yrs:10,salary:'₪400k–450k',match:81,
+     skills:['Cloud marketplaces','Alliances','Co-selling'],
+     name:'Gil Harari',current:'Alliances Director, Cloudrift',
+     backers:[B('Shai Mor','Former manager','SVP Partnerships, Cloudrift','Ran our AWS and Azure relationships end to end.'),B('Neta Paz','Colleague','Solutions Architect, Cloudrift','Great at aligning engineering and partners.')],
+     intro:null},
+    {id:'B-4420',headline:'Revenue partnerships · E-commerce',yrs:7,salary:'₪350k–390k',match:77,
+     skills:['Marketplace partnerships','Affiliate programs','Analytics'],
+     name:'Lior Dahan',current:'Partnerships Manager, Basketly',backers:[],intro:null}
+  ],
+  invites:['amir.k@gmail.com'],
+  backer:{step:0,done:false,name:'',title:'',rel:'Colleague',text:'',charity:'Women in tech scholarship fund',consent:false},
+  feed:[
+    {to:'company',t:'Head of Partnerships went live. 5 matching profiles found.',ago:'2d'},
+    {to:'company',t:'Itay Peretz approved your intro. Identity and backers unlocked.',ago:'1d'},
+    {to:'candidate',t:'Maya Ben-David backed you.',ago:'3d'},
+    {to:'candidate',t:'Your profile appeared in 4 company searches this week.',ago:'1d'},
+    {to:'backer',t:'Amit Rosenberg passed day 45 at his new job.',ago:'2d'}
+  ]
+}}
+let S=seed();
+const noa=()=>S.cands[0];
+const slotsUsed=()=>S.cands.filter(c=>c.intro&&['pending','approved'].includes(c.intro.status)&&!c.intro.outcome).length;
+const push=(to,t)=>S.feed.unshift({to,t,ago:'now'});
+function money(salary,paid){const fee=salary*FEE_RATE,pool=fee*POOL_SHARE,platform=fee-pool-CAND_BONUS;return{fee,pool,platform,per:paid?pool/paid:0}}
+function addDays(d,n){const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
+
+/* ---------- shared pieces ---------- */
+function tracker(i){return `<ol class="track" aria-label="Process stage">${STAGES.map((s,k)=>`<li class="${k<i.stage?'done':k===i.stage?'now':''}"><span>${s}</span></li>`).join('')}</ol>`}
+function relCode(r){return r.includes('manager')?'M':r.includes('client')?'C':r.includes('Mentee')?'T':'P'}
+function backingStrip(c,disclosed){
+  const n=c.backers.length;
+  if(!n) return `<div class="backing"><span class="small muted">No backers yet. Unbacked profiles rank lower.</span></div>`;
+  const mgr=c.backers.filter(b=>b.r.includes('manager')).length, cl=c.backers.filter(b=>b.r.includes('client')).length;
+  const avs=c.backers.slice(0,5).map((b,k)=>`<span class="av ${k%2?'alt':''}" title="${esc(disclosed?b.n:b.r)}">${disclosed?ini(b.n):relCode(b.r)}</span>`).join('')+(n>5?`<span class="av more">+${n-5}</span>`:'');
+  const bits=[mgr&&`${mgr} former manager${mgr>1?'s':''}`,cl&&`${cl} client${cl>1?'s':''}`].filter(Boolean).join(' · ');
+  return `<div class="backing"><div class="avs">${avs}</div><div class="small"><b>${n} backers</b> <span class="stake">${ils(n*PLEDGE)}</span> pledged<div class="muted">${bits||'Peers and mentees'}</div></div></div>`;
+}
+function backerList(list,showPay){return `<div class="backers">${list.map(b=>`<div class="backer"><span class="av">${ini(b.n)}</span><div><b>${esc(b.n)}</b> <span class="muted small">· ${esc(b.r)}</span><div class="small muted">${esc(b.t)}</div><p class="q">“${esc(b.q)}”</p></div>${showPay?`<span class="pill ${b.paid?'good':'warn'}">${b.paid?'Funded':'Pledged'}</span>`:''}</div>`).join('')}</div>`}
+function feed(to){const items=S.feed.filter(f=>f.to===to).slice(0,6);return `<div class="panel"><h2>Activity</h2><ul class="feed">${items.map(f=>`<li class="${f.ago==='now'?'':'old'}"><span>${esc(f.t)}</span><span class="muted mono small">${f.ago}</span></li>`).join('')}</ul></div>`}
+
+/* ---------- company ---------- */
+function vCompany(){
+  const used=slotsUsed(), inPipe=S.cands.filter(c=>c.intro&&c.intro.status!=='declined');
+  const dots=Array.from({length:SLOTS},(_,k)=>`<i class="${k<used?'on':''}"></i>`).join('');
+  const tabs=[['matches',`Matches (${S.cands.length})`],['pipeline',`Pipeline (${inPipe.length})`],['terms','Role & terms']];
+  let body='';
+  if(S.ctab==='matches') body=`<div class="grid"><div class="stack">${S.cands.map(cCard).join('')}</div><div class="stack">
+     <div class="panel"><h2>How matches work</h2><p class="small muted">Profiles stay anonymous. You see experience, skills, salary range and how strongly people back them. Name, employer and backers unlock only after the candidate approves your intro.</p></div>${feed('company')}</div></div>`;
+  if(S.ctab==='pipeline') body=`<div class="stack">${inPipe.length?inPipe.map(pCard).join(''):`<div class="panel"><h2>No processes yet</h2><p class="muted">Request an intro from the Matches tab to start one.</p></div>`}</div>`;
+  if(S.ctab==='terms') body=`<div class="grid"><div class="panel"><p class="eyebrow">Job description</p><h2>Head of Partnerships</h2>
+     <p>Lumen Pay is a Series B payments company. You will own bank and PSP partnerships across Europe, build the partner team from 2 to 6 people, and report to the CRO.</p>
+     <div class="chips">${['8+ years partnerships','Fintech or payments','Deal structuring','Team leadership','English fluency'].map(s=>`<span class="chip">${s}</span>`).join('')}</div>
+     <p class="small muted">Tel Aviv · Hybrid · ₪380k–420k base</p></div>
+     <div class="panel"><h2>Your terms</h2><table class="money"><tbody>
+     <tr><td>Fee</td><td>10% of base</td></tr><tr><td>When you pay</td><td>Day 90</td></tr><tr><td>Intro slots per role</td><td>5</td></tr><tr><td>Auto-close if no update</td><td>30 days</td></tr><tr><td>Ownership window</td><td>12 months</td></tr></tbody></table>
+     <p class="note">If the hire leaves before day 90 you pay nothing and get a free replacement search. Hiring someone you met here within 12 months, by any route, still counts as a hire.</p></div></div>`;
+  return `<section class="head"><div><p class="eyebrow">Company · Lumen Pay</p><h1>Head of Partnerships</h1><p class="sub">Tel Aviv · Hybrid · ₪380k–420k · posted 2 days ago</p></div>
+    <div class="slots"><span class="eyebrow">Intro slots</span><div class="dots">${dots}</div><span class="small"><b>${used} of ${SLOTS}</b> in use</span></div></section>
+    <nav class="tabs">${tabs.map(([k,l])=>`<button data-act="ctab" data-v="${k}" aria-pressed="${S.ctab===k}">${l}</button>`).join('')}</nav>${body}`;
+}
+function cCard(c){
+  const i=c.intro, disc=i&&i.status==='approved';
+  let act='';
+  if(!i||i.status==='declined'||i.status==='closed'){
+    act= i?.status==='declined'?`<span class="pill bad">Candidate declined</span>`: i?.status==='closed'?`<span class="pill">Process closed</span>`:
+      `<button class="btn sm" data-act="request" data-id="${c.id}" ${slotsUsed()>=SLOTS?'disabled':''}>Request intro</button><span class="small muted">Uses 1 slot</span>`;
+  } else if(i.status==='pending'){
+    act=`<span class="pill warn">Waiting for candidate approval</span>${c.id==='B-2741'?`<button class="link small" data-act="role" data-v="candidate">Approve as Noa →</button>`:''}`;
+  } else {
+    act=`<span class="pill acc">${i.outcome?(i.outcome==='stayed'?'Hired · passed day 90':'Left before day 90'):STAGES[i.stage]}</span><button class="link small" data-act="toggle" data-id="${c.id}">${S.open[c.id]?'Hide backers':'See backers'}</button><button class="link small" data-act="ctab" data-v="pipeline">Open in pipeline</button>`;
+  }
+  return `<article class="cand ${disc?'disclosed':''}">
+    <div class="row between"><span class="code">${c.id}${disc?' · disclosed':' · anonymous'}</span><span class="match">${c.match}% match</span></div>
+    <div><h3>${disc?esc(c.name):esc(c.headline)}</h3><p class="small muted">${disc?esc(c.current):`${c.yrs} years · current employer hidden`} · <span class="mono">${c.salary}</span></p></div>
+    <div class="chips">${c.skills.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div>
+    ${backingStrip(c,disc)}
+    ${disc&&S.open[c.id]?backerList(c.backers,true):''}
+    <div class="row">${act}</div></article>`;
+}
+function pCard(c){
+  const i=c.intro, disc=i.status==='approved';
+  const paid=c.backers.filter(b=>b.paid).length, m=money(i.salary,paid);
+  let ctl='';
+  if(i.status==='pending') ctl=`<p class="small muted">The candidate has 5 days to approve. Their identity stays hidden until then.</p>`;
+  else if(i.status==='declined') ctl=`<p class="small muted">Declined. Your slot is free again.</p>`;
+  else if(i.status==='closed') ctl=`<p class="small muted">Closed without a hire. No fee. The 12-month ownership window still applies.</p>`;
+  else if(i.stage===1) ctl=`<div class="row"><button class="btn sm" data-act="advance" data-id="${c.id}">Start interviewing</button><button class="btn sm ghost" data-act="close" data-id="${c.id}">Close without hiring</button></div>`;
+  else if(i.stage===2) ctl=`<div class="row"><button class="btn sm" data-act="advance" data-id="${c.id}">Send offer</button><button class="btn sm ghost" data-act="close" data-id="${c.id}">Close without hiring</button></div><p class="small muted">Last update today. Processes with no update for 30 days close automatically.</p>`;
+  else if(i.stage===3) ctl=`<div class="row" style="align-items:flex-end"><label style="flex:1;min-width:150px">Annual base salary (₪)<input id="sal-${c.id}" type="number" step="5000" value="${i.salary}"></label><label style="flex:1;min-width:150px">Start date<input id="start-${c.id}" type="date" value="${i.start}"></label><button class="btn sm" data-act="hire" data-id="${c.id}">Mark as hired</button></div><p class="small muted">Backers are asked to fund their pledge once you mark the hire.</p>`;
+  else if(i.stage===4) ctl=`<p class="small">Started <b>${fmtDate(i.start)}</b>. Day 90 check on <b>${addDays(i.start,90)}</b>. Fee due then: <span class="stake">${ils(m.fee)}</span></p>
+     <div class="row"><span class="small muted">Demo: jump to day 90</span><button class="btn sm" data-act="outcome" data-v="stayed" data-id="${c.id}">Still employed</button><button class="btn sm bad" data-act="outcome" data-v="left" data-id="${c.id}">Left before day 90</button></div>`;
+  else if(i.outcome==='stayed') ctl=`<table class="money"><tbody><tr><td>Placement fee (10% of ${ils(i.salary)})</td><td>${ils(m.fee)}</td></tr><tr><td>→ Backer pool, split across ${paid} funded backers</td><td>${ils(m.pool)}</td></tr><tr><td>→ Candidate bonus</td><td>${ils(CAND_BONUS)}</td></tr><tr><td>→ Backed</td><td>${ils(m.platform)}</td></tr><tr class="total"><td>Invoice to Lumen Pay</td><td>${ils(m.fee)}</td></tr></tbody></table>`;
+  else ctl=`<p class="note">No fee. The free replacement search is open, and your slot is back. Backer pledges go to the charities they chose.</p>`;
+  return `<article class="panel ${i.stage===4?'hot':''}"><div class="row between"><div><span class="code">${c.id}</span><h3>${disc?esc(c.name):esc(c.headline)}</h3><p class="small muted">${disc?esc(c.current):'Identity hidden until approval'}</p></div>${disc?`<span class="small">${c.backers.length} backers</span>`:''}</div>${i.status==='approved'?tracker(i):''}${ctl}</article>`;
+}
+
+/* ---------- candidate ---------- */
+function vCandidate(){
+  const c=noa(), i=c.intro, yael=c.backers.find(b=>b.self);
+  let intro;
+  if(!i) intro=`<div class="panel"><h2>Intro requests</h2><p class="muted">None yet. When a company wants to meet you, you decide whether to reveal your name.</p><div class="row"><button class="btn sm ghost" data-act="request" data-id="B-2741">Simulate a request</button><span class="small muted">or request one from the Company view</span></div></div>`;
+  else if(i.status==='pending') intro=`<div class="panel hot"><p class="eyebrow">New intro request</p><h2>Lumen Pay · Head of Partnerships</h2><p class="small muted">Series B payments · Tel Aviv · Hybrid · <span class="mono">₪380k–420k</span></p><p>Approving reveals your name, current role and your backers to Lumen Pay only.</p><div class="row"><button class="btn" data-act="approve" data-id="B-2741">Approve intro</button><button class="btn ghost" data-act="decline" data-id="B-2741">Decline</button></div></div>`;
+  else if(i.status==='declined') intro=`<div class="panel"><h2>Intro requests</h2><p class="muted">You declined Lumen Pay. They never saw your name.</p></div>`;
+  else if(i.status==='closed') intro=`<div class="panel"><h2>Lumen Pay</h2><p class="muted">The company closed this process. Your backers' pledges stay active for the next one.</p></div>`;
+  else intro=`<div class="panel ${i.stage===4?'hot':''}"><p class="eyebrow">Active process</p><h2>Lumen Pay · Head of Partnerships</h2>${tracker(i)}
+    <p class="small">${i.outcome==='stayed'?`You passed day 90. Your <span class="stake">${ils(CAND_BONUS)}</span> bonus is on its way, and your backers have been paid.`:i.outcome==='left'?'This hire ended before day 90. Your profile is live again.':i.stage===4?`Starting ${fmtDate(i.start)}. Pass day 90 and you get a <span class="stake">${ils(CAND_BONUS)}</span> bonus.`:'The company updates each stage. You can flag anything that looks wrong.'}</p>
+    ${i.stage<4?`<button class="link small" data-act="role" data-v="company">Move the process forward as the company →</button>`:''}</div>`;
+  const profile=S.preview?`<div class="anon"><span class="code">B-2741 · what companies see</span><h3>${c.headline}</h3><p class="small muted">${c.yrs} years · current employer hidden · <span class="mono">${c.salary}</span></p><div class="chips">${c.skills.map(s=>`<span class="chip">${s}</span>`).join('')}</div>${backingStrip(c,false)}</div>`
+   :`<div><h3>${c.name}</h3><p class="small muted">${c.current} · Tel Aviv</p></div><div class="chips">${c.skills.map(s=>`<span class="chip">${s}</span>`).join('')}</div><p class="small">Salary expectation <span class="mono">${c.salary}</span> · Open to hybrid · Hidden from Orbit Payments</p>`;
+  return `<section class="head"><div><p class="eyebrow">Candidate</p><h1>Hi Noa.</h1><p class="sub">${c.backers.length} people have put money on you.</p></div>
+   <div class="row"><span class="small muted">Profile view</span><div class="roles"><button data-act="preview" data-v="0" aria-pressed="${!S.preview}">Mine</button><button data-act="preview" data-v="1" aria-pressed="${S.preview}">As companies see it</button></div></div></section>
+   <div class="grid"><div class="stack">${intro}<div class="panel"><div class="row between"><h2>Your profile</h2><span class="pill good">Live · anonymous</span></div>${profile}</div>${feed('candidate')}</div>
+   <div class="stack"><div class="panel"><h2>Your backers</h2>${backingStrip(c,true)}
+    <label>Your invite link<div class="row" style="flex-wrap:nowrap"><input id="invlink" readonly value="backed.app/b/noa-7Kq2"><button class="btn sm" data-act="copy">Copy</button></div></label>
+    <p class="small muted">Share it on WhatsApp or LinkedIn. Backers need a professional relationship with you. Family doesn't count.</p>
+    <label>Or invite by email<div class="row" style="flex-wrap:nowrap"><input id="invmail" type="email" placeholder="name@company.com"><button class="btn sm ghost" data-act="invite">Send</button></div></label>
+    ${S.invites.map(e=>`<div class="row between small"><span>${esc(e)}</span><span class="pill">Invited · not yet backed</span></div>`).join('')}
+    ${!yael?`<div class="note">Yael Cohen opened your link. <button class="link" data-act="role" data-v="backer">See her side →</button></div>`:''}
+    ${backerList(c.backers,true)}</div></div></div>`;
+}
+
+/* ---------- backer ---------- */
+function vBacker(){
+  const b=S.backer, c=noa(), i=c.intro;
+  if(!b.done){
+    const closed=i&&i.status==='approved'&&i.stage>=3&&!i.outcome;
+    let step='';
+    if(closed) step=`<p class="note">Noa is in the final stage of a process, so new backing is paused until it ends. This stops people from backing once a hire looks certain.</p>`;
+    else if(b.step===0) step=`<p>Takes about a minute. <b>You don't pay anything today.</b></p><button class="li-btn" data-act="signin"><b>in</b> Continue with LinkedIn</button><p class="small muted">We use LinkedIn to confirm you're a real person and to check that you worked with Noa.</p>`;
+    else if(b.step===1) step=`<p class="small">Signed in as <b>${b.name}</b>, ${b.title}</p>
+      <label>How do you know Noa?<select id="rel" data-bind="rel">${['Former manager','Colleague','Former client','Mentor','Mentee'].map(r=>`<option ${b.rel===r?'selected':''}>${r}</option>`).join('')}</select></label>
+      <label>One or two sentences companies will read<textarea id="endorse" data-bind="text" placeholder="What did Noa do that you'd vouch for?">${esc(b.text)}</textarea></label>
+      <button class="btn" data-act="bnext">Continue</button>`;
+    else step=`<div class="row between"><span>Your pledge</span><span class="stake" style="font-size:18px">${ils(PLEDGE)}</span></div>
+      <table class="money"><tbody><tr><td>Today</td><td>₪0</td></tr><tr><td>If Noa is hired</td><td>Pay ${ils(PLEDGE)} within 48h</td></tr><tr><td>If she stays 90 days</td><td>${ils(PLEDGE)} back + reward</td></tr><tr><td>If she leaves early</td><td>${ils(PLEDGE)} to charity</td></tr></tbody></table>
+      <label>Charity if it doesn't work out<select id="charity" data-bind="charity">${['Women in tech scholarship fund','Youth at risk programs','Food bank network'].map(r=>`<option ${b.charity===r?'selected':''}>${r}</option>`).join('')}</select></label>
+      <label class="check"><input type="checkbox" id="consent" data-bind="consent" ${b.consent?'checked':''}> Show my name, title and endorsement to companies Noa approves.</label>
+      <button class="btn sun" data-act="pledge">Back Noa</button>`;
+    return `<section class="head"><div><p class="eyebrow">Backer invite</p><h1>Noa Levi asked you to back her.</h1><p class="sub">Put your name and a ${ils(PLEDGE)} pledge behind her next job.</p></div></section>
+     <div class="grid"><div class="panel hot"><div class="steps">${[0,1,2].map(k=>`<i class="${k<=b.step?'on':''}"></i>`).join('')}</div><h2>${['Confirm who you are','Say why you back her','Make your pledge'][b.step]}</h2>${step}</div>
+     <div class="stack"><div class="panel"><h2>What you're signing up for</h2><ol class="ol small"><li>Companies searching for Noa's skills see that people like you vouch for her.</li><li>You get notified when she starts a process. You see the stage, never the company.</li><li>You pay your pledge only if she's hired.</li><li>If she passes 90 days, you get your money back plus a share of the hiring fee.</li></ol></div>
+     <div class="panel"><p class="small muted">You can back up to ${BACK_CAP} people at a time. Companies can see how many people you back, so backing everyone weakens your signal.</p></div></div></div>`;
+  }
+  const me=c.backers.find(x=>x.self), paid=c.backers.filter(x=>x.paid).length;
+  let st,act='',pill;
+  if(!i||['declined','closed'].includes(i.status)){st='Profile live. No active process.';pill='<span class="pill">Waiting</span>'}
+  else if(i.status==='pending'){st='A company asked for an intro. Noa is deciding.';pill='<span class="pill warn">Intro requested</span>'}
+  else if(i.outcome==='stayed'){const m=money(i.salary,paid);st=me.paid?`Passed day 90. You get ${ils(PLEDGE)} back plus a ${ils(m.per)} reward.`:'Passed day 90. Your pledge was never funded, so there is no reward.';pill=`<span class="pill good">${me.paid?'+'+ils(m.per):'Unfunded'}</span>`}
+  else if(i.outcome==='left'){st=me.paid?`Left before day 90. Your ${ils(PLEDGE)} went to ${b.charity}.`:'Left before day 90.';pill='<span class="pill bad">Ended</span>'}
+  else if(i.stage>=4){st=`Hired at a payments company. Starts ${fmtDate(i.start)}.`;pill='<span class="pill good">Hired</span>';
+    act=me.paid?`<p class="small muted">Your ${ils(PLEDGE)} is held until day 90.</p>`:`<div class="note"><b>Fund your pledge within 48 hours</b> to stay eligible for the reward.<div class="row" style="margin-top:8px"><button class="btn sun sm" data-act="pay">Pay ${ils(PLEDGE)}</button><span class="small">Card or Bit</span></div></div>`}
+  else {st=`In process: ${STAGES[i.stage].toLowerCase()} stage.`;pill=`<span class="pill acc">${STAGES[i.stage]}</span>`}
+  const held=(me.paid&&i&&!i.outcome?PLEDGE:0)+PLEDGE;
+  return `<section class="head"><div><p class="eyebrow">Backer</p><h1>Hi ${b.name.split(' ')[0]}.</h1><p class="sub">${b.title}</p></div></section>
+   <div class="tiles"><div class="tile"><span class="eyebrow">Backing</span><b>3 of ${BACK_CAP}</b></div><div class="tile"><span class="eyebrow">Pledged</span><b>${ils(3*PLEDGE)}</b></div><div class="tile"><span class="eyebrow">Funded &amp; held</span><b>${ils(held)}</b></div><div class="tile"><span class="eyebrow">Earned so far</span><b>${i?.outcome==='stayed'&&me.paid?ils(money(i.salary,paid).per):'₪0'}</b></div></div>
+   <div class="grid" style="margin-top:18px"><div class="panel"><h2>People you back</h2>
+    <div class="person"><span class="av">NL</span><div class="stack" style="gap:6px"><div class="row between"><b>Noa Levi</b>${pill}</div><p class="small">${st}</p>${i&&i.status==='approved'?tracker(i):''}${act}</div></div>
+    <div class="person"><span class="av alt">AR</span><div class="stack" style="gap:6px"><div class="row between"><b>Amit Rosenberg</b><span class="pill good">Day 47 of 90</span></div><p class="small">Hired as Product Marketing Manager. Your ${ils(PLEDGE)} is held. Expected reward about <span class="mono">₪1,450</span>.</p></div></div>
+    <div class="person"><span class="av">SK</span><div class="stack" style="gap:6px"><div class="row between"><b>Shir Katz</b><span class="pill">Waiting</span></div><p class="small">Profile live. Viewed by 2 companies this week.</p></div></div>
+   </div><div class="stack">${feed('backer')}<div class="panel"><p class="small muted">Backers see a process stage, never the company name. That keeps the candidate's search confidential.</p></div></div></div>`;
+}
+
+/* ---------- how ---------- */
+function vHow(){
+  const m=money(400000,6);
+  return `<section class="head"><div><p class="eyebrow">How it works</p><h1>Three sides, one 90-day promise.</h1><p class="sub">Companies pay only for hires that last. Backers earn only when they were right.</p></div></section>
+  <div class="cols">
+   <div class="panel"><p class="eyebrow">Company</p><h2>Hire with proof</h2><ol class="ol small"><li>Post a role.</li><li>Browse anonymous matches ranked by fit and backing.</li><li>Request intros (5 slots per role).</li><li>The candidate approves, and name, employer and backers unlock.</li><li>Interview, offer, mark the hire.</li><li>At day 90, pay 10% of base, or nothing if they left.</li></ol></div>
+   <div class="panel"><p class="eyebrow">Candidate</p><h2>Get backed</h2><ol class="ol small"><li>Create an anonymous profile from your CV.</li><li>Share your invite link with people you worked with.</li><li>Approve or decline each intro request.</li><li>Track every stage of the process.</li><li>Pass day 90 and get a ${ils(CAND_BONUS)} bonus.</li></ol></div>
+   <div class="panel"><p class="eyebrow">Backer</p><h2>Vouch in a minute</h2><ol class="ol small"><li>Open the candidate's link.</li><li>Sign in with LinkedIn.</li><li>Write one or two sentences.</li><li>Pledge ${ils(PLEDGE)}. Nothing is charged today.</li><li>Fund the pledge within 48h if they're hired.</li><li>Day 90: money back plus a reward, or it goes to charity.</li></ol></div>
+  </div>
+  <div class="grid" style="margin-top:18px">
+   <div class="panel"><h2>Where the money goes</h2><p class="small muted">Example: ₪400,000 base salary, 6 funded backers, hire passes day 90.</p>
+    <table class="money"><tbody><tr><td>Placement fee (10%)</td><td>${ils(m.fee)}</td></tr><tr><td>Backer pool (25% of fee)</td><td>${ils(m.pool)}</td></tr><tr><td>→ per backer, on top of their ${ils(PLEDGE)} back</td><td>${ils(m.per)}</td></tr><tr><td>Candidate bonus</td><td>${ils(CAND_BONUS)}</td></tr><tr class="total"><td>Backed keeps</td><td>${ils(m.platform)}</td></tr></tbody></table>
+    <p class="note">An agency would charge ${ils(400000*.2)} at 20%, usually at hire.</p></div>
+   <div class="panel"><h2>Open decisions</h2><ol class="ol small"><li>Fixed ${ils(PLEDGE)} pledge for everyone, or a few tiers?</li><li>Should the fee cover base salary only, or bonus and equity too?</li><li>If a hire is laid off before day 90, do backers still lose their pledge?</li><li>Do companies pay a small refundable deposit per intro to stop tire-kicking?</li><li>Does the candidate bonus come from the fee, or is it removed to keep the model simple?</li><li>Legal review: confirm pledges count as a referral program, not a wager.</li></ol></div>
+  </div>`;
+}
+
+/* ---------- render & actions ---------- */
+function render(){
+  document.getElementById('roles').innerHTML=ROLES.map(([k,l])=>`<button data-act="role" data-v="${k}" aria-pressed="${S.role===k}">${l}</button>`).join('');
+  document.getElementById('app').innerHTML={company:vCompany,candidate:vCandidate,backer:vBacker,how:vHow}[S.role]();
+}
+let tt;function toast(t){const el=document.getElementById('toast');el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,2600)}
+function setRole(r){S.role=r;try{history.replaceState(null,'','#'+r)}catch(e){location.hash=r}render();window.scrollTo(0,0)}
+
+document.addEventListener('input',e=>{const k=e.target.dataset.bind;if(k)S.backer[k]=e.target.type==='checkbox'?e.target.checked:e.target.value});
+document.addEventListener('change',e=>{const k=e.target.dataset.bind;if(k)S.backer[k]=e.target.type==='checkbox'?e.target.checked:e.target.value});
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const a=el.dataset.act,id=el.dataset.id,v=el.dataset.v,c=S.cands.find(x=>x.id===id);
+  switch(a){
+    case 'role':return setRole(v);
+    case 'ctab':S.ctab=v;break;
+    case 'toggle':S.open[id]=!S.open[id];break;
+    case 'preview':S.preview=v==='1';break;
+    case 'request':
+      if(slotsUsed()>=SLOTS){toast('All 5 intro slots are in use. Close a process to free one.');return}
+      c.intro={status:'pending',stage:0,salary:400000,start:'2026-12-01',outcome:null};
+      push('company',`Intro requested for ${c.id}. Waiting for approval.`);
+      if(id==='B-2741')push('candidate','Lumen Pay asked for an intro for Head of Partnerships.');
+      toast('Intro requested. The candidate decides whether to reveal their name.');break;
+    case 'approve':c.intro.status='approved';c.intro.stage=1;S.open[id]=true;
+      push('company','Noa Levi approved your intro. Identity and backers unlocked.');push('candidate','You approved the intro to Lumen Pay.');push('backer','Noa started a process with a company.');
+      toast('Approved. Lumen Pay can now see your name and backers.');break;
+    case 'decline':c.intro.status='declined';push('company',`${c.id} declined the intro. Slot freed.`);toast('Declined. Lumen Pay never saw your name.');break;
+    case 'advance':c.intro.stage++;push('company',`${c.name}: moved to ${STAGES[c.intro.stage]}.`);if(id==='B-2741'){push('candidate',`Lumen Pay moved you to ${STAGES[c.intro.stage]}.`);push('backer',`Noa moved to the ${STAGES[c.intro.stage].toLowerCase()} stage.`)}break;
+    case 'hire':{const s=+document.getElementById('sal-'+id).value,d=document.getElementById('start-'+id).value;
+      if(!s||s<50000){toast('Enter the annual base salary in shekels.');return}if(!d){toast('Pick a start date.');return}
+      c.intro.salary=s;c.intro.start=d;c.intro.stage=4;push('company',`${c.name} hired. Day 90 check on ${addDays(d,90)}.`);
+      if(id==='B-2741'){push('candidate','You were hired by Lumen Pay. Congratulations!');push('backer','Noa was hired! Fund your pledge within 48 hours.')}
+      toast('Hire recorded. Backers have been asked to fund their pledges.');break}
+    case 'outcome':c.intro.stage=5;c.intro.outcome=v;
+      if(v==='stayed'){push('company',`${c.name} passed day 90. Invoice issued.`);if(id==='B-2741'){push('candidate','You passed day 90. Bonus on its way.');push('backer','Noa passed day 90. Your reward is on its way.')}toast('Day 90 confirmed. Fee invoiced and backers paid.')}
+      else{push('company',`${c.name} left before day 90. No fee.`);if(id==='B-2741'){push('candidate','The role ended before day 90. Your profile is live again.');push('backer','Noa left before day 90. Funded pledges went to charity.')}toast('No fee. Pledges go to charity and the replacement search is open.')}break;
+    case 'close':c.intro.status='closed';push('company',`Closed ${c.name||c.id} without hiring. Slot freed.`);toast('Closed. No fee. Slot freed.');break;
+    case 'copy':{const inp=document.getElementById('invlink');const ok=()=>toast('Invite link copied.');
+      try{navigator.clipboard.writeText('https://'+inp.value).then(ok,()=>{inp.select();toast('Press Ctrl+C or long-press to copy.')})}catch(err){inp.select();toast('Press Ctrl+C or long-press to copy.')}return}
+    case 'invite':{const m=document.getElementById('invmail').value.trim();if(!/^\S+@\S+\.\S+$/.test(m)){toast('Enter a valid email address.');return}S.invites.push(m);toast('Invite sent to '+m);break}
+    case 'signin':Object.assign(S.backer,{step:1,name:'Yael Cohen',title:'Senior Account Executive, Kestrel Bank'});break;
+    case 'bnext':if(S.backer.text.trim().length<15){toast('Write at least a sentence about why you back Noa.');return}S.backer.step=2;break;
+    case 'pledge':if(!S.backer.consent){toast('Tick the box so companies can see your name.');return}
+      noa().backers.push({n:S.backer.name,r:S.backer.rel,t:S.backer.title,q:S.backer.text.trim(),paid:false,self:true});S.backer.done=true;
+      push('candidate',`${S.backer.name} backed you.`);push('backer','You backed Noa Levi. Nothing charged.');toast('You back Noa. Nothing was charged.');break;
+    case 'pay':noa().backers.find(x=>x.self).paid=true;push('backer',`Pledge funded: ${ils(PLEDGE)} held until day 90.`);push('candidate',`${S.backer.name} funded her pledge.`);toast(`${ils(PLEDGE)} paid and held until day 90.`);break;
+    case 'reset':S=seed();toast('Demo reset.');break;
+  }
+  render();
+});
+const h=location.hash.slice(1);if(ROLES.some(r=>r[0]===h))S.role=h;
+render();
+</script>
+
+</body>
+</html>
