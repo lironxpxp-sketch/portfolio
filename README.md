@@ -100,3 +100,22 @@ Reachlist Builder uses two backend helpers: `companySuggest` (company-name autoc
 Visits are counted with GoatCounter (free, no cookies) at **lironsofer.goatcounter.com**. Sign up at goatcounter.com with the code `lironsofer` to see the dashboard.
 
 Send a company its own link: `https://lironsofer.online/?for=wix` (use dashes for spaces: `?for=check-point`). The page greets "Hi Wix team 👋", the email button gets the subject "Hi Liron (from Wix)", and the open shows up in GoatCounter as `for/wix`. Contact clicks show up as `contact/...`.
+
+## Private family trip page
+
+A family trip page lives in a random folder under `t/`. It isn't linked anywhere and search engines are told to skip it. Its trip details and app code are encrypted; the key is only in the private link (after the `#`), which browsers never send to any server. So this public repo holds nothing readable about the trip, and a visitor without the full link sees "the link isn't complete".
+
+Rebuild after changing the trip in Claude (keep the trip's HTML outside this repo):
+
+    python3 tools/build_trip.py <trip.html> t/<folder> "<the private link>"
+
+Passing the existing link keeps the same key and link. The script refuses to write the page if trip details would appear in plain text.
+
+Works with no setup: ticks, opened tasks and edits are saved on each phone. To share edits and "Arrived" marks between phones:
+
+1. Cloudflare → **Storage & Databases → KV → Create**, name it `trip`.
+2. Your Worker → **Settings → Bindings → Add → KV namespace**: Variable name `TRIP`, namespace `trip`.
+3. Your Worker → **Settings → Variables and Secrets → Add**: Type **Secret**, name `TRIP_TOKEN`, value = the `TRIP_TOKEN` line the build script prints.
+4. Paste the new `worker/worker.js` (Edit code → paste → Deploy).
+
+The Worker only ever stores encrypted trip data.

@@ -16,7 +16,48 @@
  *   HUNTER_API_KEY     (Secret, optional)  key from hunter.io: finds work emails in Reachlist Builder
  *   GOOGLE_CLIENT_ID   (Text, optional)    OAuth client ID: "Sign in with Google" in Reachlist
  *   GMAIL_SEND         (Text, optional)    set to "on" to send straight from Gmail (needs Google's app review for the public)
+ *   TRIP               (KV binding, optional) shared storage for the private family trip page
+ *   TRIP_TOKEN         (Secret, optional)  the trip link's access token (printed by tools/build_trip.py)
  */
+
+// Family trip page: the page encrypts its data with a key that lives only in the
+// secret link, so this Worker stores data it can't read. Access needs the link's token.
+const tripHits = new Map();
+function sameText(a, b) {
+  a = String(a || ""); b = String(b || "");
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < b.length; i++) diff |= (a.charCodeAt(i) || 0) ^ b.charCodeAt(i);
+  return diff === 0 && b.length > 0;
+}
+function tripId(v) { return String(v || "").replace(/[^a-z0-9-]/gi, "").slice(0, 40); }
+async function tripPost(body, env, origin) {
+  if (!env.TRIP || !env.TRIP_TOKEN) return reply(404, { code: "not_configured", message: "Trip storage isn't connected" }, origin);
+  const t = body.tripSave || body.tripProg;
+  if (!t || typeof t !== "object" || !sameText(t.tok, env.TRIP_TOKEN)) return reply(403, { code: "bad_token", message: "Not allowed" }, origin);
+  const id = tripId(t.id);
+  if (!id) return reply(400, { code: "invalid_request", message: "Missing trip id" }, origin);
+  if (body.tripSave) {
+    if (typeof t.enc !== "string" || !t.enc || t.enc.length > 380_000) return reply(400, { code: "invalid_request", message: "Missing trip data" }, origin);
+    const current = (await env.TRIP.get("trip:" + id, "json")) || { rev: 0 };
+    if (Number(t.rev) !== Number(current.rev || 0)) return reply(409, { code: "conflict", message: "Someone saved a newer version", rev: current.rev }, origin);
+    const next = { rev: (current.rev || 0) + 1, enc: t.enc, savedAt: new Date().toISOString() };
+    await env.TRIP.put("trip:" + id, JSON.stringify(next));
+    return reply(200, { rev: next.rev }, origin);
+  }
+  const set = t.set && typeof t.set === "object" ? t.set : null;
+  const keys = set ? Object.keys(set) : [];
+  if (!keys.length || keys.length > 200) return reply(400, { code: "invalid_request", message: "Nothing to save" }, origin);
+  const prog = (await env.TRIP.get("prog:" + id, "json")) || {};
+  for (const k of keys) {
+    const v = set[k];
+    if (k.length > 80 || !/^[AD]:/.test(k)) continue;
+    if (v === null) prog[k] = null;
+    else if (typeof v === "string" && v.length <= 12) prog[k] = v;
+  }
+  if (Object.keys(prog).length > 4000) return reply(413, { code: "too_large", message: "Too many marks" }, origin);
+  await env.TRIP.put("prog:" + id, JSON.stringify(prog));
+  return reply(200, { ok: true }, origin);
+}
 
 const ALLOWED_ORIGINS = [
   "https://lironsofer.online",
@@ -233,6 +274,16 @@ export default {
       return reply(200, { images: !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY), emailFinder: !!env.HUNTER_API_KEY,
         googleClientId: env.GOOGLE_CLIENT_ID || "", gmailSend: env.GMAIL_SEND === "on", models: ["claude", "openai", "gemini"].filter((m) => env[{ claude: "ANTHROPIC_API_KEY", openai: "OPENAI_API_KEY", gemini: "GEMINI_API_KEY" }[m]]) }, origin);
     }
+    // Family trip page: read the shared (encrypted) trip data and progress marks
+    if (request.method === "GET" && new URL(request.url).searchParams.has("trip")) {
+      const u = new URL(request.url);
+      if (!env.TRIP || !env.TRIP_TOKEN) return reply(404, { code: "not_configured", message: "Trip storage isn't connected" }, origin);
+      if (!sameText(u.searchParams.get("tok"), env.TRIP_TOKEN)) return reply(403, { code: "bad_token", message: "Not allowed" }, origin);
+      const id = tripId(u.searchParams.get("trip"));
+      const [stored, prog] = await Promise.all([env.TRIP.get("trip:" + id, "json"), env.TRIP.get("prog:" + id, "json")]);
+      return new Response(JSON.stringify({ rev: stored?.rev || 0, enc: stored?.enc || "", savedAt: stored?.savedAt || "", prog: prog || {} }), {
+        status: 200, headers: { "content-type": "application/json", "cache-control": "no-store", ...cors(origin) } });
+    }
     if (request.method === "GET") {
       const target = new URL(request.url).searchParams.get("img") || "";
       if (!/^https:\/\//i.test(target)) return reply(400, { code: "invalid_request", message: "Missing image" }, origin);
@@ -251,11 +302,17 @@ export default {
 
     const raw = await request.text();
     const isImage = raw.startsWith('{"image"');
-    if (raw.length > (isImage ? 9_000_000 : MAX_BODY_BYTES)) {
+    const isTrip = raw.startsWith('{"tripSave"') || raw.startsWith('{"tripProg"');
+    if (raw.length > (isImage ? 9_000_000 : isTrip ? 400_000 : MAX_BODY_BYTES)) {
       return reply(413, { code: "prompt_too_large", message: "Prompt is too long" }, origin);
     }
 
     const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    if (isTrip) {
+      if (overLimit(ip, tripHits, 300)) return reply(429, { code: "rate_limited", message: "Too many saves. Try again in a few minutes." }, origin);
+      let tb; try { tb = JSON.parse(raw); } catch { return reply(400, { code: "invalid_request", message: "Body must be JSON" }, origin); }
+      return tripPost(tb, env, origin);
+    }
 
     let body;
     try { body = JSON.parse(raw); } catch {
