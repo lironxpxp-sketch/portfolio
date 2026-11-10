@@ -1,6 +1,6 @@
 // Offline helper and notifications for the trip page.
 // The page stays encrypted in the cache; the key lives only on the phone.
-const CACHE = "trip-v2";
+const CACHE = "trip-v3";
 const SHELL = ["./", "../../assets/claude-shim.js?v=9", "./icon-192.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -14,8 +14,10 @@ self.addEventListener("fetch", (e) => {
   const mine = u.origin === location.origin;
   const font = /(^|\.)fonts\.(googleapis|gstatic)\.com$/.test(u.hostname);
   if (!mine && !font) return; // weather, trip sync, Wikipedia and AI always go to the network
+  // Pages and app files: always ask the server for the newest copy (falls back to the saved copy offline)
+  const req = mine ? new Request(e.request, { cache: "no-cache" }) : e.request;
   e.respondWith(
-    fetch(e.request).then((r) => {
+    fetch(req).then((r) => {
       if (r.ok || r.type === "opaque") { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
       return r;
     }).catch(() => caches.match(e.request).then((m) => m || (e.request.mode === "navigate" ? caches.match("./") : undefined)))
