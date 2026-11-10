@@ -50,6 +50,7 @@ page = f'''<!doctype html>
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#0d6857">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="הטיול">
@@ -64,13 +65,22 @@ page = f'''<!doctype html>
 </head>
 <body>
 <div id="app"></div>
-<div class="locked" id="locked" hidden><div><h1>הקישור לא שלם</h1><p>פתחו את הקישור המלא שקיבלתם, כולל כל מה שאחרי הסימן #.</p></div></div>
+<div class="locked" id="locked" hidden><div style="max-width:420px"><h1>הקישור לא שלם</h1><p>פתחו את הקישור המלא שקיבלתם, כולל כל מה שאחרי הסימן #.</p><p style="font-size:15px;opacity:.8">פתחתם מאייקון במסך הבית? הדביקו כאן את הקישור המלא פעם אחת:</p><form id="keyform" style="display:flex;gap:8px"><input id="keyinput" type="url" autocomplete="off" placeholder="https://lironsofer.online/t/…" aria-label="הקישור המלא" style="flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:inherit;direction:ltr"><button style="font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 16px;background:#FFC24B;color:#1A1405">פתיחה</button></form></div></div>
 <script id="trip-sealed" type="application/octet-stream">{sealed}</script>
 <script>
 (function(){{
   function bytes(s){{s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}}
   function hex(buf){{return Array.prototype.map.call(new Uint8Array(buf),function(x){{return ('0'+x.toString(16)).slice(-2);}}).join('');}}
-  function locked(){{document.getElementById('locked').hidden=false;}}
+  function locked(){{
+    document.getElementById('locked').hidden=false;
+    document.getElementById('keyform').addEventListener('submit',function(e){{
+      e.preventDefault();
+      var v=(document.getElementById('keyinput').value||'').trim(), k2=v.indexOf('#')>=0?v.split('#').pop():v;
+      if(!k2) return;
+      try{{ localStorage.setItem('vt-key',k2); }}catch(_){{}}
+      location.replace(location.pathname+'#'+k2); location.reload();
+    }});
+  }}
   var fromLink=(location.hash||'').slice(1), k=fromLink;
   try{{ if(k) localStorage.setItem('vt-key',k); else k=localStorage.getItem('vt-key')||''; }}catch(e){{}}
   if(!k||!window.crypto||!crypto.subtle) return locked();
