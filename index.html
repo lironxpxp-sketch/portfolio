@@ -430,5 +430,110 @@ open to my next challenge ✓</pre>
   setTimeout(play, 350);
 })();
 </script>
+<!-- Personal greeting: shows only at ?for=Mashkiot -->
+<script>
+(function () {
+  var p = new URLSearchParams(location.search);
+  if ((p.get('for') || '').toLowerCase() !== 'mashkiot') return;
+
+  var css = '' +
+  '#mg{position:fixed;inset:0;z-index:9999;overflow-y:auto;background:#0a0c10;color:#e6ebf2;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;padding:48px max(16px,env(safe-area-inset-right,0px)) 56px max(16px,env(safe-area-inset-left,0px));box-sizing:border-box;background-image:radial-gradient(circle at 1px 1px,#1a2029 1px,transparent 0);background-size:22px 22px}' +
+  '#mg *{box-sizing:border-box}' +
+  '#mg .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:22px}' +
+  '#mg .term{background:#11151c;border:1px solid #222a35;border-radius:12px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)}' +
+  '#mg .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid #222a35}' +
+  '#mg .dot{width:11px;height:11px;border-radius:50%}' +
+  '#mg .dot:nth-child(1){background:#ff6b6b}#mg .dot:nth-child(2){background:#ffd166}#mg .dot:nth-child(3){background:#7ee0b5}' +
+  '#mg .path{margin-left:8px;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#8a96a8}' +
+  '#mg .screen{padding:22px 22px 26px;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;min-height:250px}' +
+  '#mg .cmd{font-size:13px;color:#8a96a8;margin-bottom:18px;overflow-wrap:anywhere}#mg .cmd b{color:#7ee0b5;font-weight:600}' +
+  '#mg #mg-msg{font-size:clamp(20px,5vw,28px);line-height:1.45;font-weight:700;white-space:pre-wrap;margin:0;min-height:5.8em;color:#e6ebf2}' +
+  '#mg .hi{color:#ff9ec7}' +
+  '#mg .caret{display:inline-block;width:.55em;height:1.05em;background:#7ee0b5;vertical-align:-.15em;margin-left:2px;animation:mgblink 1s steps(1) infinite}' +
+  '@keyframes mgblink{50%{opacity:0}}' +
+  '#mg .replay{margin-top:14px;background:none;border:0;padding:0;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#8a96a8;cursor:pointer}#mg .replay:hover{color:#7ee0b5}' +
+  '#mg .doors{display:flex;flex-direction:column;gap:12px;transition:opacity .5s ease,transform .5s ease}#mg .doors.wait{opacity:.35;transform:translateY(6px)}' +
+  '#mg .label{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.08em;color:#8a96a8}' +
+  '#mg .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media(max-width:480px){#mg .grid{grid-template-columns:minmax(0,1fr)}}' +
+  '#mg .door{display:flex;flex-direction:column;gap:4px;padding:13px 15px;background:#11151c;border:1px solid #222a35;border-radius:10px;color:#e6ebf2;text-decoration:none;min-width:0;transition:border-color .2s,transform .2s}' +
+  '#mg .door:hover,#mg .door:focus-visible{border-color:#7ee0b5;transform:translateY(-2px);outline:none}' +
+  '#mg .door .t{font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:600;font-size:14px;color:#7ee0b5}#mg .door .d{font-size:13px;color:#8a96a8;line-height:1.45}' +
+  '#mg .main{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;background:#7ee0b5;border-color:#7ee0b5}' +
+  '#mg .main .t{color:#0a0c10;font-size:15px}#mg .main .d{color:#0f3a2a}#mg .main .arrow{font-family:"JetBrains Mono",monospace;font-weight:700;color:#0a0c10;font-size:18px}' +
+  '#mg .sign{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:#8a96a8;text-align:center}#mg .sign a{color:#e6ebf2}' +
+  '@media(prefers-reduced-motion:reduce){#mg .caret{animation:none}#mg .doors,#mg .door{transition:none}}';
+
+  var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+
+  var el = document.createElement('div');
+  el.id = 'mg'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Note for Mashkiot Team');
+  el.innerHTML =
+    '<div class="wrap">' +
+      '<div class="term"><div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="path">~/liron-sofer/for-mashkiot</span></div>' +
+      '<div class="screen"><div class="cmd">$ <b>./hello</b> --to mashkiot-team --from liron</div>' +
+      '<p id="mg-msg" aria-live="polite"></p>' +
+      '<button class="replay" id="mg-replay" type="button">↻ replay</button></div></div>' +
+      '<div class="doors" id="mg-doors"><div class="label">// click around</div><div class="grid">' +
+        '<a class="door main" href="/" id="mg-enter"><span><span class="t">lironsofer.online</span><br><span class="d">The whole site: what I build, who I am, how to reach me</span></span><span class="arrow">→</span></a>' +
+        '<a class="door" href="/cv/"><span class="t">My story in 1 minute</span><span class="d">The short video version of me</span></a>' +
+        '<a class="door" href="https://unwrap.cafe/en" target="_blank" rel="noopener"><span class="t">Unwrap</span><span class="d">A consumer product I took from idea to launch: photos into a playable gift game</span></a>' +
+        '<a class="door" href="/projects/creative-studio/"><span class="t">Creative Studio</span><span class="d">On-brand campaigns and creatives for Meta, Google and TikTok</span></a>' +
+        '<a class="door" href="/projects/ad-copilot/"><span class="t">Ad Performance Copilot</span><span class="d">Every ad platform in one view, with clear decisions</span></a>' +
+        '<a class="door" href="/projects/market-research/"><span class="t">Market Research Agent</span><span class="d">Competitors, customer pains and opportunities from one URL</span></a>' +
+        '<a class="door" href="#contact" id="mg-contact"><span class="t">Say hi</span><span class="d">Email, phone, WhatsApp and LinkedIn</span></a>' +
+      '</div></div>' +
+      '<div class="sign">— Liron Sofer · <a href="/" id="mg-sign">lironsofer.online</a></div>' +
+    '</div>';
+  document.body.appendChild(el);
+  var prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  function close(e, hash) {
+    if (e) e.preventDefault();
+    el.remove(); st.remove();
+    document.body.style.overflow = prevOverflow;
+    if (hash) location.hash = hash;
+  }
+  document.getElementById('mg-enter').addEventListener('click', function (e) { close(e); });
+  document.getElementById('mg-sign').addEventListener('click', function (e) { close(e); });
+  document.getElementById('mg-contact').addEventListener('click', function (e) { close(e, 'contact'); });
+
+  var lines = [
+    { text: 'Hello Mashkiot Team :)', cls: 'hi' },
+    { text: '\nFinally.' },
+    { text: '\nI was waiting for you.' },
+    { text: '\nClick around- We are a match' }
+  ];
+  var all = lines.map(function (l) { return l.text; }).join('');
+  var msg = document.getElementById('mg-msg');
+  var doors = document.getElementById('mg-doors');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var timer = null;
+
+  function render(upTo, caret) {
+    var left = upTo, html = '';
+    for (var i = 0; i < lines.length && left > 0; i++) {
+      var part = lines[i].text.slice(0, left); left -= part.length;
+      var safe = part.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      html += lines[i].cls ? '<span class="' + lines[i].cls + '">' + safe + '</span>' : safe;
+    }
+    msg.innerHTML = html + (caret ? '<span class="caret" aria-hidden="true"></span>' : '');
+  }
+  function play() {
+    clearTimeout(timer);
+    if (reduce) { render(all.length, true); doors.classList.remove('wait'); return; }
+    doors.classList.add('wait');
+    var i = 0;
+    (function step() {
+      i++; render(i, true);
+      if (i >= all.length) { doors.classList.remove('wait'); return; }
+      var ch = all[i - 1];
+      timer = setTimeout(step, ch === '\n' ? 520 : (ch === '.' ? 260 : 48));
+    })();
+  }
+  document.getElementById('mg-replay').addEventListener('click', play);
+  setTimeout(play, 350);
+})();
+</script>
 </body>
 </html>
