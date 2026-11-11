@@ -105,12 +105,14 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 (() => {
 const DAY = "2026-11-11";
 const STOPS = [
-  {t:600, time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", mystery:true},
-  {t:690, time:"11:30", emoji:"🎨", name:"Color Cafe", mystery:true},
-  {t:840, time:"14:00", emoji:"🍹", name:"Chacoli", mystery:true},
-  {t:960, time:"16:00", emoji:"🎒", name:"Picking up Noga"},
-  {t:1005,time:"Then",  emoji:"🎂", name:"Home"}
+  {key:5, t:540, time:"09:00", emoji:"🎈", name:"Morning balloons & coffee"},
+  {key:0, t:600, time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", mystery:1},
+  {key:1, t:690, time:"11:30", emoji:"🎨", name:"Color Cafe", mystery:2},
+  {key:2, t:840, time:"14:00", emoji:"🍹", name:"Chacoli", mystery:3},
+  {key:3, t:960, time:"16:00", emoji:"🎒", name:"Picking up Noga"},
+  {key:4, t:1005,time:"Then",  emoji:"🎂", name:"Home"}
 ];
+const idx = k => STOPS.findIndex(s => s.key === k);
 const $ = id => document.getElementById(id);
 function nowMin(){
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"})
@@ -119,13 +121,15 @@ function nowMin(){
   return d < DAY ? -1 : d > DAY ? 99999 : +p.hour*60 + +p.minute;
 }
 let shown = {}; try { shown = JSON.parse(localStorage.getItem("gala-revealed") || "{}"); } catch(e) {}
-const nameOf = i => { const s = STOPS[i], end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
-  return s.mystery && !shown[i] && nowMin() < end ? `Mystery stop #${i+1}` : s.name; };
+const nameOf = key => { const i = idx(key), s = STOPS[i]; if (!s) return "";
+  const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
+  return s.mystery && !shown[key] && nowMin() < end ? `Mystery stop #${s.mystery}` : s.name; };
 
 let photos = [], files = [];
 async function load(){
   photos.forEach(p => URL.revokeObjectURL(p.url));
   let all = []; try { all = await GalaPhotos.all(); } catch(e) {}
+  all.sort((x,y) => idx(x.stop) - idx(y.stop) || x.at - y.at);
   photos = all.map(p => ({...p, url: URL.createObjectURL(p.blob)}));
   files = photos.map((p,i) => new File([p.blob], `gala-birthday-${String(i+1).padStart(2,"0")}.jpg`, {type: p.blob.type || "image/jpeg"}));
   draw();
@@ -140,10 +144,10 @@ function draw(){
   }
   $("sub").textContent = `${photos.length} photo${photos.length>1?"s":""} from Gala's birthday.`;
   let html = "";
-  STOPS.forEach((s,i) => {
-    const list = photos.map((p,k)=>({p,k})).filter(x => x.p.stop === i);
+  STOPS.forEach(s => {
+    const list = photos.map((p,k)=>({p,k})).filter(x => x.p.stop === s.key);
     if (!list.length) return;
-    html += `<section><h2><span>${s.time}</span>${nameOf(i)} ${s.emoji}</h2><div class="grid">${list.map(x=>`<button type="button" data-k="${x.k}" aria-label="Open photo"><img src="${x.p.url}" alt="" loading="lazy"></button>`).join("")}</div></section>`;
+    html += `<section><h2><span>${s.time}</span>${nameOf(s.key)} ${s.emoji}</h2><div class="grid">${list.map(x=>`<button type="button" data-k="${x.k}" aria-label="Open photo"><img src="${x.p.url}" alt="" loading="lazy"></button>`).join("")}</div></section>`;
   });
   book.innerHTML = html;
 }
@@ -183,7 +187,7 @@ function next(){
   if (si >= imgs.length){ $("stitle").textContent = ""; $("scount").textContent = ""; $("finale").classList.add("on"); return; }
   imgs[si].classList.add("on");
   const p = photos[si];
-  $("stitle").textContent = `${STOPS[p.stop].emoji} ${nameOf(p.stop)}`;
+  $("stitle").textContent = `${(STOPS[idx(p.stop)]||{}).emoji||""} ${nameOf(p.stop)}`;
   $("scount").textContent = `${si+1} / ${imgs.length}`;
   timer = setTimeout(next, 4200);
 }
