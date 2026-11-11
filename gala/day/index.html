@@ -95,9 +95,9 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 (() => {
 const DAY = "2026-11-11", GIFT_AT = 14*60+30;
 const STOPS = [
-  {t:600,  time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", what:"Breakfast and coffee to start the day.", hint:"First, fuel. You'll need energy for what's coming.", mystery:true, map:"https://maps.app.goo.gl/5oGxdmrU7cj4zfAfA"},
-  {t:690,  time:"11:30", emoji:"🎨", name:"Color Cafe", what:"Making some art together.", hint:"Bring your creative side.", mystery:true, map:"https://maps.app.goo.gl/b72rKwoosDctNdbZ6"},
-  {t:840,  time:"14:00", emoji:"🍹", name:"Chacoli", what:"Tapas and margaritas.", hint:"Somewhere to raise a glass to you.", mystery:true, map:"https://maps.app.goo.gl/TMysd4pi8FLrmH4E6", gift:true},
+  {t:600,  time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", what:"Breakfast and coffee to start the day.", hint:"First, fuel. You'll need energy for what's coming.", mystery:true, map:"https://www.google.com/maps/dir/?api=1&destination=Dizengoff%20St%20280%2C%20Tel%20Aviv-Yafo%2C%206311719"},
+  {t:690,  time:"11:30", emoji:"🎨", name:"Color Cafe", what:"Making some art together.", hint:"Bring your creative side.", mystery:true, map:"https://www.google.com/maps/dir/?api=1&destination=Yirmeyahu%20St%2046%2C%20Tel%20Aviv-Yafo%2C%206311516"},
+  {t:840,  time:"14:00", emoji:"🍹", name:"Chacoli", what:"Tapas and margaritas.", hint:"Somewhere to raise a glass to you.", mystery:true, map:"https://www.google.com/maps/dir/?api=1&destination=Retsif%20Herbert%20Samuel%20St%203%2C%20Tel%20Aviv-Yafo", gift:true},
   {t:960,  time:"16:00", emoji:"🎒", name:"Picking up Noga", what:"Straight from the kindergarten, the birthday crew is complete."},
   {t:1005, time:"Then",  emoji:"🎂", name:"Home", what:"Celebrating together for the rest of the day."}
 ];
@@ -139,7 +139,7 @@ function render(justShown){
         : `<div class="gift"><span class="box">🎁</span><div><b>A surprise waits here</b><small>${now>=0&&now<GIFT_AT ? `Unwraps at 14:30 · ${span(GIFT_AT-now)} to go` : "Unwraps at 14:30"}</small></div></div>`;
     }
     const canReveal = secret && (state === "current" || state === "next");
-    const nav = s.map && state !== "done" ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">${secret ? "Navigate · Liron only 🤫" : "Navigate →"}</a>` : "";
+    const nav = s.map && state !== "done" ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">Navigate →</a>` : "";
     html += `<li class="${state}${secret ? " secret" : ""}${justShown===i ? " pop" : ""}"><div class="pin" aria-hidden="true">${secret ? "❔" : s.emoji}</div><div class="stop">
       <div class="top"><span class="time">${s.time}</span><span class="tag">${tag}</span></div>
       <h2>${label(s,i,state)}</h2><p>${secret ? s.hint : s.what}</p>
