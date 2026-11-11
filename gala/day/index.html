@@ -46,6 +46,14 @@ h2{margin:0;font-family:var(--display);font-weight:500;font-size:20px;line-heigh
 .nav{align-self:flex-start;margin-top:4px;font-weight:600;font-size:14px;text-decoration:none;background:var(--ink);color:var(--night);border-radius:999px;padding:9px 16px}
 .nav:focus-visible,.open:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.acts .nav{margin-top:0}
+.reveal{font:600 14px var(--body);background:var(--rose);color:#2a1630;border:0;border-radius:999px;padding:9px 16px;cursor:pointer}
+.reveal:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+li.secret h2{letter-spacing:.02em}
+li.secret .stop p{font-style:italic}
+li.pop .stop{animation:pop .7s ease-out}
+@keyframes pop{0%{transform:scale(.92);opacity:.3}60%{transform:scale(1.03)}100%{transform:none;opacity:1}}
 li.done .pin{background:var(--teal);border-color:var(--teal);font-size:0}
 li.done .pin::after{content:"✓";font-size:24px;color:var(--night);font-weight:800}
 li.done .stop{opacity:.6}
@@ -66,7 +74,7 @@ li.next .tag{border-color:var(--rose);color:var(--rose)}
 .open{grid-column:1/-1;justify-self:start;font:600 15px var(--body);text-decoration:none;background:var(--gold);color:#2a1630;border-radius:999px;padding:11px 18px}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
 footer{text-align:center;color:var(--soft);font-size:14px}
-@media (prefers-reduced-motion:reduce){li.current .pin,.gift.open .box{animation:none}}
+@media (prefers-reduced-motion:reduce){li.pop .stop,li.current .pin,.gift.open .box{animation:none}}
 </style>
 </head>
 <body>
@@ -87,9 +95,9 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 (() => {
 const DAY = "2026-11-11", GIFT_AT = 14*60+30;
 const STOPS = [
-  {t:600,  time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", what:"Breakfast and coffee to start the day.", map:"https://maps.app.goo.gl/5oGxdmrU7cj4zfAfA"},
-  {t:690,  time:"11:30", emoji:"🎨", name:"Color Cafe", what:"Making some art together.", map:"https://maps.app.goo.gl/b72rKwoosDctNdbZ6"},
-  {t:840,  time:"14:00", emoji:"🍹", name:"Chacoli", what:"Tapas and margaritas.", map:"https://maps.app.goo.gl/TMysd4pi8FLrmH4E6", gift:true},
+  {t:600,  time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", what:"Breakfast and coffee to start the day.", hint:"First, fuel. You'll need energy for what's coming.", mystery:true, map:"https://maps.app.goo.gl/5oGxdmrU7cj4zfAfA"},
+  {t:690,  time:"11:30", emoji:"🎨", name:"Color Cafe", what:"Making some art together.", hint:"Bring your creative side.", mystery:true, map:"https://maps.app.goo.gl/b72rKwoosDctNdbZ6"},
+  {t:840,  time:"14:00", emoji:"🍹", name:"Chacoli", what:"Tapas and margaritas.", hint:"Somewhere to raise a glass to you.", mystery:true, map:"https://maps.app.goo.gl/TMysd4pi8FLrmH4E6", gift:true},
   {t:960,  time:"16:00", emoji:"🎒", name:"Picking up Noga", what:"Straight from the kindergarten, the birthday crew is complete."},
   {t:1005, time:"Then",  emoji:"🎂", name:"Home", what:"Celebrating together for the rest of the day."}
 ];
@@ -102,9 +110,14 @@ function clock(){
     .formatToParts(new Date()).map(x=>[x.type,x.value]));
   return {date:`${p.year}-${p.month}-${p.day}`, min:+p.hour*60 + +p.minute};
 }
+let shown = {};
+try { shown = JSON.parse(localStorage.getItem("gala-revealed") || "{}"); } catch(e) {}
+function reveal(i){ shown[i] = 1; try { localStorage.setItem("gala-revealed", JSON.stringify(shown)); } catch(e) {} render(i); }
+const hidden = (s,i,state) => s.mystery && !shown[i] && state !== "done";
+const label = (s,i,state) => hidden(s,i,state) ? `Mystery stop #${i+1}` : s.name;
 const span = m => { m=Math.max(1,m); const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r? " "+r+"m":""}` : `${r} min`; };
 
-function render(){
+function render(justShown){
   const {date,min} = clock();
   const now = date < DAY ? -1 : date > DAY ? 99999 : min;
   let html = "", current = -1, next = -1;
@@ -117,29 +130,33 @@ function render(){
     const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
     const state = now >= end ? "done" : i===current ? "current" : i===next ? "next" : "";
     const tag = state==="done" ? "Done" : state==="current" ? "You are here" : state==="next" ? (now>=0 && now<99999 ? `In ${span(s.t-now)}` : "Up next") : "Later";
+    const secret = hidden(s,i,state);
     let gift = "";
-    if (s.gift){
+    if (s.gift && !secret){
       const open = now >= GIFT_AT;
       gift = open
         ? `<div class="gift open"><span class="box">🎁</span><div><b>A surprise just for you</b><small>It's ready. Go on, open it.</small></div><a class="open" href="/gala/voucher/">Open your gift</a></div>`
         : `<div class="gift"><span class="box">🎁</span><div><b>A surprise waits here</b><small>${now>=0&&now<GIFT_AT ? `Unwraps at 14:30 · ${span(GIFT_AT-now)} to go` : "Unwraps at 14:30"}</small></div></div>`;
     }
-    html += `<li class="${state}"><div class="pin" aria-hidden="true">${s.emoji}</div><div class="stop">
+    const canReveal = secret && (state === "current" || state === "next");
+    const nav = s.map && state !== "done" ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">${secret ? "Navigate · Liron only 🤫" : "Navigate →"}</a>` : "";
+    html += `<li class="${state}${secret ? " secret" : ""}${justShown===i ? " pop" : ""}"><div class="pin" aria-hidden="true">${secret ? "❔" : s.emoji}</div><div class="stop">
       <div class="top"><span class="time">${s.time}</span><span class="tag">${tag}</span></div>
-      <h2>${s.name}</h2><p>${s.what}</p>
-      ${s.map ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">Navigate →</a>` : ""}${gift}</div></li>`;
+      <h2>${label(s,i,state)}</h2><p>${secret ? s.hint : s.what}</p>
+      <div class="acts">${nav}${canReveal ? `<button class="reveal" data-i="${i}">We're here! Reveal ✨</button>` : ""}</div>${gift}</div></li>`;
   });
   document.getElementById("stops").innerHTML = html;
   const line = document.getElementById("now");
   if (now < 0) line.textContent = "Five stops, one very good day.";
   else if (now >= 99999) line.textContent = "What a day. Happy birthday ♡";
-  else if (current < 0) line.innerHTML = `First stop: <b>${STOPS[0].name}</b> in ${span(STOPS[0].t-now)}.`;
+  else if (current < 0) line.innerHTML = `First stop: <b>${label(STOPS[0],0,"")}</b> in ${span(STOPS[0].t-now)}.`;
   else if (current === STOPS.length-1) line.innerHTML = `Home together. <b>Happy birthday, Gala ♡</b>`;
-  else line.innerHTML = `Now: <b>${STOPS[current].name}</b>. Next up: ${STOPS[current+1].name} at ${STOPS[current+1].time}.`;
+  else line.innerHTML = `Now: <b>${label(STOPS[current],current,"current")}</b>. Next up: ${label(STOPS[current+1],current+1,"")} at ${STOPS[current+1].time}.`;
 }
+document.getElementById("stops").addEventListener("click", e => { const b = e.target.closest(".reveal"); if (b) reveal(+b.dataset.i); });
 render();
-setInterval(render, 30000);
-addEventListener("hashchange", render);
+setInterval(() => render(), 30000);
+addEventListener("hashchange", () => render());
 })();
 </script>
 </body>
