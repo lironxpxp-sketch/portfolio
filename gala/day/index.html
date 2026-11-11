@@ -129,7 +129,7 @@ footer{text-align:center;color:var(--soft);font-size:14px}
   <footer>Made with love, Liron ♡</footer>
 </div>
 
-<script src="/gala/photos.js"></script>
+<script src="/gala/photos.js?v=3"></script>
 <script>
 (() => {
 const DAY = "2026-11-11", GIFT_AT = 14*60+30;
@@ -159,9 +159,9 @@ const hidden = (s,state) => s.mystery && !shown[s.key] && state !== "done";
 const label = (s,state) => hidden(s,state) ? `Mystery stop #${s.mystery}` : s.name;
 const span = m => { m=Math.max(1,m); const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r? " "+r+"m":""}` : `${r} min`; };
 
-let pics = {}, total = 0, busy = -1, target = -1, failed = -1, urls = new Map(), loading = false;
+let pics = {}, total = 0, busy = -1, target = -1, failed = -1, urls = new Map(), loading = false, again = false;
 async function loadPics(){
-  if (loading) return; loading = true;
+  if (loading) { again = true; return; } loading = true;
   try {
     const {photos, shown: cloud} = await GalaPhotos.load();
     Object.assign(shown, cloud);
@@ -173,6 +173,7 @@ async function loadPics(){
   } catch(e) {}
   loading = false;
   if (peek.hidden) render();
+  if (again) { again = false; loadPics(); }
 }
 function picsHtml(key){
   const list = pics[key] || [];

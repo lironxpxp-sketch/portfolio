@@ -101,10 +101,29 @@ window.GalaPhotos = (() => {
       const set = {};
       for (const p of local || []) { try { const bid = await putBlob(p.blob); set[`A:g:${p.stop}:${bid}`] = Math.round(p.at || Date.now()).toString(36); } catch (e) { return; } }
       Object.keys(localShown()).forEach(k => set[`K:g:rev:${k}`] = "1");
-      if (Object.keys(set).length) await post("tripProg", { set });
+      if (Object.keys(set).length) { note(set); await post("tripProg", { set }); }
       for (const p of local || []) await tx("readwrite", s => s.delete(p.id)).catch(() => {});
     })().catch(() => { migrated = null; });
     return migrated;
+  }
+
+  // ---- journal: this phone's recent writes, re-applied until the shared storage shows them ----
+  const J = "gala-journal";
+  const journal = () => { try { return JSON.parse(store.get(J) || "{}"); } catch (e) { return {}; } };
+  function note(set) { const j = journal(), now = Date.now(); for (const [k, v] of Object.entries(set)) j[k] = { v, at: now }; store.set(J, JSON.stringify(j)); }
+  async function heal(prog) {
+    const j = journal(), now = Date.now(), fix = {};
+    for (const [k, e] of Object.entries(j)) {
+      const seen = k in prog ? prog[k] : undefined;
+      if (seen === e.v || (e.v === null && seen === undefined)) { if (now - e.at > 10 * 60e3) delete j[k]; continue; }
+      if (now - e.at > 90e3) { fix[k] = e.v; e.at = now; }
+    }
+    store.set(J, JSON.stringify(j));
+    if (Object.keys(fix).length) await post("tripProg", { set: fix }).catch(() => {});
+    // show this phone's own changes right away, even before storage catches up
+    const view = { ...prog };
+    for (const [k, e] of Object.entries(journal())) view[k] = e.v;
+    return view;
   }
 
   const shared = !!keyText && !!(window.crypto && crypto.subtle);
@@ -117,7 +136,7 @@ window.GalaPhotos = (() => {
         return { photos, shown: localShown() };
       }
       await migrate();
-      const prog = await readProg(), shown = { ...localShown() }, list = [];
+      const prog = await heal(await readProg()), shown = { ...localShown() }, list = [];
       for (const [k, v] of Object.entries(prog)) {
         if (v === null) continue;
         let m = k.match(/^A:g:(\d+):([A-Za-z0-9_-]+)$/);
@@ -135,15 +154,17 @@ window.GalaPhotos = (() => {
       if (!shared) { for (const f of files) { const blob = await shrink(f); await tx("readwrite", s => s.add({ stop, at: Date.now(), blob })); } return; }
       const set = {};
       for (const f of files) { const blob = await shrink(f); const bid = await putBlob(blob); blobCache.set(bid, Promise.resolve(blob)); set[`A:g:${stop}:${bid}`] = Date.now().toString(36); }
+      note(set);
       await post("tripProg", { set });
     },
     async remove(id) {
       if (!shared) return tx("readwrite", s => s.delete(id));
+      note({ [id]: null });
       await post("tripProg", { set: { [id]: null } });
     },
     async reveal(stopKey) {
       const s = localShown(); s[stopKey] = 1; store.set("gala-revealed", JSON.stringify(s));
-      if (shared) await post("tripProg", { set: { [`K:g:rev:${stopKey}`]: "1" } }).catch(() => {});
+      if (shared) { const set = { [`K:g:rev:${stopKey}`]: "1" }; note(set); await post("tripProg", { set }).catch(() => {}); }
     }
   };
 })();
