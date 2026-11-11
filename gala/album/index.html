@@ -4,100 +4,136 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Gala's Birthday Album</title>
+<title>Gala's 25th Bday Funday</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Caveat:wght@500;700&family=DM+Sans:wght@400;600&display=swap">
 <style>
-/* Layout: one column photo book; a section per stop with a 3-up grid; fullscreen viewer and slideshow overlays. Same night/gold world as the roadmap. */
+/* Layout: a scrapbook lying on a dark plum table. One page at a time; pages turn on the left edge.
+   Cover is glitter pink-to-violet; inner pages are dotted paper with taped polaroids and stickers. Single deliberate look. */
 :root{
-  --night:#120d1c; --plum:#1d1429; --card:#241a33; --ink:#fff8f1; --soft:rgba(255,248,241,.7);
-  --line:rgba(255,248,241,.16); --gold:#ffc65c; --rose:#ff6f91;
-  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --table:#120d1c; --ink:#fff8f1; --soft:rgba(255,248,241,.7); --line:rgba(255,248,241,.16);
+  --paper:#fffaf3; --dot:rgba(176,67,122,.13); --berry:#5e2a6e; --rose:#ff6f91; --wine:#b0437a; --gold:#ffc65c;
+  --display:"Shrikhand","Cooper Black",Georgia,serif;
+  --hand:"Caveat","Bradley Hand","Segoe Print",cursive;
   --body:"DM Sans",system-ui,-apple-system,sans-serif;
   color-scheme:dark;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{margin:0;min-height:100%}
-body{background:var(--night);color:var(--ink);font:15px/1.5 var(--body);
-  background-image:radial-gradient(110% 50% at 50% 0%,#3a2547 0%,transparent 70%);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
-.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
-.back{align-self:flex-start;font-size:14px;color:var(--soft);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px}
-header{display:flex;flex-direction:column;gap:8px}
-.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
-h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,50px);line-height:1;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 0 var(--rose)}
-.sub{margin:0;color:var(--soft)}
-.tools{display:flex;gap:10px;flex-wrap:wrap}
-.btn{font:600 15px var(--body);border:0;border-radius:999px;padding:11px 18px;cursor:pointer;text-decoration:none;background:var(--gold);color:#2a1630}
-.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.btn:focus-visible,.back:focus-visible,.grid button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
-.msg{color:var(--soft);font-size:14px;margin:0}
-section{display:flex;flex-direction:column;gap:10px}
-section h2{margin:0;font-family:var(--display);font-weight:500;font-size:22px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-section h2 span{font-family:var(--display);font-weight:800;font-size:16px;color:var(--gold);font-variant-numeric:tabular-nums}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.grid button{padding:0;border:0;background:var(--plum);border-radius:12px;overflow:hidden;aspect-ratio:1;cursor:pointer;max-width:100%}
-.grid img{width:100%;height:100%;object-fit:cover;display:block}
-.grid button:first-child:nth-last-child(n+4){grid-column:span 2;grid-row:span 2}
-.empty{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:10px;text-align:center;justify-items:center}
-.empty b{font-family:var(--display);font-size:20px}
-footer{text-align:center;color:var(--soft);font-size:14px}
+html,body{margin:0;height:100%}
+body{background:var(--table);color:var(--ink);font:15px/1.5 var(--body);overflow:hidden;
+  background-image:radial-gradient(90% 60% at 50% 40%,#3a2547 0%,transparent 75%);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 14px}
+.app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.chipbtn{font:600 14px var(--body);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 14px;text-decoration:none;cursor:pointer}
+.chipbtn.gold{background:var(--gold);color:#2a1630;border-color:var(--gold)}
+.chipbtn:focus-visible,.arrow:focus-visible,.pol:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.msg{margin:0;color:var(--soft);font-size:13px;text-align:center}
 
+.stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;perspective:2200px}
+.book{position:relative;aspect-ratio:.72;max-width:100%;
+  width:min(100%,460px,calc((100vh - 170px)*.72));width:min(100%,460px,calc((100dvh - 170px)*.72))}
+.book::before{content:"";position:absolute;inset:0;border-radius:6px 16px 16px 6px;background:#eadbc8;
+  box-shadow:3px 3px 0 #e2cfb8,6px 6px 0 #d6c0a6,9px 9px 0 #c9b090,0 30px 60px -20px rgba(0,0,0,.7)}
+.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;
+  -webkit-backface-visibility:hidden;backface-visibility:hidden;transition:transform .9s cubic-bezier(.3,.7,.2,1)}
+.leaf.turned{transform:rotateY(-178deg);pointer-events:none}
+.book.instant .leaf{transition:none}
+.page{position:absolute;inset:0;border-radius:6px 16px 16px 6px;overflow:hidden;display:flex;flex-direction:column;gap:8px;padding:16px 16px 18px 22px;
+  background-color:var(--paper);background-image:radial-gradient(var(--dot) 1.1px,transparent 1.5px);background-size:16px 16px;color:var(--berry)}
+.page::after{content:"";position:absolute;inset:0 auto 0 0;width:22px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(94,42,110,.18),rgba(94,42,110,0))}
+
+/* cover */
+.cover{justify-content:center;align-items:center;text-align:center;gap:6px;color:#fff;
+  background-color:#c46bd8;
+  background-image:radial-gradient(#fff 1px,transparent 1.7px),radial-gradient(rgba(255,214,120,.95) 1.3px,transparent 2.2px),radial-gradient(rgba(255,255,255,.55) 1px,transparent 1.6px),
+    linear-gradient(155deg,#ff8fb1 0%,#d16fd2 45%,#6f43d9 100%);
+  background-size:23px 23px,31px 29px,13px 13px,100% 100%;background-position:0 0,11px 7px,5px 9px,0 0}
+.cover .pre{font:700 clamp(30px,9vw,42px)/1 var(--hand);transform:rotate(-4deg);text-shadow:0 2px 0 var(--wine)}
+.cover h1{margin:0;font:400 clamp(46px,15vw,78px)/.95 var(--display);letter-spacing:.01em;text-wrap:balance;
+  text-shadow:0 3px 0 var(--wine),0 6px 0 #4a2a9a,0 14px 24px rgba(40,10,60,.45)}
+.cover .fun{font:400 clamp(34px,11vw,56px)/1 var(--display);color:var(--gold);transform:rotate(-3deg);
+  text-shadow:0 3px 0 var(--wine),0 6px 0 #4a2a9a}
+.cover .date{margin-top:14px;font:600 12px var(--body);letter-spacing:.2em;text-transform:uppercase;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:5px 14px}
+.cover .open{position:absolute;bottom:18px;left:0;right:0;font:700 22px var(--hand);opacity:.9;animation:nudge 1.8s ease-in-out infinite}
+.badge{position:absolute;top:18px;right:18px;width:74px;height:74px;border-radius:50%;display:grid;place-items:center;transform:rotate(12deg);
+  background:var(--gold);color:var(--wine);font:400 30px/1 var(--display);box-shadow:0 0 0 4px #fff,0 8px 18px rgba(40,10,60,.4)}
+@keyframes nudge{50%{transform:translateX(8px)}}
+
+/* stop pages */
+.ph{display:flex;gap:10px;align-items:center;position:relative;z-index:1;padding-right:34px}
+.ph .em{font-size:40px;line-height:1;filter:drop-shadow(2px 2px 0 #fff) drop-shadow(-2px -2px 0 #fff) drop-shadow(0 4px 6px rgba(94,42,110,.3));transform:rotate(-8deg)}
+.ph .chip{display:inline-block;font:600 12px var(--body);letter-spacing:.08em;background:var(--rose);color:#fff;border-radius:999px;padding:2px 10px;transform:rotate(-2deg)}
+.ph h2{margin:2px 0 0;font:400 clamp(20px,6vw,27px)/1.05 var(--display);color:var(--berry);text-wrap:balance}
+.ph .hand{margin:0;font:700 22px/1.1 var(--hand);color:var(--wine)}
+.shots{flex:1;min-height:0;display:grid;gap:12px;padding:10px 4px 14px;position:relative;z-index:1}
+.n1{grid-template:1fr/1fr}
+.n2{grid-template:1fr 1fr/1fr}
+.n3{grid-template:1fr 1fr/1fr 1fr}.n3 .pol:last-child{grid-column:1/-1}
+.n4{grid-template:1fr 1fr/1fr 1fr}
+.pol{position:relative;border:0;margin:0;padding:7px 7px 24px;background:#fff;cursor:pointer;display:flex;
+  height:100%;min-height:0;max-width:100%;aspect-ratio:.84;justify-self:center;align-self:center;
+  transform:rotate(var(--r));box-shadow:0 7px 16px -4px rgba(60,20,60,.35),0 1px 2px rgba(60,20,60,.2)}
+.n2 .pol:first-child{justify-self:start}.n2 .pol:last-child{justify-self:end}
+.pol img{width:100%;height:100%;object-fit:cover;display:block;max-width:100%;background:#f1e6ef}
+.pol::before{content:"";position:absolute;top:-10px;left:50%;width:58px;height:19px;transform:translateX(-50%) rotate(-5deg);
+  background:repeating-linear-gradient(45deg,rgba(255,143,177,.8) 0 6px,rgba(255,205,220,.8) 6px 12px)}
+.pol:nth-child(2)::before{background:repeating-linear-gradient(45deg,rgba(183,156,255,.8) 0 6px,rgba(225,214,255,.8) 6px 12px);transform:translateX(-50%) rotate(4deg)}
+.pol:nth-child(3)::before{background:repeating-linear-gradient(45deg,rgba(95,211,199,.75) 0 6px,rgba(200,240,234,.8) 6px 12px)}
+.pol:nth-child(4)::before{background:repeating-linear-gradient(45deg,rgba(255,198,92,.8) 0 6px,rgba(255,232,180,.85) 6px 12px);transform:translateX(-50%) rotate(3deg)}
+.stk{position:absolute;z-index:2;font-size:30px;line-height:1;pointer-events:none;
+  filter:drop-shadow(2px 2px 0 #fff) drop-shadow(-2px -2px 0 #fff) drop-shadow(0 3px 5px rgba(94,42,110,.3))}
+.pnum{position:absolute;bottom:4px;left:0;right:0;text-align:center;font:700 16px var(--hand);color:rgba(94,42,110,.5);z-index:1}
+
+/* end + empty */
+.end{justify-content:center;align-items:center;text-align:center;gap:10px}
+.end h2{margin:0;font:400 clamp(34px,11vw,52px)/1 var(--display);color:var(--rose);text-shadow:0 3px 0 var(--berry);text-wrap:balance}
+.end p{margin:0;font:700 26px/1.2 var(--hand);color:var(--berry)}
+.end small{font:600 12px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--wine)}
+.end a{font:600 15px var(--body);color:#fff;background:var(--wine);border-radius:999px;padding:10px 18px;text-decoration:none}
+
+.ctl{display:flex;justify-content:center;align-items:center;gap:16px}
+.arrow{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:rgba(255,248,241,.08);color:var(--ink);font-size:22px;cursor:pointer}
+.arrow:disabled{opacity:.3;cursor:default}
+.count{min-width:110px;text-align:center;font:700 20px var(--hand);color:var(--soft);font-variant-numeric:tabular-nums}
+
+/* photo viewer */
 .over{position:fixed;inset:0;z-index:30;background:#07040c;display:flex;flex-direction:column}
 .over .bar{display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px))}
 .over .cap{color:var(--soft);font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.icon{font:600 14px var(--body);background:rgba(255,248,241,.1);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;flex-shrink:0}
-.icon:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-.stage{flex:1;position:relative;overflow:hidden;touch-action:pan-y}
-.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;max-width:none}
+.vstage{flex:1;position:relative;overflow:hidden;touch-action:pan-y}
+.vstage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;max-width:none}
 .nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(18,13,28,.6);color:var(--ink);font-size:20px;cursor:pointer}
 .nav.l{left:max(10px,env(safe-area-inset-left,0px))}.nav.r{right:max(10px,env(safe-area-inset-right,0px))}
 .confirm{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px))}
-.confirm .icon.danger{background:var(--rose);color:#2a1630;border-color:var(--rose)}
-
-#show .stage img{opacity:0;transition:opacity 1.2s ease}
-#show .stage img.on{opacity:1;animation:kb 5s ease-out forwards}
-@keyframes kb{from{transform:scale(1.08)}to{transform:scale(1)}}
-#show .title{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;padding-inline:16px;pointer-events:none}
-#show .title b{display:inline-block;font-family:var(--display);font-weight:800;font-size:22px;background:rgba(18,13,28,.55);border-radius:999px;padding:6px 16px}
-.finale{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;opacity:0;transition:opacity 1.2s}
-.finale.on{opacity:1}
-.finale h2{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,54px);line-height:1.05;text-shadow:0 2px 0 var(--rose);text-wrap:balance}
-.finale p{color:var(--gold);margin:.6em 0 0}
-@media (prefers-reduced-motion:reduce){#show .stage img.on{animation:none}#show .stage img,.finale{transition:none}}
+.danger{background:var(--rose)!important;color:#2a1630!important;border-color:var(--rose)!important}
+@media (prefers-reduced-motion:reduce){.leaf{transition:none}.cover .open{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <a class="back" href="/gala/day/">← Back to our day</a>
-  <header>
-    <span class="eyebrow">Wednesday · 11 · 11 · 2026</span>
-    <h1>Our day, in photos</h1>
-    <p class="sub" id="sub">Gala's birthday, stop by stop.</p>
-    <div class="tools" id="tools" hidden>
-      <button class="btn" id="play" type="button">▶ Play the slideshow</button>
-      <button class="btn alt" id="save" type="button">Save all to Photos</button>
-    </div>
-    <p class="msg" id="msg" hidden></p>
-  </header>
-  <div id="book"></div>
-  <footer>Made with love, Liron ♡</footer>
+<div class="app">
+  <div class="top">
+    <a class="chipbtn" href="/gala/day/">← Our day</a>
+    <button class="chipbtn gold" id="save" type="button" hidden>Save all to Photos</button>
+  </div>
+  <p class="msg" id="msg" hidden></p>
+  <div class="stage"><div class="book instant" id="book" aria-live="polite"></div></div>
+  <div class="ctl">
+    <button class="arrow" id="prev" type="button" aria-label="Previous page">‹</button>
+    <span class="count" id="count">Cover</span>
+    <button class="arrow" id="next" type="button" aria-label="Next page">›</button>
+  </div>
 </div>
 
 <div class="over" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Photo">
-  <div class="bar"><button class="icon" id="vclose" type="button">✕ Close</button><span class="cap" id="vcap"></span><button class="icon" id="vdel" type="button">Delete</button></div>
-  <div class="stage" id="vstage"><img id="vimg" alt=""><button class="nav l" id="vprev" type="button" aria-label="Previous photo">‹</button><button class="nav r" id="vnext" type="button" aria-label="Next photo">›</button></div>
-  <div class="confirm" id="vconfirm" hidden><span>Delete this photo for good?</span><button class="icon danger" id="vyes" type="button">Delete</button><button class="icon" id="vno" type="button">Keep it</button></div>
-</div>
-
-<div class="over" id="show" hidden role="dialog" aria-modal="true" aria-label="Slideshow">
-  <div class="bar"><button class="icon" id="sclose" type="button">✕ Close</button><span class="cap" id="scount"></span><span></span></div>
-  <div class="stage" id="sstage"><div class="title"><b id="stitle"></b></div>
-    <div class="finale" id="finale"><div><h2>Happy birthday, Gala 💜</h2><p>What a day. Love, Liron</p></div></div></div>
+  <div class="bar"><button class="chipbtn" id="vclose" type="button">✕ Close</button><span class="cap" id="vcap"></span><button class="chipbtn" id="vdel" type="button">Delete</button></div>
+  <div class="vstage" id="vstage"><img id="vimg" alt=""><button class="nav l" id="vprev" type="button" aria-label="Previous photo">‹</button><button class="nav r" id="vnext" type="button" aria-label="Next photo">›</button></div>
+  <div class="confirm" id="vconfirm" hidden><span>Delete this photo for good?</span><button class="chipbtn danger" id="vyes" type="button">Delete</button><button class="chipbtn" id="vno" type="button">Keep it</button></div>
 </div>
 
 <script src="/gala/photos.js?v=3"></script>
@@ -105,16 +141,17 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 (() => {
 const DAY = "2026-11-11";
 const STOPS = [
-  {key:5, t:540, time:"09:00", emoji:"🎈", name:"Morning balloons & coffee"},
-  {key:0, t:600, time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", mystery:1},
-  {key:1, t:690, time:"11:30", emoji:"🎨", name:"Color Cafe", mystery:2},
-  {key:2, t:840, time:"14:00", emoji:"🍹", name:"Chacoli", mystery:3},
-  {key:3, t:960, time:"16:00", emoji:"🎒", name:"Picking up Noga"},
-  {key:4, t:1005,time:"Then",  emoji:"🎂", name:"Home"},
-  {key:6, t:1200,time:"20:00", emoji:"👨‍👩‍👧", name:"Meeting family"}
+  {key:5, t:540, time:"09:00", emoji:"🎈", name:"Morning balloons & coffee", cap:"balloons & first coffee!"},
+  {key:0, t:600, time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", cap:"breakfast date", mystery:1},
+  {key:1, t:690, time:"11:30", emoji:"🎨", name:"Color Cafe", cap:"we made art!!", mystery:2},
+  {key:2, t:840, time:"14:00", emoji:"🍹", name:"Chacoli", cap:"tapas & margs + a surprise", mystery:3},
+  {key:3, t:960, time:"16:00", emoji:"🎒", name:"Picking up Noga", cap:"the crew is complete"},
+  {key:4, t:1005,time:"Home",  emoji:"🎂", name:"Home", cap:"home sweet home"},
+  {key:6, t:1200,time:"20:00", emoji:"👨‍👩‍👧", name:"Meeting family", cap:"family time 💜"}
 ];
-const idx = k => STOPS.findIndex(s => s.key === k);
+const STICKERS = ["✨","💖","⭐","🎀","🌸","💜","🌟","🦋"];
 const $ = id => document.getElementById(id);
+const idx = k => STOPS.findIndex(s => s.key === k);
 function nowMin(){
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"})
     .formatToParts(new Date()).map(x=>[x.type,x.value]));
@@ -125,87 +162,124 @@ let shown = {};
 const nameOf = key => { const i = idx(key), s = STOPS[i]; if (!s) return "";
   const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
   return s.mystery && !shown[key] && nowMin() < end ? `Mystery stop #${s.mystery}` : s.name; };
+const rot = id => { let h = 0; for (const c of String(id)) h = (h*31 + c.charCodeAt(0)) | 0; return (Math.abs(h) % 11) - 5; };
+const demoMode = !window.GalaPhotos;
 
-let photos = [], files = [];
+// sample pictures, only for the design preview (no photo storage on the page)
+async function demo(){
+  const plan = [5,5,0,0,0,1,1,1,1,2,2,2,3,4,6,6], hues = [330,280,20,200,160,45];
+  return Promise.all(plan.map((stop,i) => new Promise(res => {
+    const c = document.createElement("canvas"); c.width = 600; c.height = 720; const g = c.getContext("2d");
+    const gr = g.createLinearGradient(0,0,600,720); const h = hues[i % hues.length];
+    gr.addColorStop(0,`hsl(${h} 80% 72%)`); gr.addColorStop(1,`hsl(${(h+50)%360} 70% 45%)`);
+    g.fillStyle = gr; g.fillRect(0,0,600,720); g.font = "220px serif"; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(STOPS[idx(stop)].emoji, 300, 360);
+    c.toBlob(blob => res({id:"demo"+i, stop, at:i, blob}), "image/jpeg", .8);
+  })));
+}
+
+let photos = [], files = [], sig = null, urls = new Map(), leaves = [], cur = 0;
 async function load(){
-  photos.forEach(p => URL.revokeObjectURL(p.url));
-  let all = []; try { const r = await GalaPhotos.load(); all = r.photos; Object.assign(shown, r.shown); } catch(e) {}
+  let all = [];
+  try {
+    if (demoMode) all = await demo();
+    else { const r = await GalaPhotos.load(); all = r.photos; Object.assign(shown, r.shown); }
+  } catch(e) {}
   all.sort((x,y) => idx(x.stop) - idx(y.stop) || x.at - y.at);
-  photos = all.map(p => ({...p, url: URL.createObjectURL(p.blob)}));
-  files = photos.map((p,i) => new File([p.blob], `gala-birthday-${String(i+1).padStart(2,"0")}.jpg`, {type: p.blob.type || "image/jpeg"}));
-  draw();
+  const s = all.map(p => p.id).join("|") + "#" + JSON.stringify(shown);
+  if (s === sig) return; sig = s;
+  const keep = new Set(all.map(p => String(p.id)));
+  for (const [k,u] of urls) if (!keep.has(k)) { URL.revokeObjectURL(u); urls.delete(k); }
+  photos = all.map(p => { const k = String(p.id); if (!urls.has(k)) urls.set(k, URL.createObjectURL(p.blob)); return {...p, url:urls.get(k)}; });
+  files = photos.map((p,i) => new File([p.blob], `gala-25th-${String(i+1).padStart(2,"0")}.jpg`, {type: p.blob.type || "image/jpeg"}));
+  $("save").hidden = !photos.length;
+  build();
 }
-function draw(){
-  const book = $("book");
-  $("tools").hidden = !photos.length;
-  if (!photos.length){
-    $("sub").textContent = "Gala's birthday, stop by stop.";
-    book.innerHTML = `<div class="empty"><b>No photos yet</b><span class="msg">Add photos from each stop on the roadmap. They'll gather here.</span><a class="btn" href="/gala/day/">Go to our day</a></div>`;
-    return;
-  }
-  $("sub").textContent = `${photos.length} photo${photos.length>1?"s":""} from Gala's birthday.`;
-  let html = "";
+
+function deco(n){
+  const a = STICKERS[n % STICKERS.length], b = STICKERS[(n*3+2) % STICKERS.length];
+  return `<span class="stk" style="top:14px;right:14px;transform:rotate(${(n%2?14:-12)}deg)">${a}</span>`
+       + `<span class="stk" style="bottom:20px;${n%2 ? "left:26px" : "right:30px"};font-size:24px;transform:rotate(${n%2?-10:10}deg)">${b}</span>`;
+}
+function build(){
+  const pages = [];
+  pages.push({cls:"cover", html:`<div class="badge">25</div><div class="pre">Gala's</div><h1>25th Bday</h1><div class="fun">Funday!</div>
+    <div class="date">Wednesday · 11 · 11 · 2026</div><div class="open">turn the page →</div>`});
+  if (!photos.length) pages.push({cls:"end", html:`<h2>No photos yet!</h2><p>Add them from each stop on our day, and they'll land here.</p><a href="/gala/day/">Go to our day</a>`});
   STOPS.forEach(s => {
-    const list = photos.map((p,k)=>({p,k})).filter(x => x.p.stop === s.key);
-    if (!list.length) return;
-    html += `<section><h2><span>${s.time}</span>${nameOf(s.key)} ${s.emoji}</h2><div class="grid">${list.map(x=>`<button type="button" data-k="${x.k}" aria-label="Open photo"><img src="${x.p.url}" alt="" loading="lazy"></button>`).join("")}</div></section>`;
+    const list = photos.map((p,k) => ({p,k})).filter(x => x.p.stop === s.key);
+    for (let i = 0; i < list.length; i += 4){
+      const items = list.slice(i, i+4), cont = i > 0, n = pages.length;
+      pages.push({cls:"", html:`<div class="ph">${cont ? "" : `<span class="em" aria-hidden="true">${s.emoji}</span>`}<div>
+          <span class="chip">${s.time}</span><h2>${nameOf(s.key)}</h2><p class="hand">${cont ? "…and more!" : s.cap}</p></div></div>
+        <div class="shots n${items.length}">${items.map(x => `<button class="pol" type="button" data-k="${x.k}" style="--r:${rot(x.p.id)}deg" aria-label="Open photo"><img src="${x.p.url}" alt=""></button>`).join("")}</div>
+        ${deco(n)}`});
+    }
   });
-  book.innerHTML = html;
+  if (photos.length) pages.push({cls:"end", html:`<span class="stk" style="top:22px;left:30px;transform:rotate(-12deg)">🎀</span><span class="stk" style="top:40px;right:34px;transform:rotate(14deg)">✨</span>
+    <small>That's a wrap</small><h2>Happy 25th, Gala!</h2><p>What a funday. I love you 💜<br>Liron</p>
+    <small>${photos.length} photo${photos.length>1?"s":""} · ${new Set(photos.map(p=>p.stop)).size} stops</small>`});
+  const book = $("book");
+  book.classList.add("instant");
+  book.innerHTML = pages.map((p,i) => `<div class="leaf" data-i="${i}"><div class="page ${p.cls}">${p.html}${p.cls === "" ? `<span class="pnum">${i}</span>` : ""}</div></div>`).join("");
+  leaves = [...book.children];
+  cur = Math.min(cur, leaves.length - 1);
+  layout();
+  void book.offsetWidth; requestAnimationFrame(() => requestAnimationFrame(() => book.classList.remove("instant")));
 }
-$("book").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) openViewer(+b.dataset.k); });
+function layout(){
+  const n = leaves.length, last = photos.length ? n - 1 : -1;
+  leaves.forEach((l,i) => { const t = i < cur; l.classList.toggle("turned", t); l.style.zIndex = t ? n + i : n - i; l.setAttribute("aria-hidden", i === cur ? "false" : "true"); });
+  $("prev").disabled = cur === 0; $("next").disabled = cur >= n - 1;
+  $("count").textContent = cur === 0 ? "Cover" : cur === last ? "The end" : photos.length ? `Page ${cur} of ${n - 2}` : "";
+}
+const go = d => { const c = Math.max(0, Math.min(leaves.length - 1, cur + d)); if (c !== cur) { cur = c; layout(); } };
+$("prev").onclick = () => go(-1); $("next").onclick = () => go(1);
+
+// tap right side = next, left side = back; swipe either way; tap a photo to see it big
+const book = $("book"); let sx = null, sy = 0, swiped = false;
+book.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; swiped = false; });
+book.addEventListener("pointerup", e => { if (sx === null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null;
+  if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { swiped = true; go(dx < 0 ? 1 : -1); } });
+book.addEventListener("click", e => {
+  if (swiped) { swiped = false; return; }
+  if (e.target.closest("a")) return;
+  const p = e.target.closest(".pol"); if (p) return openViewer(+p.dataset.k);
+  const r = book.getBoundingClientRect(); go(e.clientX > r.left + r.width * .4 ? 1 : -1);
+});
+addEventListener("keydown", e => {
+  if (!$("viewer").hidden) { if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); if (e.key === "Escape") closeViewer(); return; }
+  if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1);
+});
 
 // viewer
-let cur = 0;
-function openViewer(k){ cur = k; $("viewer").hidden = false; $("vconfirm").hidden = true; paint(); document.body.style.overflow = "hidden"; }
-function paint(){ const p = photos[cur]; if (!p) return closeViewer();
-  $("vimg").src = p.url; $("vcap").textContent = `${nameOf(p.stop)} · ${cur+1} of ${photos.length}`; }
-function closeViewer(){ $("viewer").hidden = true; document.body.style.overflow = ""; }
-function step(d){ cur = (cur + d + photos.length) % photos.length; $("vconfirm").hidden = true; paint(); }
+let vi = 0;
+function openViewer(k){ vi = k; $("viewer").hidden = false; $("vconfirm").hidden = true; $("vdel").hidden = demoMode; paint(); }
+function paint(){ const p = photos[vi]; if (!p) return closeViewer(); $("vimg").src = p.url; $("vcap").textContent = `${nameOf(p.stop)} · ${vi+1} of ${photos.length}`; }
+function closeViewer(){ $("viewer").hidden = true; }
+function step(d){ vi = (vi + d + photos.length) % photos.length; $("vconfirm").hidden = true; paint(); }
 $("vclose").onclick = closeViewer; $("vprev").onclick = () => step(-1); $("vnext").onclick = () => step(1);
 $("vdel").onclick = () => { $("vconfirm").hidden = false; };
 $("vno").onclick = () => { $("vconfirm").hidden = true; };
-$("vyes").onclick = async () => { const id = photos[cur].id; try { await GalaPhotos.remove(id); } catch(e) {}
-  await load(); if (!photos.length) return closeViewer(); cur = Math.min(cur, photos.length-1); $("vconfirm").hidden = true; paint(); };
-let sx = null;
-$("vstage").addEventListener("pointerdown", e => sx = e.clientX);
-$("vstage").addEventListener("pointerup", e => { if (sx === null) return; const d = e.clientX - sx; sx = null; if (Math.abs(d) > 50) step(d < 0 ? 1 : -1); });
-addEventListener("keydown", e => { if ($("viewer").hidden) return; if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); if (e.key === "Escape") closeViewer(); });
+$("vyes").onclick = async () => { const id = photos[vi].id; closeViewer(); try { await GalaPhotos.remove(id); } catch(e) {} sig = null; await load(); };
+let vx = null;
+$("vstage").addEventListener("pointerdown", e => vx = e.clientX);
+$("vstage").addEventListener("pointerup", e => { if (vx === null) return; const d = e.clientX - vx; vx = null; if (Math.abs(d) > 50) step(d < 0 ? 1 : -1); });
 
-// slideshow
-let timer = null, si = 0, imgs = [];
-function play(){
-  if (!photos.length) return;
-  const st = $("sstage"); st.querySelectorAll("img").forEach(n => n.remove());
-  imgs = photos.map(p => { const im = new Image(); im.src = p.url; im.alt = ""; st.insertBefore(im, st.firstChild); return im; });
-  $("finale").classList.remove("on"); $("show").hidden = false; document.body.style.overflow = "hidden";
-  try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{}); } catch(e) {}
-  si = -1; next();
-}
-function next(){
-  clearTimeout(timer);
-  imgs.forEach(im => im.classList.remove("on"));
-  si++;
-  if (si >= imgs.length){ $("stitle").textContent = ""; $("scount").textContent = ""; $("finale").classList.add("on"); return; }
-  imgs[si].classList.add("on");
-  const p = photos[si];
-  $("stitle").textContent = `${(STOPS[idx(p.stop)]||{}).emoji||""} ${nameOf(p.stop)}`;
-  $("scount").textContent = `${si+1} / ${imgs.length}`;
-  timer = setTimeout(next, 4200);
-}
-function stop(){ clearTimeout(timer); $("show").hidden = true; document.body.style.overflow = "";
-  try { document.fullscreenElement && document.exitFullscreen(); } catch(e) {} }
-$("play").onclick = play; $("sclose").onclick = stop; $("sstage").addEventListener("click", () => { if (si < imgs.length) next(); });
-
-// save all: the share sheet lets her "Save Images" to Photos or send to WhatsApp
+// save all: the share sheet lets her "Save Images" to Photos or send them on WhatsApp
 $("save").onclick = async () => {
   const m = $("msg"); m.hidden = false;
   try {
-    if (navigator.canShare && navigator.canShare({files})) { await navigator.share({files, title: "Gala's birthday"}); m.textContent = "Done 💜"; }
+    if (navigator.canShare && navigator.canShare({files})) { await navigator.share({files, title: "Gala's 25th Bday Funday"}); m.textContent = "Done 💜"; }
     else m.textContent = "Saving all at once isn't supported in this browser. Open a photo, then press and hold it to save.";
   } catch(e) { m.textContent = e && e.name === "AbortError" ? "No problem, nothing was saved. Try again any time." : "Couldn't open the share sheet. Open a photo, then press and hold it to save."; }
 };
+
 load();
-setInterval(() => { if (!document.hidden && $("viewer").hidden && $("show").hidden) load(); }, 30000);
+if (!demoMode) {
+  setInterval(() => { if (!document.hidden && $("viewer").hidden) load(); }, 30000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+}
 })();
 </script>
 </body>
