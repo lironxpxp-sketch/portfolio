@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Gala's Birthday Day</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column; a dashed winding rail on the left links five stop markers, each stop a card. Same night/gold world as the balloon room. */
+:root{
+  --night:#120d1c; --plum:#1d1429; --card:#241a33; --ink:#fff8f1; --soft:rgba(255,248,241,.7);
+  --line:rgba(255,248,241,.16); --gold:#ffc65c; --rose:#ff6f91; --teal:#5fd3c7;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"DM Sans",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0;min-height:100%}
+body{background:var(--night);color:var(--ink);font:15px/1.5 var(--body);
+  background-image:radial-gradient(110% 50% at 50% 0%,#3a2547 0%,transparent 70%);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+a{color:inherit}
+.back{align-self:flex-start;font-size:14px;color:var(--soft);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,48px);line-height:1;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 0 var(--rose)}
+.now{margin:4px 0 0;color:var(--soft);font-size:15px}
+.now b{color:var(--ink);font-weight:600}
+
+ol{list-style:none;margin:0;padding:0;position:relative;display:flex;flex-direction:column;gap:18px}
+ol::before{content:"";position:absolute;left:23px;top:24px;bottom:24px;width:4px;
+  background:repeating-linear-gradient(to bottom,var(--gold) 0 10px,transparent 10px 18px);opacity:.55;border-radius:2px}
+li{display:grid;grid-template-columns:50px 1fr;gap:12px;align-items:start;position:relative}
+.pin{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:var(--plum);border:2px solid var(--line);position:relative;z-index:1}
+.stop{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.time{font-family:var(--display);font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;color:var(--gold)}
+.tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--soft)}
+h2{margin:0;font-family:var(--display);font-weight:500;font-size:20px;line-height:1.2}
+.stop p{margin:0;color:var(--soft)}
+.nav{align-self:flex-start;margin-top:4px;font-weight:600;font-size:14px;text-decoration:none;background:var(--ink);color:var(--night);border-radius:999px;padding:9px 16px}
+.nav:focus-visible,.open:focus-visible,.back:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+li.done .pin{background:var(--teal);border-color:var(--teal);font-size:0}
+li.done .pin::after{content:"✓";font-size:24px;color:var(--night);font-weight:800}
+li.done .stop{opacity:.6}
+li.done .nav{display:none}
+li.current .pin{border-color:var(--gold);box-shadow:0 0 0 0 rgba(255,198,92,.6);animation:pulse 2s infinite}
+li.current .stop{border-color:var(--gold);background:linear-gradient(160deg,#3a2a3f,var(--card))}
+li.current .tag{background:var(--gold);color:var(--night);border-color:var(--gold);font-weight:600}
+li.next .tag{border-color:var(--rose);color:var(--rose)}
+@keyframes pulse{70%{box-shadow:0 0 0 14px rgba(255,198,92,0)}100%{box-shadow:0 0 0 0 rgba(255,198,92,0)}}
+
+.gift{margin-top:6px;border-radius:14px;padding:14px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;
+  background:repeating-linear-gradient(135deg,rgba(255,111,145,.16) 0 12px,rgba(255,111,145,.08) 12px 24px);border:1px dashed rgba(255,111,145,.6)}
+.gift .box{font-size:34px;line-height:1}
+.gift b{display:block;font-weight:600}
+.gift small{color:var(--soft);font-size:13px;font-variant-numeric:tabular-nums}
+.gift.open{background:linear-gradient(135deg,rgba(255,198,92,.25),rgba(255,111,145,.25));border:1px solid var(--gold)}
+.gift.open .box{animation:wiggle 1.4s ease-in-out infinite}
+.open{grid-column:1/-1;justify-self:start;font:600 15px var(--body);text-decoration:none;background:var(--gold);color:#2a1630;border-radius:999px;padding:11px 18px}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+footer{text-align:center;color:var(--soft);font-size:14px}
+@media (prefers-reduced-motion:reduce){li.current .pin,.gift.open .box{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/gala/">← Back to the balloons</a>
+  <header>
+    <span class="eyebrow">Wednesday · 11 November</span>
+    <h1>Gala's birthday day</h1>
+    <p class="now" id="now">Five stops, one very good day.</p>
+  </header>
+
+  <ol id="stops"></ol>
+
+  <footer>Made with love, Liron ♡</footer>
+</div>
+
+<script>
+(() => {
+const DAY = "2026-11-11", GIFT_AT = 14*60+30;
+const STOPS = [
+  {t:600,  time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", what:"Breakfast and coffee to start the day.", map:"https://maps.app.goo.gl/5oGxdmrU7cj4zfAfA"},
+  {t:690,  time:"11:30", emoji:"🎨", name:"Color Cafe", what:"Making some art together.", map:"https://maps.app.goo.gl/b72rKwoosDctNdbZ6"},
+  {t:840,  time:"14:00", emoji:"🍹", name:"Chacoli", what:"Tapas and margaritas.", map:"https://maps.app.goo.gl/TMysd4pi8FLrmH4E6", gift:true},
+  {t:960,  time:"16:00", emoji:"🎒", name:"Picking up Noga", what:"Straight from the kindergarten, the birthday crew is complete."},
+  {t:1005, time:"Then",  emoji:"🎂", name:"Home", what:"Celebrating together for the rest of the day."}
+];
+
+// Israel time; add #at-1430 to the link to preview another time of the day
+function clock(){
+  const m = location.hash.match(/^#at-(\d{2})(\d{2})$/);
+  if (m) return {date:DAY, min:+m[1]*60 + +m[2]};
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"})
+    .formatToParts(new Date()).map(x=>[x.type,x.value]));
+  return {date:`${p.year}-${p.month}-${p.day}`, min:+p.hour*60 + +p.minute};
+}
+const span = m => { m=Math.max(1,m); const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r? " "+r+"m":""}` : `${r} min`; };
+
+function render(){
+  const {date,min} = clock();
+  const now = date < DAY ? -1 : date > DAY ? 99999 : min;
+  let html = "", current = -1, next = -1;
+  STOPS.forEach((s,i) => {
+    const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
+    if (now >= s.t && now < end) current = i;
+    if (next < 0 && now < s.t) next = i;
+  });
+  STOPS.forEach((s,i) => {
+    const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
+    const state = now >= end ? "done" : i===current ? "current" : i===next ? "next" : "";
+    const tag = state==="done" ? "Done" : state==="current" ? "You are here" : state==="next" ? (now>=0 && now<99999 ? `In ${span(s.t-now)}` : "Up next") : "Later";
+    let gift = "";
+    if (s.gift){
+      const open = now >= GIFT_AT;
+      gift = open
+        ? `<div class="gift open"><span class="box">🎁</span><div><b>A surprise just for you</b><small>It's ready. Go on, open it.</small></div><a class="open" href="/gala/voucher/">Open your gift</a></div>`
+        : `<div class="gift"><span class="box">🎁</span><div><b>A surprise waits here</b><small>${now>=0&&now<GIFT_AT ? `Unwraps at 14:30 · ${span(GIFT_AT-now)} to go` : "Unwraps at 14:30"}</small></div></div>`;
+    }
+    html += `<li class="${state}"><div class="pin" aria-hidden="true">${s.emoji}</div><div class="stop">
+      <div class="top"><span class="time">${s.time}</span><span class="tag">${tag}</span></div>
+      <h2>${s.name}</h2><p>${s.what}</p>
+      ${s.map ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">Navigate →</a>` : ""}${gift}</div></li>`;
+  });
+  document.getElementById("stops").innerHTML = html;
+  const line = document.getElementById("now");
+  if (now < 0) line.textContent = "Five stops, one very good day.";
+  else if (now >= 99999) line.textContent = "What a day. Happy birthday ♡";
+  else if (current < 0) line.innerHTML = `First stop: <b>${STOPS[0].name}</b> in ${span(STOPS[0].t-now)}.`;
+  else if (current === STOPS.length-1) line.innerHTML = `Home together. <b>Happy birthday, Gala ♡</b>`;
+  else line.innerHTML = `Now: <b>${STOPS[current].name}</b>. Next up: ${STOPS[current+1].name} at ${STOPS[current+1].time}.`;
+}
+render();
+setInterval(render, 30000);
+addEventListener("hashchange", render);
+})();
+</script>
+</body>
+</html>

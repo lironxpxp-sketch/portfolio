@@ -34,6 +34,8 @@ html,body{height:100%;overflow:hidden;background:var(--night);color:var(--ink);f
 .card p{margin:0;color:var(--soft);font-size:14.5px;line-height:1.45}
 button,.btn{font:600 16px var(--body);color:#2a1630;background:var(--gold);border:0;border-radius:999px;padding:14px 22px;cursor:pointer;display:inline-block}
 button:focus-visible,.btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.btn{text-decoration:none}
+.bar .dayb{font-size:14px;padding:11px 16px}
 .ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .bar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
   padding:12px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -56,6 +58,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
   <h2>Your living room, but make it a party</h2>
   <p>Point the phone at the room and look around. Tap a balloon to pop it, tap empty space to add one.</p>
   <button id="go">Open the party</button>
+  <a class="btn ghost" href="/gala/day/">See our day 🗺️</a>
 </div>
 
 <div class="card" id="fallback" hidden>
@@ -70,6 +73,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 <div class="bar" id="bar" hidden>
   <button id="more">More balloons</button>
   <button id="reset">Refill the room</button>
+  <a class="btn dayb" href="/gala/day/">Our day 🗺️</a>
 </div>
 
 <script>

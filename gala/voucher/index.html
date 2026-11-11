@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>For Gala</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone-sized "steamed mirror" panel; finger-wipe reveals a spa appointment card underneath. Single dark look by choice. */
+:root{
+  --bg:#0f1a17; --panel:#16241f; --leaf:#7fa892; --mist:#e8efe9; --muted:#9db3a7; --warm:#e2b98f;
+  --display:"Italiana","Didot","Bodoni 72",Georgia,serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--mist);font-family:var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px;box-sizing:border-box;
+  background-image:radial-gradient(120% 70% at 50% 0%,rgba(226,185,143,.10),transparent 60%),radial-gradient(90% 60% at 50% 100%,rgba(127,168,146,.12),transparent 70%);
+  -webkit-user-select:none;user-select:none}
+.wrap{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-height:100%}
+.back{align-self:flex-start;font-size:13px;color:var(--muted);text-decoration:none;border:1px solid rgba(232,239,233,.2);border-radius:99px;padding:7px 14px}
+header{text-align:center;display:flex;flex-direction:column;gap:6px;padding-top:4px}
+.eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--leaf)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,10vw,46px);line-height:1.05;margin:0;text-wrap:balance}
+.hint{font-size:14px;color:var(--muted);min-height:20px;transition:opacity .6s}
+.mirror{position:relative;border-radius:200px 200px 22px 22px;overflow:hidden;background:var(--panel);
+  box-shadow:inset 0 0 0 1px rgba(232,239,233,.08),0 30px 60px -30px rgba(0,0,0,.7);aspect-ratio:3/4.4;max-width:100%;touch-action:none}
+.card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:64px 24px 26px;gap:12px;
+  background:radial-gradient(80% 50% at 50% 30%,rgba(226,185,143,.18),transparent 70%),var(--panel)}
+.card .for{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--warm)}
+.card h2{font-family:var(--display);font-weight:400;font-size:clamp(38px,11vw,52px);line-height:1;margin:0}
+.card p{margin:0;color:var(--muted);font-size:15px;line-height:1.5;max-width:30ch}
+.slot{display:flex;border:1px solid rgba(232,239,233,.16);border-radius:14px;overflow:hidden;width:100%;max-width:300px}
+.slot div{flex:1;padding:11px 8px;display:flex;flex-direction:column;gap:3px}
+.slot div+div{border-left:1px solid rgba(232,239,233,.16)}
+.slot small{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--leaf)}
+.slot b{font-weight:500;font-size:17px;font-variant-numeric:tabular-nums}
+.where{font-size:13.5px!important;color:var(--mist)!important}
+.stamp{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--bg);background:var(--leaf);padding:5px 12px;border-radius:99px;transform:rotate(-3deg)}
+canvas{position:absolute;inset:0;width:100%;height:100%;cursor:pointer;transition:opacity 1.4s ease}
+canvas.gone{opacity:0;pointer-events:none}
+.after{display:flex;flex-direction:column;gap:14px;opacity:0;transform:translateY(8px);transition:opacity 1s .6s,transform 1s .6s}
+.after.on{opacity:1;transform:none}
+.count{display:flex;justify-content:center;gap:10px}
+.count div{display:flex;flex-direction:column;align-items:center;min-width:64px;padding:10px 6px;border-radius:12px;background:rgba(127,168,146,.10)}
+.count b{font-family:var(--display);font-weight:400;font-size:30px;font-variant-numeric:tabular-nums;line-height:1}
+.count small{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.caption{text-align:center;font-size:13px;color:var(--muted)}
+.note{text-align:center;font-family:var(--display);font-size:24px;line-height:1.3;margin:6px 0 0;text-wrap:balance}
+.sign{text-align:center;color:var(--warm);font-size:14px;letter-spacing:.06em}
+.skip{align-self:center;background:none;border:1px solid rgba(232,239,233,.2);color:var(--muted);font:inherit;font-size:13px;padding:8px 16px;border-radius:99px;cursor:pointer;opacity:0;transition:opacity .8s}
+.skip.show{opacity:1}
+.skip:focus-visible,.back:focus-visible{outline:2px solid var(--leaf);outline-offset:3px}
+.locked{border-radius:200px 200px 22px 22px;background:var(--panel);aspect-ratio:3/4.4;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;
+  box-shadow:inset 0 0 0 1px rgba(232,239,233,.08)}
+.locked .big{font-size:56px}
+.locked h2{font-family:var(--display);font-weight:400;font-size:34px;margin:0}
+.locked p{margin:0;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){canvas,.after,.hint,.skip{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/gala/day/">← Back to our day</a>
+  <header>
+    <span class="eyebrow">11 · 11 · Happy birthday</span>
+    <h1 id="title">Gala, the mirror is all steamed up</h1>
+    <div class="hint" id="hint">Wipe the glass with your finger</div>
+  </header>
+
+  <div class="locked" id="locked" hidden>
+    <span class="big">🎁</span>
+    <h2>Not yet!</h2>
+    <p>This one unwraps at 14:30 at Chacoli.</p>
+    <p id="lockleft"></p>
+  </div>
+
+  <div class="mirror" id="mirror">
+    <div class="card" aria-live="polite">
+      <span class="for">Booked for you</span>
+      <h2>One massage</h2>
+      <p>An hour where nobody needs anything from you. Just lie down and let someone else do the work.</p>
+      <div class="slot">
+        <div><small>Day</small><b>Wed 25.11</b></div>
+        <div><small>Time</small><b>11:00</b></div>
+      </div>
+      <p class="where">Combined massage with Noa Stein<br>Sokolov 83, Tel Aviv</p>
+      <span class="stamp">Paid · Nothing to arrange</span>
+    </div>
+    <canvas id="fog" aria-label="Steamed glass. Wipe it to reveal your gift." role="img"></canvas>
+  </div>
+
+  <button class="skip" id="skip" type="button">Can't wipe? Tap to clear the steam</button>
+
+  <section class="after" id="after">
+    <div class="count" aria-label="Time until your massage">
+      <div><b id="cd-d">0</b><small>days</small></div>
+      <div><b id="cd-h">0</b><small>hours</small></div>
+      <div><b id="cd-m">0</b><small>min</small></div>
+    </div>
+    <div class="caption" id="caption">until you relax</div>
+    <p class="note">Happy birthday, my love. You've earned this one.</p>
+    <div class="sign">Love, Liron</div>
+  </section>
+</div>
+
+<script>
+(function(){
+  // ---- lock until 14:30 Israel time on 11.11.2026 (add #open to the link to preview) ----
+  const UNLOCK = new Date('2026-11-11T14:30:00+02:00').getTime();
+  const isOpen = () => location.hash === '#open' || Date.now() >= UNLOCK;
+  const mirror = document.getElementById('mirror'), locked = document.getElementById('locked');
+  let started = false;
+  function gate(){
+    if (isOpen()){
+      locked.hidden = true; mirror.hidden = false; document.getElementById('hint').hidden = false;
+      if (!started){ started = true; start(); }
+      return;
+    }
+    mirror.hidden = true; locked.hidden = false; document.getElementById('hint').hidden = true;
+    document.getElementById('title').textContent = 'Patience, birthday girl';
+    const m = Math.max(1, Math.ceil((UNLOCK - Date.now())/6e4)), h = Math.floor(m/60);
+    document.getElementById('lockleft').textContent = (h ? h+'h ' : '') + (m%60) + ' min to go';
+  }
+  gate(); setInterval(gate, 20000); addEventListener('hashchange', gate);
+
+  function start(){
+    document.getElementById('title').textContent = 'Gala, the mirror is all steamed up';
+    const cv = document.getElementById('fog'), ctx = cv.getContext('2d');
+    const hint = document.getElementById('hint'), after = document.getElementById('after'), skip = document.getElementById('skip');
+    let W=0,H=0,dpr=1,revealed=false,strokes=0,last=null;
+
+    function paintFog(){
+      const r = mirror.getBoundingClientRect();
+      dpr = Math.min(window.devicePixelRatio||1,2);
+      W = Math.round(r.width*dpr); H = Math.round(r.height*dpr);
+      cv.width=W; cv.height=H;
+      ctx.globalCompositeOperation='source-over';
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'rgba(222,232,226,0.97)'); g.addColorStop(1,'rgba(196,212,203,0.97)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      for(let i=0;i<40;i++){
+        const x=Math.random()*W,y=Math.random()*H,rad=(40+Math.random()*120)*dpr;
+        const c=ctx.createRadialGradient(x,y,0,x,y,rad);
+        c.addColorStop(0,'rgba(255,255,255,0.35)'); c.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.fill();
+      }
+      for(let i=0;i<160;i++){
+        const x=Math.random()*W,y=Math.random()*H,rad=(0.8+Math.random()*2.6)*dpr;
+        ctx.fillStyle='rgba(150,175,162,0.35)'; ctx.beginPath(); ctx.arc(x,y,rad,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.arc(x-rad*.3,y-rad*.3,rad*.35,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalCompositeOperation='destination-out';
+      ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=6*dpr; ctx.lineCap='round';
+      const hx=W/2,hy=H*0.5,s=26*dpr;
+      ctx.beginPath(); ctx.moveTo(hx,hy+s*1.1);
+      ctx.bezierCurveTo(hx-s*2.2,hy-s*.2,hx-s*1.1,hy-s*1.7,hx,hy-s*.6);
+      ctx.bezierCurveTo(hx+s*1.1,hy-s*1.7,hx+s*2.2,hy-s*.2,hx,hy+s*1.1);
+      ctx.stroke();
+      ctx.globalCompositeOperation='source-over';
+    }
+    function wipe(x,y){
+      ctx.globalCompositeOperation='destination-out';
+      const rad=34*dpr, from = last || {x,y};
+      const dist=Math.hypot(x-from.x,y-from.y), steps=Math.max(1,Math.ceil(dist/(rad/3)));
+      for(let i=0;i<=steps;i++){
+        const px=from.x+(x-from.x)*i/steps, py=from.y+(y-from.y)*i/steps;
+        const c=ctx.createRadialGradient(px,py,0,px,py,rad);
+        c.addColorStop(0,'rgba(0,0,0,1)'); c.addColorStop(.6,'rgba(0,0,0,.85)'); c.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=c; ctx.beginPath(); ctx.arc(px,py,rad,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalCompositeOperation='source-over';
+      last={x,y};
+      if(++strokes%12===0) check();
+    }
+    function check(){
+      const step=Math.max(8,Math.round(W/40)), data=ctx.getImageData(0,0,W,H).data;
+      let clear=0,total=0;
+      for(let y=0;y<H;y+=step){for(let x=0;x<W;x+=step){total++; if(data[(y*W+x)*4+3]<90) clear++;}}
+      if(clear/total>0.5) reveal();
+    }
+    function reveal(){
+      if(revealed) return; revealed=true;
+      cv.classList.add('gone'); skip.classList.remove('show'); skip.hidden=true;
+      hint.textContent='Happy birthday ♡'; after.classList.add('on');
+    }
+    function pos(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*dpr,y:(e.clientY-r.top)*dpr};}
+    let down=false;
+    cv.addEventListener('pointerdown',e=>{down=true;last=null;cv.setPointerCapture(e.pointerId);const p=pos(e);wipe(p.x,p.y);hint.style.opacity='.5';});
+    cv.addEventListener('pointermove',e=>{if(!down)return;const p=pos(e);wipe(p.x,p.y);});
+    ['pointerup','pointercancel','pointerleave'].forEach(t=>cv.addEventListener(t,()=>{down=false;last=null;if(!revealed)check();}));
+    skip.addEventListener('click',reveal);
+    setTimeout(()=>{if(!revealed)skip.classList.add('show');},9000);
+    paintFog();
+    let rt; window.addEventListener('resize',()=>{if(revealed)return;clearTimeout(rt);rt=setTimeout(()=>{paintFog();strokes=0;},150);});
+
+    const target=new Date('2026-11-25T11:00:00+02:00').getTime();
+    function tick(){
+      let ms=Math.max(0,target-Date.now());
+      const d=Math.floor(ms/864e5); ms-=d*864e5;
+      const h=Math.floor(ms/36e5); ms-=h*36e5;
+      const m=Math.floor(ms/6e4);
+      document.getElementById('cd-d').textContent=d;
+      document.getElementById('cd-h').textContent=h;
+      document.getElementById('cd-m').textContent=m;
+      if(target<=Date.now()) document.getElementById('caption').textContent='It’s massage time';
+    }
+    tick(); setInterval(tick,20000);
+  }
+})();
+</script>
+</body>
+</html>
