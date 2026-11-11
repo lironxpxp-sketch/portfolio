@@ -120,7 +120,7 @@ function nowMin(){
   const d = `${p.year}-${p.month}-${p.day}`;
   return d < DAY ? -1 : d > DAY ? 99999 : +p.hour*60 + +p.minute;
 }
-let shown = {}; try { shown = JSON.parse(localStorage.getItem("gala-revealed") || "{}"); } catch(e) {}
+let shown = {};
 const nameOf = key => { const i = idx(key), s = STOPS[i]; if (!s) return "";
   const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
   return s.mystery && !shown[key] && nowMin() < end ? `Mystery stop #${s.mystery}` : s.name; };
@@ -128,7 +128,7 @@ const nameOf = key => { const i = idx(key), s = STOPS[i]; if (!s) return "";
 let photos = [], files = [];
 async function load(){
   photos.forEach(p => URL.revokeObjectURL(p.url));
-  let all = []; try { all = await GalaPhotos.all(); } catch(e) {}
+  let all = []; try { const r = await GalaPhotos.load(); all = r.photos; Object.assign(shown, r.shown); } catch(e) {}
   all.sort((x,y) => idx(x.stop) - idx(y.stop) || x.at - y.at);
   photos = all.map(p => ({...p, url: URL.createObjectURL(p.blob)}));
   files = photos.map((p,i) => new File([p.blob], `gala-birthday-${String(i+1).padStart(2,"0")}.jpg`, {type: p.blob.type || "image/jpeg"}));
@@ -204,6 +204,7 @@ $("save").onclick = async () => {
   } catch(e) { m.textContent = e && e.name === "AbortError" ? "No problem, nothing was saved. Try again any time." : "Couldn't open the share sheet. Open a photo, then press and hold it to save."; }
 };
 load();
+setInterval(() => { if (!document.hidden && $("viewer").hidden && $("show").hidden) load(); }, 30000);
 })();
 </script>
 </body>

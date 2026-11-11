@@ -95,6 +95,7 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 .peekrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .del{font:600 14px var(--body);background:var(--rose);color:#2a1630;border:0;border-radius:999px;padding:9px 16px;cursor:pointer}
 .del:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.sync{margin:0;font-size:13px;color:var(--gold)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (prefers-reduced-motion:reduce){li.pop .stop,li.current .pin,.gift.open .box{animation:none}}
 </style>
@@ -106,6 +107,7 @@ footer{text-align:center;color:var(--soft);font-size:14px}
     <span class="eyebrow">Wednesday · 11 November</span>
     <h1>Gala's birthday day</h1>
     <p class="now" id="now">Six stops, one very good day.</p>
+    <p class="sync" id="syncnote" hidden>Photos on this phone aren't shared yet. Open the shared link once on this phone to sync.</p>
   </header>
 
   <ol id="stops"></ol>
@@ -131,6 +133,7 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 <script>
 (() => {
 const DAY = "2026-11-11", GIFT_AT = 14*60+30;
+const peek = document.getElementById("peek");
 // key = stable id used for saved photos and reveals (never reuse or reorder keys)
 const STOPS = [
   {key:5, t:540,  time:"09:00", emoji:"🎈", name:"Morning balloons & coffee", what:"Balloons in the living room and the first coffee of your birthday."},
@@ -143,7 +146,7 @@ const STOPS = [
 
 // Israel time; add #at-1430 to the link to preview another time of the day
 function clock(){
-  const m = location.hash.match(/^#at-(\d{2})(\d{2})$/);
+  const m = location.hash.match(/at-(\d{2})(\d{2})/);
   if (m) return {date:DAY, min:+m[1]*60 + +m[2]};
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"})
     .formatToParts(new Date()).map(x=>[x.type,x.value]));
@@ -151,30 +154,36 @@ function clock(){
 }
 let shown = {};
 try { shown = JSON.parse(localStorage.getItem("gala-revealed") || "{}"); } catch(e) {}
-function reveal(i){ shown[STOPS[i].key] = 1; try { localStorage.setItem("gala-revealed", JSON.stringify(shown)); } catch(e) {} render(i); }
+function reveal(i){ shown[STOPS[i].key] = 1; GalaPhotos.reveal(STOPS[i].key); render(i); }
 const hidden = (s,state) => s.mystery && !shown[s.key] && state !== "done";
 const label = (s,state) => hidden(s,state) ? `Mystery stop #${s.mystery}` : s.name;
 const span = m => { m=Math.max(1,m); const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r? " "+r+"m":""}` : `${r} min`; };
 
-let pics = {}, total = 0, busy = -1, target = -1;
+let pics = {}, total = 0, busy = -1, target = -1, failed = -1, urls = new Map(), loading = false;
 async function loadPics(){
+  if (loading) return; loading = true;
   try {
-    const all = await GalaPhotos.all();
-    Object.values(pics).flat().forEach(x => URL.revokeObjectURL(x.url));
-    pics = {}; total = all.length;
-    all.forEach(p => (pics[p.stop] = pics[p.stop] || []).push({id:p.id, url:URL.createObjectURL(p.blob)}));
+    const {photos, shown: cloud} = await GalaPhotos.load();
+    Object.assign(shown, cloud);
+    const keep = new Set(photos.map(p => String(p.id)));
+    for (const [id,u] of urls) if (!keep.has(id)) { URL.revokeObjectURL(u); urls.delete(id); }
+    pics = {}; total = photos.length;
+    photos.forEach(p => { const sid = String(p.id); if (!urls.has(sid)) urls.set(sid, URL.createObjectURL(p.blob));
+      (pics[p.stop] = pics[p.stop] || []).push({id:p.id, sid, url:urls.get(sid)}); });
   } catch(e) {}
-  render();
+  loading = false;
+  if (peek.hidden) render();
 }
 function picsHtml(key){
   const list = pics[key] || [];
   if (!list.length) return "";
-  return `<div class="pics">${list.map(x=>`<button type="button" class="thumb" data-pk="${key}" data-id="${x.id}" aria-label="View or delete photo"><img src="${x.url}" alt=""></button>`).join("")}</div>`;
+  return `<div class="pics">${list.map(x=>`<button type="button" class="thumb" data-pk="${key}" data-id="${x.sid}" aria-label="View or delete photo"><img src="${x.url}" alt=""></button>`).join("")}</div>`;
 }
 function render(justShown){
   const {date,min} = clock();
   const now = date < DAY ? -1 : date > DAY ? 99999 : min;
   let html = "", current = -1, next = -1;
+  document.getElementById("syncnote").hidden = GalaPhotos.shared;
   STOPS.forEach((s,i) => {
     const end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
     if (now >= s.t && now < end) current = i;
@@ -193,7 +202,7 @@ function render(justShown){
         : `<div class="gift"><span class="box">🎁</span><div><b>A surprise waits here</b><small>${now>=0&&now<GIFT_AT ? `Unwraps at 14:30 · ${span(GIFT_AT-now)} to go` : "Unwraps at 14:30"}</small></div></div>`;
     }
     const canShoot = !secret && (state === "current" || state === "done" || (s.mystery && shown[s.key]));
-    const shoot = canShoot ? `<button class="add" data-shoot="${s.key}">${busy===s.key ? "Saving…" : (pics[s.key]||[]).length ? "📸 Add more" : "📸 Add photos"}</button>` : "";
+    const shoot = canShoot ? `<button class="add" data-shoot="${s.key}">${busy===s.key ? "Saving…" : failed===s.key ? "Couldn't save. Try again" : (pics[s.key]||[]).length ? "📸 Add more" : "📸 Add photos"}</button>` : "";
     const canReveal = secret && (state === "current" || state === "next");
     const nav = s.map && state !== "done" ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">Navigate →</a>` : "";
     html += `<li class="${state}${secret ? " secret" : ""}${justShown===i ? " pop" : ""}"><div class="pin" aria-hidden="true">${secret ? "❔" : s.emoji}</div><div class="stop">
@@ -214,29 +223,33 @@ function render(justShown){
     ? (total ? `${total} photo${total>1?"s":""} from today, all in one place.` : "Our day, in photos.")
     : (total ? `${total} photo${total>1?"s":""} so far. Tonight they turn into one album.` : "Add photos at each stop. Tonight they turn into one album.");
 }
-const picker = document.getElementById("picker"), peek = document.getElementById("peek");
+const picker = document.getElementById("picker");
 let peekId = null;
 function openPeek(id, url){ peekId = id; document.getElementById("peekimg").src = url; document.getElementById("peekask").hidden = true; document.getElementById("peekacts").hidden = false; peek.hidden = false; }
 function closePeek(){ peek.hidden = true; peekId = null; }
 document.getElementById("stops").addEventListener("click", e => {
   const b = e.target.closest(".reveal"); if (b) reveal(+b.dataset.i);
   const a = e.target.closest("[data-shoot]"); if (a && busy < 0) { target = +a.dataset.shoot; picker.value = ""; picker.click(); }
-  const t = e.target.closest(".thumb"); if (t) { const x = (pics[+t.dataset.pk]||[]).find(p => p.id === +t.dataset.id); if (x) openPeek(x.id, x.url); }
+  const t = e.target.closest(".thumb"); if (t) { const x = (pics[+t.dataset.pk]||[]).find(p => p.sid === t.dataset.id); if (x) openPeek(x.id, x.url); }
 });
 picker.addEventListener("change", async () => {
   const files = [...picker.files]; if (!files.length || target < 0) return;
-  busy = target; render();
-  try { await GalaPhotos.add(target, files); } catch(e) {}
-  busy = -1; await loadPics();
+  busy = target; failed = -1; render();
+  try { await GalaPhotos.add(target, files); } catch(e) { failed = target; }
+  busy = -1; await loadPics(); render();
 });
 document.getElementById("peekclose").onclick = closePeek;
 peek.addEventListener("click", e => { if (e.target === peek) closePeek(); });
 document.getElementById("peekdel").onclick = () => { document.getElementById("peekacts").hidden = true; document.getElementById("peekask").hidden = false; };
 document.getElementById("peekno").onclick = () => { document.getElementById("peekask").hidden = true; document.getElementById("peekacts").hidden = false; };
-document.getElementById("peekyes").onclick = async () => { const id = peekId; closePeek(); try { await GalaPhotos.remove(id); } catch(e) {} await loadPics(); };
+document.getElementById("peekyes").onclick = async () => { const id = peekId; closePeek();
+  for (const k in pics) pics[k] = pics[k].filter(p => p.id !== id); total = Object.values(pics).flat().length; render();
+  try { await GalaPhotos.remove(id); } catch(e) {} await loadPics(); };
 render();
 loadPics();
 setInterval(() => render(), 30000);
+setInterval(() => { if (!document.hidden && busy < 0) loadPics(); }, 20000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) loadPics(); });
 addEventListener("hashchange", () => render());
 })();
 </script>
