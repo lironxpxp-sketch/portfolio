@@ -74,6 +74,18 @@ li.next .tag{border-color:var(--rose);color:var(--rose)}
 .open{grid-column:1/-1;justify-self:start;font:600 15px var(--body);text-decoration:none;background:var(--gold);color:#2a1630;border-radius:999px;padding:11px 18px}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
 footer{text-align:center;color:var(--soft);font-size:14px}
+.pics{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pics img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--line);max-width:100%}
+.pics .more{width:54px;height:54px;border-radius:10px;display:grid;place-items:center;background:var(--plum);border:1px solid var(--line);font-size:13px;color:var(--soft)}
+.add{font:600 14px var(--body);background:transparent;color:var(--ink);border:1px dashed rgba(255,248,241,.4);border-radius:999px;padding:8px 14px;cursor:pointer}
+.add:focus-visible,.albumbtn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.album{background:linear-gradient(150deg,#3a2240,var(--card));border:1px solid rgba(255,111,145,.4);border-radius:20px;padding:18px;display:grid;gap:10px}
+.album h3{margin:0;font-family:var(--display);font-weight:800;font-size:22px}
+.album p{margin:0;color:var(--soft)}
+.album.ready{border-color:var(--gold);box-shadow:0 20px 50px -24px rgba(255,198,92,.6)}
+.albumbtn{justify-self:start;font:600 15px var(--body);text-decoration:none;background:var(--rose);color:#2a1630;border-radius:999px;padding:11px 18px}
+.album.ready .albumbtn{background:var(--gold)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (prefers-reduced-motion:reduce){li.pop .stop,li.current .pin,.gift.open .box{animation:none}}
 </style>
 </head>
@@ -88,9 +100,17 @@ footer{text-align:center;color:var(--soft);font-size:14px}
 
   <ol id="stops"></ol>
 
+  <section class="album" id="album">
+    <h3>Our album 📖</h3>
+    <p id="albumtext">Add photos at each stop. Tonight they turn into one album.</p>
+    <a class="albumbtn" href="/gala/album/">Open the album</a>
+  </section>
+
+  <input type="file" id="picker" class="vh" accept="image/*" multiple tabindex="-1" aria-hidden="true">
   <footer>Made with love, Liron ♡</footer>
 </div>
 
+<script src="/gala/photos.js"></script>
 <script>
 (() => {
 const DAY = "2026-11-11", GIFT_AT = 14*60+30;
@@ -117,6 +137,22 @@ const hidden = (s,i,state) => s.mystery && !shown[i] && state !== "done";
 const label = (s,i,state) => hidden(s,i,state) ? `Mystery stop #${i+1}` : s.name;
 const span = m => { m=Math.max(1,m); const h=Math.floor(m/60), r=m%60; return h ? `${h}h${r? " "+r+"m":""}` : `${r} min`; };
 
+let pics = {}, total = 0, busy = -1, target = -1;
+async function loadPics(){
+  try {
+    const all = await GalaPhotos.all();
+    Object.values(pics).flat().forEach(u => URL.revokeObjectURL(u));
+    pics = {}; total = all.length;
+    all.forEach(p => (pics[p.stop] = pics[p.stop] || []).push(URL.createObjectURL(p.blob)));
+  } catch(e) {}
+  render();
+}
+function picsHtml(i){
+  const list = pics[i] || [];
+  if (!list.length) return "";
+  const show = list.slice(0, list.length > 6 ? 5 : 6);
+  return `<div class="pics">${show.map(u=>`<img src="${u}" alt="">`).join("")}${list.length > show.length ? `<span class="more">+${list.length-show.length}</span>` : ""}</div>`;
+}
 function render(justShown){
   const {date,min} = clock();
   const now = date < DAY ? -1 : date > DAY ? 99999 : min;
@@ -138,12 +174,14 @@ function render(justShown){
         ? `<div class="gift open"><span class="box">🎁</span><div><b>A surprise just for you</b><small>It's ready. Go on, open it.</small></div><a class="open" href="/gala/voucher/">Open your gift</a></div>`
         : `<div class="gift"><span class="box">🎁</span><div><b>A surprise waits here</b><small>${now>=0&&now<GIFT_AT ? `Unwraps at 14:30 · ${span(GIFT_AT-now)} to go` : "Unwraps at 14:30"}</small></div></div>`;
     }
+    const canShoot = !secret && (state === "current" || state === "done" || (s.mystery && shown[i]));
+    const shoot = canShoot ? `<button class="add" data-shoot="${i}">${busy===i ? "Saving…" : (pics[i]||[]).length ? "📸 Add more" : "📸 Add photos"}</button>` : "";
     const canReveal = secret && (state === "current" || state === "next");
     const nav = s.map && state !== "done" ? `<a class="nav" href="${s.map}" target="_blank" rel="noopener">Navigate →</a>` : "";
     html += `<li class="${state}${secret ? " secret" : ""}${justShown===i ? " pop" : ""}"><div class="pin" aria-hidden="true">${secret ? "❔" : s.emoji}</div><div class="stop">
       <div class="top"><span class="time">${s.time}</span><span class="tag">${tag}</span></div>
       <h2>${label(s,i,state)}</h2><p>${secret ? s.hint : s.what}</p>
-      <div class="acts">${nav}${canReveal ? `<button class="reveal" data-i="${i}">We're here! Reveal ✨</button>` : ""}</div>${gift}</div></li>`;
+      <div class="acts">${nav}${canReveal ? `<button class="reveal" data-i="${i}">We're here! Reveal ✨</button>` : ""}${shoot}</div>${canShoot ? picsHtml(i) : ""}${gift}</div></li>`;
   });
   document.getElementById("stops").innerHTML = html;
   const line = document.getElementById("now");
@@ -152,9 +190,25 @@ function render(justShown){
   else if (current < 0) line.innerHTML = `First stop: <b>${label(STOPS[0],0,"")}</b> in ${span(STOPS[0].t-now)}.`;
   else if (current === STOPS.length-1) line.innerHTML = `Home together. <b>Happy birthday, Gala ♡</b>`;
   else line.innerHTML = `Now: <b>${label(STOPS[current],current,"current")}</b>. Next up: ${label(STOPS[current+1],current+1,"")} at ${STOPS[current+1].time}.`;
+  const ready = now >= STOPS[STOPS.length-1].t;
+  document.getElementById("album").classList.toggle("ready", ready);
+  document.getElementById("albumtext").textContent = ready
+    ? (total ? `${total} photo${total>1?"s":""} from today, all in one place.` : "Our day, in photos.")
+    : (total ? `${total} photo${total>1?"s":""} so far. Tonight they turn into one album.` : "Add photos at each stop. Tonight they turn into one album.");
 }
-document.getElementById("stops").addEventListener("click", e => { const b = e.target.closest(".reveal"); if (b) reveal(+b.dataset.i); });
+const picker = document.getElementById("picker");
+document.getElementById("stops").addEventListener("click", e => {
+  const b = e.target.closest(".reveal"); if (b) reveal(+b.dataset.i);
+  const a = e.target.closest("[data-shoot]"); if (a && busy < 0) { target = +a.dataset.shoot; picker.value = ""; picker.click(); }
+});
+picker.addEventListener("change", async () => {
+  const files = [...picker.files]; if (!files.length || target < 0) return;
+  busy = target; render();
+  try { await GalaPhotos.add(target, files); } catch(e) {}
+  busy = -1; await loadPics();
+});
 render();
+loadPics();
 setInterval(() => render(), 30000);
 addEventListener("hashchange", () => render());
 })();

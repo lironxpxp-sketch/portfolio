@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Gala's Birthday Album</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column photo book; a section per stop with a 3-up grid; fullscreen viewer and slideshow overlays. Same night/gold world as the roadmap. */
+:root{
+  --night:#120d1c; --plum:#1d1429; --card:#241a33; --ink:#fff8f1; --soft:rgba(255,248,241,.7);
+  --line:rgba(255,248,241,.16); --gold:#ffc65c; --rose:#ff6f91;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"DM Sans",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;min-height:100%}
+body{background:var(--night);color:var(--ink);font:15px/1.5 var(--body);
+  background-image:radial-gradient(110% 50% at 50% 0%,#3a2547 0%,transparent 70%);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.back{align-self:flex-start;font-size:14px;color:var(--soft);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+header{display:flex;flex-direction:column;gap:8px}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,50px);line-height:1;letter-spacing:-.01em;text-wrap:balance;text-shadow:0 2px 0 var(--rose)}
+.sub{margin:0;color:var(--soft)}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+.btn{font:600 15px var(--body);border:0;border-radius:999px;padding:11px 18px;cursor:pointer;text-decoration:none;background:var(--gold);color:#2a1630}
+.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible,.back:focus-visible,.grid button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.msg{color:var(--soft);font-size:14px;margin:0}
+section{display:flex;flex-direction:column;gap:10px}
+section h2{margin:0;font-family:var(--display);font-weight:500;font-size:22px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+section h2 span{font-family:var(--display);font-weight:800;font-size:16px;color:var(--gold);font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.grid button{padding:0;border:0;background:var(--plum);border-radius:12px;overflow:hidden;aspect-ratio:1;cursor:pointer;max-width:100%}
+.grid img{width:100%;height:100%;object-fit:cover;display:block}
+.grid button:first-child:nth-last-child(n+4){grid-column:span 2;grid-row:span 2}
+.empty{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;display:grid;gap:10px;text-align:center;justify-items:center}
+.empty b{font-family:var(--display);font-size:20px}
+footer{text-align:center;color:var(--soft);font-size:14px}
+
+.over{position:fixed;inset:0;z-index:30;background:#07040c;display:flex;flex-direction:column}
+.over .bar{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px))}
+.over .cap{color:var(--soft);font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icon{font:600 14px var(--body);background:rgba(255,248,241,.1);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer;flex-shrink:0}
+.icon:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.stage{flex:1;position:relative;overflow:hidden;touch-action:pan-y}
+.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;max-width:none}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:rgba(18,13,28,.6);color:var(--ink);font-size:20px;cursor:pointer}
+.nav.l{left:max(10px,env(safe-area-inset-left,0px))}.nav.r{right:max(10px,env(safe-area-inset-right,0px))}
+.confirm{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.confirm .icon.danger{background:var(--rose);color:#2a1630;border-color:var(--rose)}
+
+#show .stage img{opacity:0;transition:opacity 1.2s ease}
+#show .stage img.on{opacity:1;animation:kb 5s ease-out forwards}
+@keyframes kb{from{transform:scale(1.08)}to{transform:scale(1)}}
+#show .title{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;padding-inline:16px;pointer-events:none}
+#show .title b{display:inline-block;font-family:var(--display);font-weight:800;font-size:22px;background:rgba(18,13,28,.55);border-radius:999px;padding:6px 16px}
+.finale{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;opacity:0;transition:opacity 1.2s}
+.finale.on{opacity:1}
+.finale h2{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(34px,10vw,54px);line-height:1.05;text-shadow:0 2px 0 var(--rose);text-wrap:balance}
+.finale p{color:var(--gold);margin:.6em 0 0}
+@media (prefers-reduced-motion:reduce){#show .stage img.on{animation:none}#show .stage img,.finale{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/gala/day/">← Back to our day</a>
+  <header>
+    <span class="eyebrow">Wednesday · 11 · 11 · 2026</span>
+    <h1>Our day, in photos</h1>
+    <p class="sub" id="sub">Gala's birthday, stop by stop.</p>
+    <div class="tools" id="tools" hidden>
+      <button class="btn" id="play" type="button">▶ Play the slideshow</button>
+      <button class="btn alt" id="save" type="button">Save all to Photos</button>
+    </div>
+    <p class="msg" id="msg" hidden></p>
+  </header>
+  <div id="book"></div>
+  <footer>Made with love, Liron ♡</footer>
+</div>
+
+<div class="over" id="viewer" hidden role="dialog" aria-modal="true" aria-label="Photo">
+  <div class="bar"><button class="icon" id="vclose" type="button">✕ Close</button><span class="cap" id="vcap"></span><button class="icon" id="vdel" type="button">Delete</button></div>
+  <div class="stage" id="vstage"><img id="vimg" alt=""><button class="nav l" id="vprev" type="button" aria-label="Previous photo">‹</button><button class="nav r" id="vnext" type="button" aria-label="Next photo">›</button></div>
+  <div class="confirm" id="vconfirm" hidden><span>Delete this photo for good?</span><button class="icon danger" id="vyes" type="button">Delete</button><button class="icon" id="vno" type="button">Keep it</button></div>
+</div>
+
+<div class="over" id="show" hidden role="dialog" aria-modal="true" aria-label="Slideshow">
+  <div class="bar"><button class="icon" id="sclose" type="button">✕ Close</button><span class="cap" id="scount"></span><span></span></div>
+  <div class="stage" id="sstage"><div class="title"><b id="stitle"></b></div>
+    <div class="finale" id="finale"><div><h2>Happy birthday, Gala 💜</h2><p>What a day. Love, Liron</p></div></div></div>
+</div>
+
+<script src="/gala/photos.js"></script>
+<script>
+(() => {
+const DAY = "2026-11-11";
+const STOPS = [
+  {t:600, time:"10:00", emoji:"☕", name:"Fortune Coffee Shop", mystery:true},
+  {t:690, time:"11:30", emoji:"🎨", name:"Color Cafe", mystery:true},
+  {t:840, time:"14:00", emoji:"🍹", name:"Chacoli", mystery:true},
+  {t:960, time:"16:00", emoji:"🎒", name:"Picking up Noga"},
+  {t:1005,time:"Then",  emoji:"🎂", name:"Home"}
+];
+const $ = id => document.getElementById(id);
+function nowMin(){
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"})
+    .formatToParts(new Date()).map(x=>[x.type,x.value]));
+  const d = `${p.year}-${p.month}-${p.day}`;
+  return d < DAY ? -1 : d > DAY ? 99999 : +p.hour*60 + +p.minute;
+}
+let shown = {}; try { shown = JSON.parse(localStorage.getItem("gala-revealed") || "{}"); } catch(e) {}
+const nameOf = i => { const s = STOPS[i], end = i < STOPS.length-1 ? STOPS[i+1].t : 99998;
+  return s.mystery && !shown[i] && nowMin() < end ? `Mystery stop #${i+1}` : s.name; };
+
+let photos = [], files = [];
+async function load(){
+  photos.forEach(p => URL.revokeObjectURL(p.url));
+  let all = []; try { all = await GalaPhotos.all(); } catch(e) {}
+  photos = all.map(p => ({...p, url: URL.createObjectURL(p.blob)}));
+  files = photos.map((p,i) => new File([p.blob], `gala-birthday-${String(i+1).padStart(2,"0")}.jpg`, {type: p.blob.type || "image/jpeg"}));
+  draw();
+}
+function draw(){
+  const book = $("book");
+  $("tools").hidden = !photos.length;
+  if (!photos.length){
+    $("sub").textContent = "Gala's birthday, stop by stop.";
+    book.innerHTML = `<div class="empty"><b>No photos yet</b><span class="msg">Add photos from each stop on the roadmap. They'll gather here.</span><a class="btn" href="/gala/day/">Go to our day</a></div>`;
+    return;
+  }
+  $("sub").textContent = `${photos.length} photo${photos.length>1?"s":""} from Gala's birthday.`;
+  let html = "";
+  STOPS.forEach((s,i) => {
+    const list = photos.map((p,k)=>({p,k})).filter(x => x.p.stop === i);
+    if (!list.length) return;
+    html += `<section><h2><span>${s.time}</span>${nameOf(i)} ${s.emoji}</h2><div class="grid">${list.map(x=>`<button type="button" data-k="${x.k}" aria-label="Open photo"><img src="${x.p.url}" alt="" loading="lazy"></button>`).join("")}</div></section>`;
+  });
+  book.innerHTML = html;
+}
+$("book").addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) openViewer(+b.dataset.k); });
+
+// viewer
+let cur = 0;
+function openViewer(k){ cur = k; $("viewer").hidden = false; $("vconfirm").hidden = true; paint(); document.body.style.overflow = "hidden"; }
+function paint(){ const p = photos[cur]; if (!p) return closeViewer();
+  $("vimg").src = p.url; $("vcap").textContent = `${nameOf(p.stop)} · ${cur+1} of ${photos.length}`; }
+function closeViewer(){ $("viewer").hidden = true; document.body.style.overflow = ""; }
+function step(d){ cur = (cur + d + photos.length) % photos.length; $("vconfirm").hidden = true; paint(); }
+$("vclose").onclick = closeViewer; $("vprev").onclick = () => step(-1); $("vnext").onclick = () => step(1);
+$("vdel").onclick = () => { $("vconfirm").hidden = false; };
+$("vno").onclick = () => { $("vconfirm").hidden = true; };
+$("vyes").onclick = async () => { const id = photos[cur].id; try { await GalaPhotos.remove(id); } catch(e) {}
+  await load(); if (!photos.length) return closeViewer(); cur = Math.min(cur, photos.length-1); $("vconfirm").hidden = true; paint(); };
+let sx = null;
+$("vstage").addEventListener("pointerdown", e => sx = e.clientX);
+$("vstage").addEventListener("pointerup", e => { if (sx === null) return; const d = e.clientX - sx; sx = null; if (Math.abs(d) > 50) step(d < 0 ? 1 : -1); });
+addEventListener("keydown", e => { if ($("viewer").hidden) return; if (e.key === "ArrowLeft") step(-1); if (e.key === "ArrowRight") step(1); if (e.key === "Escape") closeViewer(); });
+
+// slideshow
+let timer = null, si = 0, imgs = [];
+function play(){
+  if (!photos.length) return;
+  const st = $("sstage"); st.querySelectorAll("img").forEach(n => n.remove());
+  imgs = photos.map(p => { const im = new Image(); im.src = p.url; im.alt = ""; st.insertBefore(im, st.firstChild); return im; });
+  $("finale").classList.remove("on"); $("show").hidden = false; document.body.style.overflow = "hidden";
+  try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{}); } catch(e) {}
+  si = -1; next();
+}
+function next(){
+  clearTimeout(timer);
+  imgs.forEach(im => im.classList.remove("on"));
+  si++;
+  if (si >= imgs.length){ $("stitle").textContent = ""; $("scount").textContent = ""; $("finale").classList.add("on"); return; }
+  imgs[si].classList.add("on");
+  const p = photos[si];
+  $("stitle").textContent = `${STOPS[p.stop].emoji} ${nameOf(p.stop)}`;
+  $("scount").textContent = `${si+1} / ${imgs.length}`;
+  timer = setTimeout(next, 4200);
+}
+function stop(){ clearTimeout(timer); $("show").hidden = true; document.body.style.overflow = "";
+  try { document.fullscreenElement && document.exitFullscreen(); } catch(e) {} }
+$("play").onclick = play; $("sclose").onclick = stop; $("sstage").addEventListener("click", () => { if (si < imgs.length) next(); });
+
+// save all: the share sheet lets her "Save Images" to Photos or send to WhatsApp
+$("save").onclick = async () => {
+  const m = $("msg"); m.hidden = false;
+  try {
+    if (navigator.canShare && navigator.canShare({files})) { await navigator.share({files, title: "Gala's birthday"}); m.textContent = "Done 💜"; }
+    else m.textContent = "Saving all at once isn't supported in this browser. Open a photo, then press and hold it to save.";
+  } catch(e) { m.textContent = e && e.name === "AbortError" ? "No problem, nothing was saved. Try again any time." : "Couldn't open the share sheet. Open a photo, then press and hold it to save."; }
+};
+load();
+})();
+</script>
+</body>
+</html>
