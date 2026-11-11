@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Gala's Balloon Room</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=DM+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: full-bleed camera stage, balloons on a canvas above it, one floating card + a bottom control bar */
+:root{
+  --night:#120d1c; --ink:#fff8f1; --soft:rgba(255,248,241,.72);
+  --glass:rgba(24,16,36,.62); --line:rgba(255,248,241,.18); --gold:#ffc65c; --rose:#ff6f91;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"DM Sans",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow:hidden;background:var(--night);color:var(--ink);font-family:var(--body);touch-action:none;-webkit-user-select:none;user-select:none}
+#stage{position:fixed;inset:0;background:radial-gradient(120% 80% at 50% 110%,#3a2547 0%,#1d1429 55%,var(--night) 100%)}
+#cam,#photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+#fx{position:absolute;inset:0;width:100%;height:100%}
+.banner{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);text-align:center;pointer-events:none;padding-inline:16px}
+.banner h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(28px,8.5vw,52px);line-height:1;letter-spacing:-.01em;text-wrap:balance;
+  color:var(--ink);text-shadow:0 2px 0 var(--rose),0 6px 24px rgba(0,0,0,.45)}
+.banner p{margin:.35em 0 0;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.card{position:fixed;left:50%;top:50%;transform:translate(-50%,-38%);width:min(340px,calc(100% - 32px));background:var(--glass);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:22px;padding:22px 20px;text-align:center;display:grid;gap:12px}
+.card h2{margin:0;font-family:var(--display);font-weight:500;font-size:22px;text-wrap:balance}
+.card p{margin:0;color:var(--soft);font-size:14.5px;line-height:1.45}
+button,.btn{font:600 16px var(--body);color:#2a1630;background:var(--gold);border:0;border-radius:999px;padding:14px 22px;cursor:pointer;display:inline-block}
+button:focus-visible,.btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar button{background:var(--glass);color:var(--ink);border:1px solid var(--line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:14px;padding:11px 16px}
+.hint{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--glass);border:1px solid var(--line);
+  border-radius:999px;padding:8px 14px;font-size:13px;white-space:nowrap;transition:opacity .8s;pointer-events:none}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.hint{transition:none}}
+</style>
+
+<div id="stage">
+  <video id="cam" playsinline muted autoplay hidden></video>
+  <img id="photo" alt="" hidden>
+  <canvas id="fx"></canvas>
+</div>
+
+<div class="banner"><h1>Happy birthday, Gala</h1><p>11 · 11 · 2026</p></div>
+
+<div class="card" id="intro">
+  <h2>Your living room, but make it a party</h2>
+  <p>Point the phone at the room and look around. Tap a balloon to pop it, tap empty space to add one.</p>
+  <button id="go">Open the party</button>
+</div>
+
+<div class="card" id="fallback" hidden>
+  <h2>Snap the living room</h2>
+  <p id="fbmsg">The live camera isn't available here, so take a photo of the room and the balloons will move in. Drag to look around.</p>
+  <label class="btn" for="pick">Take a photo</label>
+  <input type="file" id="pick" accept="image/*" capture="environment">
+</div>
+
+<div class="hint" id="hint" hidden>Move the phone around 🎈</div>
+
+<div class="bar" id="bar" hidden>
+  <button id="more">More balloons</button>
+  <button id="reset">Refill the room</button>
+</div>
+
+<script>
+(() => {
+const cv = document.getElementById('fx'), ctx = cv.getContext('2d');
+const cam = document.getElementById('cam'), photo = document.getElementById('photo');
+const $ = id => document.getElementById(id);
+let W=0,H=0,DPR=1,PPD=8; // pixels per degree
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);PPD=W/52;}
+addEventListener('resize',resize);resize();
+
+const COLORS=[["#ff6f91","#c2185b"],["#ffc65c","#d98a00"],["#5fd3c7","#16897d"],["#b79cff","#6a45d6"],["#fff2e6","#d9b9a6"],["#ff8a5c","#c74716"],["#7fb6ff","#2a64c9"]];
+const wrap=a=>((a+540)%360)-180, rnd=(a,b)=>a+Math.random()*(b-a);
+
+// view state (degrees). yaw grows when turning right, pitch grows when looking up
+let yaw=0,pitch=0,tYaw=0,tPitch=0,motion=false,base=null,dragYaw=0,dragPitch=0;
+let balloons=[],bits=[],confetti=[];
+
+function makeBalloon(y,p,rising){
+  const z=rnd(.65,1.35),c=COLORS[Math.random()*COLORS.length|0];
+  return {yaw:y,pitch:p,z,c,ph:rnd(0,6.28),ph2:rnd(0,6.28),rise:rising?1:0,str:rnd(1.9,2.6)};
+}
+function fill(n){
+  balloons=[];
+  for(let i=0;i<n;i++){
+    const front=Math.random()<.6;
+    balloons.push(makeBalloon(front?rnd(-70,70):rnd(-180,180),rnd(-22,32),true));
+    balloons[i].rise=1+i*.04;
+  }
+  balloons.sort((a,b)=>a.z-b.z);
+}
+fill(38);
+for(let i=0;i<46;i++)confetti.push({x:Math.random(),y:Math.random(),s:rnd(3,7),v:rnd(.02,.06),r:rnd(0,6.28),c:COLORS[i%7][0]});
+
+function project(b,t){
+  const dx=wrap(b.yaw-yaw), dy=b.pitch-pitch;
+  const r=30*b.z*(W/400);
+  let x=W/2+dx*PPD+Math.sin(t*.5+b.ph2)*5*b.z;
+  let y=H*.5-dy*PPD+Math.sin(t*.9+b.ph)*7*b.z;
+  if(b.rise>0)y+=Math.pow(Math.min(b.rise,1),2)*H*1.1;
+  return {x,y,r};
+}
+
+function drawBalloon(b,t){
+  const {x,y,r}=project(b,t);
+  if(x<-r*2||x>W+r*2||y<-r*3||y>H+r*6)return;
+  const rx=r*.88, ry=r;
+  // string
+  const sway=Math.sin(t*1.3+b.ph)*r*.35;
+  ctx.strokeStyle="rgba(255,248,241,.55)";ctx.lineWidth=1.1;
+  ctx.beginPath();ctx.moveTo(x,y+ry+r*.12);
+  ctx.bezierCurveTo(x+sway,y+ry+r*b.str*.4,x-sway,y+ry+r*b.str*.75,x+sway*.5,y+ry+r*b.str);ctx.stroke();
+  // knot
+  ctx.fillStyle=b.c[1];ctx.beginPath();ctx.moveTo(x,y+ry-2);ctx.lineTo(x-r*.12,y+ry+r*.14);ctx.lineTo(x+r*.12,y+ry+r*.14);ctx.closePath();ctx.fill();
+  // body
+  const g=ctx.createRadialGradient(x-rx*.35,y-ry*.4,r*.1,x,y,r*1.15);
+  g.addColorStop(0,b.c[0]);g.addColorStop(.75,b.c[0]);g.addColorStop(1,b.c[1]);
+  ctx.fillStyle=g;ctx.beginPath();
+  ctx.moveTo(x,y+ry);
+  ctx.bezierCurveTo(x-rx*1.15,y+ry*.75,x-rx*1.1,y-ry,x,y-ry);
+  ctx.bezierCurveTo(x+rx*1.1,y-ry,x+rx*1.15,y+ry*.75,x,y+ry);ctx.fill();
+  // shine
+  ctx.fillStyle="rgba(255,255,255,.55)";ctx.beginPath();ctx.ellipse(x-rx*.38,y-ry*.42,rx*.16,ry*.26,-.5,0,6.28);ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.25)";ctx.beginPath();ctx.ellipse(x-rx*.15,y-ry*.72,rx*.07,ry*.07,0,0,6.28);ctx.fill();
+  b._x=x;b._y=y;b._r=r;
+}
+
+let last=performance.now();
+function frame(now){
+  const t=now/1000,dt=Math.min((now-last)/1000,.05);last=now;
+  if(!motion){tYaw=dragYaw;tPitch=dragPitch;}
+  yaw+=wrap(tYaw-yaw)*.18; pitch+=(tPitch-pitch)*.18;
+  ctx.clearRect(0,0,W,H);
+  // confetti drifting in front of the camera
+  for(const c of confetti){c.y+=c.v*dt*.6;c.r+=dt*2;if(c.y>1.05){c.y=-.05;c.x=Math.random();}
+    const px=c.x*W+Math.sin(t+c.r)*8,py=c.y*H;ctx.save();ctx.translate(px,py);ctx.rotate(c.r);ctx.fillStyle=c.c;ctx.globalAlpha=.75;ctx.fillRect(-c.s/2,-c.s/4,c.s,c.s/2);ctx.restore();}
+  ctx.globalAlpha=1;
+  for(const b of balloons){if(b.rise>0)b.rise=Math.max(0,b.rise-dt*.45);drawBalloon(b,t);}
+  for(let i=bits.length-1;i>=0;i--){const p=bits[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.l-=dt;p.a+=p.va*dt;
+    if(p.l<=0){bits.splice(i,1);continue}
+    ctx.save();ctx.globalAlpha=Math.min(1,p.l*2);ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/3,p.s,p.s*.66);ctx.restore();}
+  ctx.globalAlpha=1;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// sound
+let ac=null;
+function popSound(){
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    const n=ac.createBuffer(1,ac.sampleRate*.12,ac.sampleRate),d=n.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,4);
+    const s=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();
+    f.type="lowpass";f.frequency.value=2200;g.gain.value=.9;s.buffer=n;s.connect(f).connect(g).connect(ac.destination);s.start();
+  }catch(e){}
+}
+
+function pop(b){
+  popSound();
+  for(let i=0;i<18;i++)bits.push({x:b._x,y:b._y,vx:rnd(-260,260),vy:rnd(-320,120),l:rnd(.6,1.1),s:rnd(5,11),a:rnd(0,6),va:rnd(-10,10),c:i%3?b.c[0]:"#fff8f1"});
+  balloons.splice(balloons.indexOf(b),1);
+  setTimeout(()=>{const nb=makeBalloon(b.yaw+rnd(-8,8),rnd(-15,30),true);balloons.push(nb);balloons.sort((a,c)=>a.z-c.z);},3500);
+}
+
+// pointer: tap pops / adds, drag looks around (when no motion sensor)
+let down=null;
+cv.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY,y0:dragYaw,p0:dragPitch,moved:false};});
+cv.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;
+  if(Math.hypot(dx,dy)>8)down.moved=true;
+  if(!motion&&down.moved){dragYaw=down.y0-dx/PPD;dragPitch=Math.max(-40,Math.min(50,down.p0+dy/PPD));}});
+cv.addEventListener('pointerup',e=>{if(!down)return;const m=down.moved;down=null;if(m)return;
+  const x=e.clientX,y=e.clientY;
+  for(let i=balloons.length-1;i>=0;i--){const b=balloons[i];if(b._r&&b.rise===0&&Math.hypot((x-b._x)/.9,y-b._y)<b._r*1.1){pop(b);return;}}
+  const nb=makeBalloon(yaw+(x-W/2)/PPD,pitch+(H*.5-y)/PPD,false);nb.rise=.35;balloons.push(nb);balloons.sort((a,c)=>a.z-c.z);
+});
+
+// motion
+function onOrient(e){
+  if(e.alpha==null||e.beta==null)return;
+  const h=-(e.webkitCompassHeading!=null? -e.webkitCompassHeading : e.alpha);
+  if(base===null)base=h;
+  motion=true;tYaw=wrap(h-base);tPitch=Math.max(-60,Math.min(70,e.beta-90));
+}
+async function startMotion(){
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      const r=await DeviceOrientationEvent.requestPermission(); if(r!=='granted')return;
+    }
+    addEventListener('deviceorientation',onOrient,true);
+  }catch(e){}
+}
+
+function showHint(txt){const h=$('hint');h.textContent=txt;h.hidden=false;h.style.opacity=1;setTimeout(()=>h.style.opacity=0,4500);}
+
+$('go').addEventListener('click',async()=>{
+  popSound();
+  const motionP=startMotion();
+  $('intro').hidden=true;
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    cam.srcObject=s;cam.hidden=false;await cam.play().catch(()=>{});
+    await motionP;fill(38);$('bar').hidden=false;
+    setTimeout(()=>showHint(motion?'Move the phone around 🎈':'Drag to look around 🎈'),400);
+  }catch(err){
+    await motionP;$('fallback').hidden=false;
+  }
+});
+
+$('pick').addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  photo.src=URL.createObjectURL(f);photo.hidden=false;$('fallback').hidden=true;$('bar').hidden=false;
+  fill(38);showHint(motion?'Move the phone around 🎈':'Drag to look around 🎈');
+});
+$('more').addEventListener('click',()=>{for(let i=0;i<10;i++){const nb=makeBalloon(yaw+rnd(-30,30),pitch+rnd(-15,25),true);nb.rise=1+i*.06;balloons.push(nb);}balloons.sort((a,b)=>a.z-b.z);});
+$('reset').addEventListener('click',()=>fill(38));
+})();
+</script>
+
+</body>
+</html>
