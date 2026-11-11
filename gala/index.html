@@ -42,15 +42,17 @@ button:focus-visible,.btn:focus-visible{outline:3px solid var(--ink);outline-off
 .bar button{background:var(--glass);color:var(--ink);border:1px solid var(--line);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:14px;padding:11px 16px}
 .hint{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--glass);border:1px solid var(--line);
   border-radius:999px;padding:8px 14px;font-size:13px;white-space:nowrap;transition:opacity .8s;pointer-events:none}
-.love{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(18,13,28,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+.love{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(10,6,16,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
   padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.note{direction:rtl;text-align:right;width:min(360px,100%);background:#fff8f1;color:#2a1630;border-radius:24px;padding:26px 22px 20px;display:grid;gap:12px;
-  font-family:"Rubik",var(--body);box-shadow:0 30px 70px -20px rgba(0,0,0,.6);animation:rise .6s cubic-bezier(.2,.9,.3,1.2)}
-.note h2{margin:0;font-weight:700;font-size:30px;line-height:1.1}
-.note p{margin:0;font-size:17px;line-height:1.5}
-.note small{color:#7a5f78;font-size:13px}
-.note button{justify-self:stretch;font-family:"Rubik",var(--body);font-weight:500;font-size:17px;background:#2a1630;color:#fff8f1;margin-top:4px}
-.note button:focus-visible{outline:3px solid var(--rose);outline-offset:3px}
+.note{direction:rtl;text-align:right;width:min(360px,100%);color:var(--ink);border-radius:24px;padding:28px 22px 20px;display:grid;gap:12px;font-family:"Rubik",var(--body);
+  background:radial-gradient(120% 70% at 85% 0%,rgba(255,111,145,.28),transparent 60%),linear-gradient(160deg,#2c1838,#160e22);
+  border:1px solid rgba(255,111,145,.35);box-shadow:0 0 0 1px rgba(255,198,92,.08) inset,0 30px 80px -20px rgba(255,111,145,.35),0 30px 70px -20px rgba(0,0,0,.7);animation:rise .6s cubic-bezier(.2,.9,.3,1.2)}
+.note h2{margin:0;font-weight:700;font-size:30px;line-height:1.1;color:#ffd3df;text-shadow:0 0 22px rgba(255,111,145,.55)}
+.note p{margin:0;font-size:17px;line-height:1.55;color:rgba(255,248,241,.88)}
+.note small{color:var(--gold);opacity:.85;font-size:13px}
+.note button{justify-self:stretch;font-family:"Rubik",var(--body);font-weight:500;font-size:17px;margin-top:6px;color:#fff8f1;
+  background:linear-gradient(135deg,#ff6f91,#b0437a);box-shadow:0 10px 26px -8px rgba(255,111,145,.6)}
+.note button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 @keyframes rise{from{transform:translateY(24px) scale(.96);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.note{animation:none}}
 input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
