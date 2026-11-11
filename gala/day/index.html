@@ -106,7 +106,7 @@ footer{text-align:center;color:var(--soft);font-size:14px}
   <header>
     <span class="eyebrow">Wednesday · 11 November</span>
     <h1>Gala's birthday day</h1>
-    <p class="now" id="now">Six stops, one very good day.</p>
+    <p class="now" id="now">Seven stops, one very good day.</p>
     <p class="sync" id="syncnote" hidden>Photos on this phone aren't shared yet. Open the shared link once on this phone to sync.</p>
   </header>
 
@@ -141,7 +141,8 @@ const STOPS = [
   {key:1, t:690,  time:"11:30", emoji:"🎨", name:"Color Cafe", what:"Making some art together.", hint:"Bring your creative side.", mystery:2, map:"https://www.google.com/maps/dir/?api=1&destination=Yirmeyahu%20St%2046%2C%20Tel%20Aviv-Yafo%2C%206311516"},
   {key:2, t:840,  time:"14:00", emoji:"🍹", name:"Chacoli", what:"Tapas and margaritas.", hint:"Somewhere to raise a glass to you.", mystery:3, map:"https://www.google.com/maps/dir/?api=1&destination=Retsif%20Herbert%20Samuel%20St%203%2C%20Tel%20Aviv-Yafo", gift:true},
   {key:3, t:960,  time:"16:00", emoji:"🎒", name:"Picking up Noga", what:"Straight from the kindergarten, the birthday crew is complete."},
-  {key:4, t:1005, time:"Then",  emoji:"🎂", name:"Home", what:"Celebrating together for the rest of the day."}
+  {key:4, t:1005, time:"Then",  emoji:"🎂", name:"Home", what:"Celebrating together at home."},
+  {key:6, t:1200, time:"20:00", emoji:"👨‍👩‍👧", name:"Meeting family", what:"The whole family together to celebrate you."}
 ];
 
 // Israel time; add #at-1430 to the link to preview another time of the day
@@ -213,10 +214,10 @@ function render(justShown){
   });
   document.getElementById("stops").innerHTML = html;
   const line = document.getElementById("now");
-  if (now < 0) line.textContent = "Six stops, one very good day.";
+  if (now < 0) line.textContent = "Seven stops, one very good day.";
   else if (now >= 99999) line.textContent = "What a day. Happy birthday ♡";
   else if (current < 0) line.innerHTML = `First stop: <b>${label(STOPS[0],"")}</b> in ${span(STOPS[0].t-now)}.`;
-  else if (current === STOPS.length-1) line.innerHTML = `Home together. <b>Happy birthday, Gala ♡</b>`;
+  else if (current === STOPS.length-1) line.innerHTML = `With the whole family. <b>Happy birthday, Gala ♡</b>`;
   else line.innerHTML = `Now: <b>${label(STOPS[current],"current")}</b>. Next up: ${label(STOPS[current+1],"")} at ${STOPS[current+1].time}.`;
   const ready = now >= STOPS[STOPS.length-1].t;
   document.getElementById("album").classList.toggle("ready", ready);
