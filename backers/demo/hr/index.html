@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backed for Onyx Security · HR</title>
+<meta name="robots" content="noindex">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: white-label recruiter console. Client brand top-left, one role, one ranked list. Backing = ink bar. HR version: no money. */
+:root{
+  --bg:#F4F4F6; --surface:#FFFFFF; --surface-2:#ECECF1; --ink:#101116; --muted:#5E606C; --line:#DCDCE3;
+  --accent:#101116; --accent-ink:#FFFFFF; --focus:#3B5BFF;
+  --sun:#FFCF3A; --sun-ink:#2A2100;
+  --good:#0B8F63; --good-soft:#DDF5EC; --bad:#B8323F; --bad-soft:#FBE4E6; --info:#3B5BFF; --info-soft:#E4E9FF;
+  --f-display:"Bricolage Grotesque","Arial Black",system-ui,sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C0D11; --surface:#16171D; --surface-2:#20212A; --ink:#F1F1F5; --muted:#A0A2B0; --line:#2C2D38;
+  --accent:#F1F1F5; --accent-ink:#0C0D11; --focus:#8BA0FF;
+  --sun:#FFD24D; --sun-ink:#231B00;
+  --good:#3DD39C; --good-soft:#123528; --bad:#FF7A86; --bad-soft:#3D1A20; --info:#8BA0FF; --info-soft:#232A52; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C0D11; --surface:#16171D; --surface-2:#20212A; --ink:#F1F1F5; --muted:#A0A2B0; --line:#2C2D38;
+  --accent:#F1F1F5; --accent-ink:#0C0D11; --focus:#8BA0FF;
+  --sun:#FFD24D; --sun-ink:#231B00;
+  --good:#3DD39C; --good-soft:#123528; --bad:#FF7A86; --bad-soft:#3D1A20; --info:#8BA0FF; --info-soft:#232A52; color-scheme:dark}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(26px,4.4vw,38px);font-weight:800;line-height:1.08}
+h2{font-size:19px;font-weight:800}
+h3{font-size:16px;font-weight:600}
+p{margin:0}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding-block:16px;border-bottom:1px solid var(--line)}
+.client{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{display:flex;align-items:center;gap:10px;border:1px dashed transparent;border-radius:10px;padding:4px 6px;background:none}
+.logo:hover{border-color:var(--line)}
+.logo img{max-height:34px;max-width:180px;display:block}
+.wordmark{font:800 22px var(--f-display);letter-spacing:-.02em;white-space:nowrap}
+.sep{width:1px;height:24px;background:var(--line)}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav span{padding:6px 10px;border-radius:8px;font-weight:600;font-size:14px;color:var(--muted)}
+.nav span.on{background:var(--surface-2);color:var(--ink)}
+.powered{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.bmark{width:22px;height:22px;border-radius:6px;background:var(--sun);color:var(--sun-ink);display:grid;place-items:center;font:800 13px var(--f-display);transform:rotate(-6deg)}
+
+/* role header */
+.role{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;padding-block:22px 14px}
+.role .meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:14px;color:var(--muted)}
+.sync{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.sources{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.src{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.src::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good)}
+.src.busy::before{background:var(--sun);animation:pulse .7s infinite alternate}
+@keyframes pulse{to{opacity:.3}}
+.btn{border:0;border-radius:11px;padding:10px 16px;font-weight:600;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{filter:brightness(1.12)}
+.btn.ghost{background:var(--surface-2);color:var(--ink)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.5;cursor:default}
+.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* explainer */
+.legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:820px){.legend{grid-template-columns:minmax(0,1fr)}}
+.leg{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}
+.leg .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:800 15px var(--f-display);background:var(--surface-2)}
+.leg .ic.y{background:var(--sun);color:var(--sun-ink)}
+.leg .ic.k{background:var(--accent);color:var(--accent-ink)}
+.leg b{display:block;font-size:14px}
+.leg p{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* status bar */
+.status{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:var(--surface-2);margin-bottom:12px;font-size:13px}
+.status.news{background:var(--info-soft);color:var(--ink)}
+.row-r{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.help{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 11px;font-size:13px;font-weight:600}
+.help:hover{border-color:var(--ink)}
+.qi{width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:800 11px var(--f-display)}
+.sort{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.sort button{border:0;background:none;padding:5px 10px;border-radius:7px;font-size:13px;font-weight:600;color:var(--muted)}
+.sort button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+/* list */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.hrow,.crow{display:grid;grid-template-columns:40px minmax(0,2.6fr) 84px 140px minmax(0,1.6fr) 176px;gap:14px;align-items:center;padding:12px 16px}
+.hrow{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);background:var(--surface)}
+.hrow .hl{color:var(--ink)}
+.crow{border-bottom:1px solid var(--line);transition:background .2s}
+.crow:last-child{border-bottom:0}
+.crow:hover{background:color-mix(in srgb,var(--surface-2) 45%,transparent)}
+.crow.flash{animation:flash 2.4s ease-out}
+@keyframes flash{0%,30%{background:var(--info-soft)}100%{background:transparent}}
+.rank{font:800 22px var(--f-display);text-align:center}
+.who{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:600 14px var(--f-body);background:var(--surface-2);color:var(--ink)}
+.who b{font-size:15px}
+.who .sub{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tagnew{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--info-soft);color:var(--info);margin-left:6px;vertical-align:2px}
+.move{font-size:11px;font-weight:600;color:var(--good);margin-left:6px}
+.ring{--p:50;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--good) calc(var(--p)*1%),var(--surface-2) 0)}
+.ring span{width:36px;height:36px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:500 13px var(--f-mono)}
+.bk{display:flex;flex-direction:column;gap:5px}
+.bar{height:8px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .6s}
+.bk .n{font-size:13px}
+.bk .n b{font:800 18px var(--f-display);margin-right:4px}
+.stake{display:inline-flex;align-items:center;border-radius:8px;padding:3px 9px;background:var(--sun);color:var(--sun-ink);font:500 14px var(--f-mono);font-variant-numeric:tabular-nums;transform:rotate(-1.5deg)}
+.who-backs{display:flex;flex-wrap:wrap;gap:4px}
+.rel{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.rel b{color:var(--ink)}
+.rel.weak{border-style:dashed}
+.rel.strong{background:var(--surface-2);color:var(--ink)}
+.acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.lbl{display:none}
+
+@media (max-width:980px){
+  .hrow{display:none}
+  .crow{grid-template-columns:36px minmax(0,1fr) auto;grid-template-areas:"r w m" "b b b" "x x x" "a a a";row-gap:12px}
+  .crow>.rank{grid-area:r}.crow>.who{grid-area:w}.crow>.mt{grid-area:m}.crow>.bk{grid-area:b}.crow>.pl{grid-area:s;display:flex;align-items:center;gap:10px}.crow>.who-backs{grid-area:x}.crow>.acts{grid-area:a;justify-content:flex-start}
+  .lbl{display:inline;font-size:12px;color:var(--muted)}
+}
+
+/* drawer / modal */
+.scrim{position:fixed;inset:0;background:rgba(10,10,14,.5);z-index:30;display:flex;justify-content:flex-end}
+.sheet{background:var(--surface);width:min(620px,100%);height:100%;overflow-y:auto;padding:22px max(20px, env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) 22px;display:flex;flex-direction:column;gap:18px;box-shadow:-10px 0 40px rgba(0,0,0,.2)}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:slide .22s ease-out}@keyframes slide{from{transform:translateX(30px)}to{transform:none}}}
+.sheet .x{position:sticky;top:0;align-self:flex-end;border:0;background:var(--surface-2);width:36px;height:36px;border-radius:50%;font-size:18px;line-height:1}
+.sec{display:flex;flex-direction:column;gap:10px}
+.cvhead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;margin-top:-28px}
+.cvhead .av{width:56px;height:56px;font-size:18px}
+.reqs{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+.reqs li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:14px}
+.reqs .y{color:var(--good);font-weight:800}
+.reqs .n{color:var(--bad);font-weight:800}
+.reqs .opt{color:var(--muted);font-size:12px}
+.job{display:flex;flex-direction:column;gap:4px;padding-left:14px;border-left:3px solid var(--line)}
+.job ul{margin:4px 0 0;padding-left:18px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+.backer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start;padding-block:12px;border-top:1px solid var(--line)}
+.backer:first-child{border-top:0}
+.backer .av{width:36px;height:36px;font-size:12px}
+.w{font:500 12px var(--f-mono);color:var(--muted);text-align:right}
+.scorebox{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sb{background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.sb b{display:block;font:800 22px var(--f-display)}
+.note{font-size:13px;color:var(--muted);background:var(--surface-2);border-radius:12px;padding:10px 12px}
+
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding-block:22px 28px;font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;max-width:calc(100% - 32px);z-index:40}
+</style>
+</head>
+<body>
+
+<header class="top wrap">
+  <div class="client">
+    <button class="logo" id="logoBtn" title="Click to add the client logo"><span class="wordmark" id="wordmark">Onyx Security</span><img id="logoImg" alt="Onyx Security" hidden></button>
+    <input type="file" id="logoFile" accept="image/*" hidden>
+    <span class="sep"></span>
+    <nav class="nav" aria-label="Sections"><span class="on">Open roles</span><span>Pipeline</span><span>Hires</span></nav>
+  </div>
+  <div class="powered"><span class="bmark">B</span>Talent powered by <b>Backed</b></div>
+</header>
+
+<main class="wrap">
+  <section class="role">
+    <div>
+      <p class="eyebrow">Open role · R&amp;D / Customer Engineering</p>
+      <h1>Technical Solution Architect</h1>
+      <div class="meta"><span>Tel Aviv · Full time</span><span>5+ yrs customer-facing technical</span><span>Cloud, Kubernetes, APIs, AI security</span></div>
+    </div>
+    <div class="sync">
+      <div class="sources" id="sources"></div>
+      <button class="btn" id="refresh"><span id="refIcon">↻</span><span id="refTxt">Refresh list</span></button>
+    </div>
+  </section>
+
+
+  <div class="status" id="status"></div>
+  <section class="legend" id="legend" aria-label="How to read this list" hidden>
+    <div class="leg"><span class="ic">%</span><div><b>Match</b><p>How well the CV fits this job description, requirement by requirement.</p></div></div>
+    <div class="leg"><span class="ic k">↑</span><div><b>Backers</b><p>People who worked with the candidate and vouch for them. Managers and senior people count most, friends and family least.</p></div></div>
+    <div class="leg"><span class="ic y">#</span><div><b>Ranking</b><p>Candidates are ordered by backing score: how many people back them, how they know them, and how senior they are.</p></div></div>
+  </section>
+
+  <section class="list" aria-label="Candidates">
+    <div class="hrow"><span>#</span><span>Candidate</span><span>CV match</span><span class="hl">Backing ↓</span><span>Who backs them</span><span></span></div>
+    <div id="rows"></div>
+  </section>
+</main>
+
+<footer class="foot wrap"><span>Concept demo prepared for Onyx Security. All candidates and backers are fictional.</span><span>Backed · hiring with skin in the game</span></footer>
+
+<div class="scrim" id="scrim" hidden><aside class="sheet" id="sheet" role="dialog" aria-modal="true"></aside></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const REQS=[
+ ['5+ years in a customer-facing technical role',0],
+ ['Strong software engineering skills',0],
+ ['APIs, integrations, automation and data processing',0],
+ ['Kubernetes, Linux, networking, containers, major cloud',0],
+ ['Analyzes datasets, troubleshoots complex environments',0],
+ ['Communicates with technical and business audiences',0],
+ ['AI, cybersecurity or cloud-native experience',0],
+ ['Enterprise POCs or large deployments',1],
+ ['CI/CD, DevOps, infrastructure-as-code',1]];
+const REL={M:['Direct manager',1],E:['Executive at past company',.8],C:['Client',.9],P:['Colleague',.6],R:['Former direct report',.4],F:['Friend',.25],K:['Family',.1]};
+const RELORDER=['M','E','C','P','R','F','K'];
+const RELSHORT={M:['direct manager','direct managers'],E:['past-company exec','past-company execs'],C:['client','clients'],P:['colleague','colleagues'],R:['former report','former reports'],F:['friend','friends'],K:['family','family']};
+const PERSONAL=['Startup founder','Product designer','Teacher','Lawyer','Architect','Student'];
+const SEN={C:['C-level',1],V:['VP',.9],D:['Director',.8],M:['Manager',.65],I:['Individual contributor',.35]};
+const TITLES={C:['CTO','CEO','Chief Product Officer','CISO'],V:['VP Engineering','VP Customer Success','VP Sales','VP Product'],D:['Director of Solutions','Director of Engineering','Director of IT'],M:['Engineering Manager','Team Lead','Group Manager'],I:['Senior Engineer','Solutions Engineer','DevOps Engineer','Data Engineer','Account Executive']};
+const NAMES=['Dana Erez','Yoni Katz','Hila Avraham','Ron Bar','Michal Sasson','Asaf Levi','Nir Oren','Keren Levy','Gal Navon','Liat Ziv','Shai Mor','Neta Paz','Eitan Rosen','Tamar Golan','Ori Shapira','Maya Ben-David','Roni Tal','Adi Cohen','Barak Ilan','Inbal Segal','Yuval Dror','Efrat Hen','Guy Amar','Sivan Lahav','Ido Weiss','Moran Baruch','Alon Friedman','Rotem Azulay','Hadar Klein','Nadav Peled'];
+const CLIENTS=['Meridian Bank','Polaris Health','Atlas Retail','Corvid Insurance','Northwind Telecom','Halcyon Energy'];
+const QUOTES={
+ M:['Ran our hardest enterprise POCs and closed every one.','The person I sent into the room when a deal was on fire.','Would hire again tomorrow, without an interview.','Grew from engineer to the team\'s go-to architect in two years.'],
+ C:['Understood our architecture faster than our own team.','Fixed a production issue live on a call with our CISO.','The reason we renewed.','Made a complex rollout feel simple.'],
+ P:['Writes the tools everyone else ends up using.','Calm under pressure and great with customers.','Explains Kubernetes to sales and sales to R&D.','Always shares credit.'],
+ R:['Best manager I have had.','Taught me how to run a customer workshop.','Gave honest feedback that made me better.'],
+ E:['Known across the company as the engineer customers trust.','One of the few people I would put in front of any customer.','Had a reputation in leadership meetings for getting deals unstuck.'],
+ F:['The most curious person I know.','Has been building things since we were kids.','Never gives up on a problem.'],
+ K:['Works harder than anyone in our family.','Always the one fixing everyone\'s tech.']};
+
+const C=[
+ {n:'Noa Peretz',t:'Senior Solutions Architect',co:'Ravel Security',y:7,m:93,src:'Comeet',req:'111111111',
+  sum:'Solutions architect at a cloud security vendor. Leads enterprise POCs end to end and builds deployment tooling in Python and Go.',
+  prev:['Solutions Engineer','Helio Systems','2019–2022'],since:'2022',
+  bul:['Led 40+ enterprise POCs with a 70% win rate across finance and healthcare.','Built a Terraform + Python toolkit that cut deployment time from 3 days to 4 hours.'],
+  skills:['AWS','Kubernetes','Python','Go','Terraform','REST APIs','SIEM integrations'],
+  b:['MCL1000','EVL1000','CVL500','CDL500','PML500','PIL250','RIL250']},
+ {n:'Amir Haddad',t:'Forward Deployed Engineer',co:'Quarry AI',y:6,m:90,src:'Greenhouse',req:'111111110',
+  sum:'Forward deployed engineer at an AI platform company. Embeds with enterprise customers to ship LLM and agent integrations.',
+  prev:['Backend Engineer','Vantix Cloud','2018–2021'],since:'2021',
+  bul:['Deployed AI agent pipelines for 12 Fortune 500 customers.','Wrote the integration SDK now used by every customer-facing engineer.'],
+  skills:['GCP','Kubernetes','Python','LLM APIs','Data pipelines','Kafka'],
+  b:['MCL1000','CCL1000','ECL1000','PML500','FIL250']},
+ {n:'Yael Shani',t:'Solutions Engineering Team Lead',co:'Helio Systems',y:8,m:86,src:'BambooHR',req:'111101101',
+  sum:'Leads a team of five solutions engineers supporting enterprise sales for a data security platform.',
+  prev:['Solutions Engineer','Sentinel Grid','2017–2020'],since:'2020',
+  bul:['Supported $18M in new ARR as technical lead on enterprise deals.','Built the team\'s POC playbook and demo environments.'],
+  skills:['Azure','AWS','Python','Networking','Demo environments','Team leadership'],
+  b:['MVL500','PML500','PIL250','FIL250','KIL250','RIL250','RIL250','FIL250','CML500']},
+ {n:'Daniel Avital',t:'Professional Services Lead',co:'Tidepoint',y:9,m:81,src:'Comeet',req:'101111110',
+  sum:'Runs professional services for a cloud observability company. Owns large deployments from kickoff to go-live.',
+  prev:['Implementation Engineer','Arcwise','2015–2019'],since:'2019',
+  bul:['Delivered 60+ enterprise deployments, including two with 10,000+ nodes.','Cut average time-to-value from 9 weeks to 5.'],
+  skills:['Kubernetes','Linux','Ansible','AWS','Customer workshops'],
+  b:['MDL1000','EVL500','CDL500','PML500']},
+ {n:'Shira Katz',t:'Customer Engineer',co:'Nimbus Data',y:5,m:88,src:'Greenhouse',req:'111111011',
+  sum:'Customer engineer on a data platform. Strong coder who builds custom integrations for strategic accounts.',
+  prev:['Software Engineer','Kestrel Labs','2020–2022'],since:'2022',
+  bul:['Built 15 custom connectors for strategic customers.','Analyzed customer telemetry to find a bug costing 8% of usage.'],
+  skills:['Python','SQL','Docker','AWS','Data analysis'],
+  b:['MVL500','PML500','PIL250','CML250']},
+ {n:'Omer Ben-Ami',t:'Cloud Architect',co:'Arcwise',y:10,m:79,src:'LinkedIn',req:'101110101',
+  sum:'Cloud architect designing multi-region infrastructure for SaaS customers.',
+  prev:['DevOps Engineer','Tidepoint','2014–2018'],since:'2018',
+  bul:['Designed landing zones for 30+ enterprise AWS accounts.','Led the company\'s move to Kubernetes.'],
+  skills:['AWS','Azure','Kubernetes','Terraform','Networking'],
+  b:['EDL500','PIL250','KIL250']},
+ {n:'Maya Rosen',t:'Sales Engineer',co:'Sentinel Grid',y:5,m:84,src:'BambooHR',req:'101111110',
+  sum:'Sales engineer at a cybersecurity company. Runs technical discovery and demos for enterprise prospects.',
+  prev:['Support Engineer','Ravel Security','2020–2022'],since:'2022',
+  bul:['Ran 120+ technical demos a year with a 45% conversion to POC.','Built a demo lab on Kubernetes used by the whole SE team.'],
+  skills:['Cybersecurity','Kubernetes','Python','Demos','Discovery'],
+  b:['CVL500','PIL250','RIL250']},
+ {n:'Itai Golan',t:'DevOps Lead',co:'Kestrel Labs',y:7,m:76,src:'Comeet',req:'110110001',
+  sum:'DevOps lead running CI/CD and cloud infrastructure for an engineering org of 80.',
+  prev:['DevOps Engineer','Quarry AI','2017–2020'],since:'2020',
+  bul:['Rebuilt CI/CD and cut release time by 60%.','Owns on-call and incident response for production.'],
+  skills:['Kubernetes','GitHub Actions','Terraform','GCP','Linux'],
+  b:['MML500','PIL250']},
+ {n:'Tal Mizrahi',t:'Integration Engineer',co:'Vantix Cloud',y:5,m:82,src:'LinkedIn',req:'111101100',
+  sum:'Integration engineer connecting a SaaS platform to customers\' identity, ticketing and SIEM tools.',
+  prev:['QA Automation Engineer','Nimbus Data','2019–2021'],since:'2021',
+  bul:['Shipped 25 integrations with Okta, ServiceNow and Splunk.','Automated onboarding checks for new enterprise customers.'],
+  skills:['REST APIs','Python','Okta','Splunk','Automation'],
+  b:['PIL250','KIL250']},
+ {n:'Lior Ashkenazi',t:'Technical Account Manager',co:'Lumen Pay',y:6,m:74,src:'Greenhouse',req:'100011100',
+  sum:'Technical account manager for enterprise payment customers. Bridges customer needs and the product team.',
+  prev:['Customer Success Manager','Atlas Retail','2018–2020'],since:'2020',
+  bul:['Managed 20 enterprise accounts with 120% net revenue retention.','Ran quarterly architecture reviews with customer CTOs.'],
+  skills:['Account management','SQL','APIs','Workshops'],
+  b:['FIL250']}
+];
+
+/* build backers deterministically */
+let ni=0;
+function mkBacker(spec,c,k){
+  const r=spec[0],s=spec[1],amt=+spec.slice(3);
+  let title=TITLES[s][(k+c.n.length)%TITLES[s].length];
+  let org=r==='C'?CLIENTS[(k+c.y)%CLIENTS.length]:r==='E'?c.prev[1]:(r==='M'&&k%2?c.prev[1]:c.co);
+  if(r==='F'||r==='K'){const t=PERSONAL[(k+c.y)%PERSONAL.length];title=t;org=r==='F'?'personal friend':'family member'}
+  return {n:NAMES[(ni++)%NAMES.length],r,s,amt,title,org,q:QUOTES[r][(k+c.m)%QUOTES[r].length]};
+}
+C.forEach(c=>{c.backers=c.b.map((s,k)=>mkBacker(s,c,k));c.id=c.n});
+const weight=b=>REL[b.r][1]*SEN[b.s][1];
+const raw=c=>c.backers.reduce((a,b)=>a+weight(b),0);
+const score=c=>Math.round(100*(1-Math.exp(-raw(c)/2.5)));
+const pledged=c=>c.backers.reduce((a,b)=>a+b.amt,0);
+const ils=n=>'₪'+n.toLocaleString('en-US');
+const ini=n=>n.split(' ').map(w=>w[0]).join('').slice(0,2);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+const S={legend:false,sort:'backing',synced:'Today, 08:42',scanned:312,fresh:false,moves:{},newId:null,intros:{}};
+const SOURCES=[['Comeet',142],['BambooHR',71],['Greenhouse',64],['LinkedIn',35]];
+
+function ordered(){return [...C].sort(S.sort==='backing'?(a,b)=>score(b)-score(a)||b.m-a.m:(a,b)=>b.m-a.m||score(b)-score(a))}
+function relSummary(c){
+  const cnt={};c.backers.forEach(b=>cnt[b.r]=(cnt[b.r]||0)+1);
+  return RELORDER.filter(r=>cnt[r]).map(r=>`<span class="rel ${'FK'.includes(r)?'weak':''}"><b>${cnt[r]}</b> ${RELSHORT[r][cnt[r]>1?1:0]}</span>`).join('');
+}
+function render(){
+  document.getElementById('sources').innerHTML=SOURCES.map(([n])=>`<span class="src" data-src="${n}">${n}</span>`).join('');
+  const st=document.getElementById('status');
+  st.className='status'+(S.fresh?' news':'');
+  st.innerHTML=`<span>${S.fresh?`<b>Updated.</b> ${S.fresh}`:`<b>${S.scanned} CVs</b> scanned from 4 sources · <b>10</b> strong matches · last synced ${S.synced}`}</span>
+   <div class="row-r"><button class="help" data-legend aria-expanded="${S.legend}"><span class="qi">?</span>${S.legend?'Hide guide':'How to read this list'}</button><div class="sort" role="group" aria-label="Rank by"><button data-sort="backing" aria-pressed="${S.sort==='backing'}">Rank by backing</button><button data-sort="match" aria-pressed="${S.sort==='match'}">Rank by match</button></div></div>`;
+  document.getElementById('legend').hidden=!S.legend;
+  const list=ordered(), top=Math.max(...C.map(score));
+  document.querySelector('.hrow').innerHTML=`<span>#</span><span>Candidate</span><span class="${S.sort==='match'?'hl':''}">CV match${S.sort==='match'?' ↓':''}</span><span class="${S.sort==='backing'?'hl':''}">Backing${S.sort==='backing'?' ↓':''}</span><span>Who backs them</span><span></span>`;
+  document.getElementById('rows').innerHTML=list.map((c,i)=>{
+    const sc=score(c), mv=S.moves[c.id];
+    return `<div class="crow ${S.newId===c.id?'flash':''}">
+     <div class="rank">${i+1}</div>
+     <div class="who"><span class="av">${ini(c.n)}</span><div style="min-width:0"><b>${esc(c.n)}</b>${S.newId===c.id?'<span class="tagnew">New backer</span>':''}${mv?`<span class="move">▲ ${mv}</span>`:''}<div class="sub">${esc(c.t)} · ${esc(c.co)} · ${c.y} yrs</div></div></div>
+     <div class="mt"><div class="ring" style="--p:${c.m}" title="CV match"><span>${c.m}%</span></div></div>
+     <div class="bk"><span class="n"><b>${c.backers.length}</b>backer${c.backers.length>1?'s':''}</span><div class="bar" title="Backing score ${sc}/100"><i style="width:${Math.max(6,sc/top*100)}%"></i></div><span class="small muted">Score ${sc}/100</span></div>
+     <div class="who-backs">${relSummary(c)}</div>
+     <div class="acts"><button class="btn sm ghost" data-cv="${esc(c.id)}">Read CV</button><button class="btn sm ghost" data-bk="${esc(c.id)}">Backers</button>${S.intros[c.id]?'<button class="btn sm" disabled>Intro sent</button>':`<button class="btn sm" data-intro="${esc(c.id)}">Request intro</button>`}</div>
+    </div>`}).join('');
+}
+
+/* sheets */
+const scrim=document.getElementById('scrim'),sheet=document.getElementById('sheet');
+function open(html){sheet.innerHTML=`<button class="x" data-close aria-label="Close">×</button>`+html;scrim.hidden=false;sheet.scrollTop=0;sheet.querySelector('.x').focus()}
+function close(){scrim.hidden=true}
+function cvHtml(c){
+  const met=[...c.req].filter((x,i)=>x==='1'&&!REQS[i][1]).length, must=REQS.filter(r=>!r[1]).length;
+  return `<div class="cvhead"><span class="av">${ini(c.n)}</span><div><h2>${esc(c.n)}</h2><p class="muted small">${esc(c.t)} · ${esc(c.co)} · Tel Aviv area · CV from ${c.src}</p></div></div>
+   <div class="scorebox"><div class="sb"><span class="eyebrow">CV match</span><b>${c.m}%</b></div><div class="sb"><span class="eyebrow">Backers</span><b>${c.backers.length}</b></div><div class="sb"><span class="eyebrow">Backing score</span><b>${score(c)}</b></div></div>
+   <div class="sec"><h3>Match against the job description</h3><p class="small muted">Meets ${met} of ${must} requirements</p><ul class="reqs">${REQS.map((r,i)=>`<li><span class="${c.req[i]==='1'?'y':'n'}">${c.req[i]==='1'?'✓':'✕'}</span><span>${r[0]}${r[1]?' <span class="opt">nice to have</span>':''}</span></li>`).join('')}</ul></div>
+   <div class="sec"><h3>Summary</h3><p>${esc(c.sum)}</p></div>
+   <div class="sec"><h3>Experience</h3>
+    <div class="job"><b>${esc(c.t)}</b><span class="small muted">${esc(c.co)} · ${c.since}–present</span><ul>${c.bul.map(b=>`<li>${esc(b)}</li>`).join('')}</ul></div>
+    <div class="job"><b>${esc(c.prev[0])}</b><span class="small muted">${esc(c.prev[1])} · ${c.prev[2]}</span></div></div>
+   <div class="sec"><h3>Skills</h3><div class="chips">${c.skills.map(s=>`<span class="chip">${esc(s)}</span>`).join('')}</div></div>
+   <button class="btn" data-bk="${esc(c.id)}">See ${c.backers.length} backer${c.backers.length>1?'s':''}</button>`;
+}
+function bkHtml(c){
+  const list=[...c.backers].sort((a,b)=>weight(b)-weight(a));
+  return `<div class="cvhead"><span class="av">${ini(c.n)}</span><div><h2>Who backs ${esc(c.n.split(' ')[0])}</h2><p class="muted small">${c.backers.length} people · backing score ${score(c)}/100</p></div></div>
+   <p class="note">Each backer counts by how they know the candidate and how senior they are. A direct manager who is now a CTO counts about three times more than a junior colleague. Friends and family count least. So a few strong professional backers outrank many personal ones.</p>
+   <div>${list.map(b=>`<div class="backer"><span class="av">${ini(b.n)}</span><div><b>${esc(b.n)}</b><div class="small muted">${esc(b.title)}, ${esc(b.org)}</div><div class="small" style="margin-top:4px"><span class="rel strong">${REL[b.r][0]}</span>${'FK'.includes(b.r)?'':` <span class="rel">${SEN[b.s][0]}</span>`}</div><p style="margin-top:6px">“${esc(b.q)}”</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="w">weight ${weight(b).toFixed(2)}</span></div></div>`).join('')}</div>
+   <button class="btn ghost" data-cv="${esc(c.id)}">Read CV</button>`;
+}
+
+/* refresh */
+let busy=false;
+async function refresh(){
+  if(busy)return;busy=true;
+  const btn=document.getElementById('refresh');btn.disabled=true;
+  document.getElementById('refIcon').outerHTML='<span class="spin" id="refIcon"></span>';
+  const txt=document.getElementById('refTxt');
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  for(const [n,k] of SOURCES){
+    txt.textContent=`Pulling CVs from ${n}…`;
+    document.querySelectorAll('.src').forEach(e=>e.classList.toggle('busy',e.dataset.src===n));
+    await wait(650);
+  }
+  txt.textContent='Matching & ranking…';await wait(700);
+  /* the change: Maya gets a senior backer */
+  const before=ordered().map(c=>c.id);
+  const maya=C.find(c=>c.n==='Maya Rosen');
+  if(!maya.backers.some(b=>b.fresh)){const b=mkBacker('MCL1000',maya,9);b.n='Avi Tzur';b.title='CTO';b.org='Ravel Security';b.q='Ran our support escalations like an architect. Customers asked for her by name.';b.fresh=true;maya.backers.push(b)}
+  const prevRank=before.indexOf(maya.id)+1;
+  S.sort='backing';
+  const nowRank=ordered().findIndex(c=>c.id===maya.id)+1;
+  S.moves={};if(prevRank>nowRank)S.moves[maya.id]=prevRank-nowRank;
+  S.newId=maya.id;S.scanned+=9;
+  const d=new Date();S.synced='Today, '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  S.fresh=`${S.scanned} CVs scanned (9 new). Maya Rosen got a new backer, her direct manager (now a CTO), and moved up from #${prevRank} to #${nowRank}.`;
+  render();
+  btn.disabled=false;btn.innerHTML='<span id="refIcon">↻</span><span id="refTxt">Refresh list</span>';busy=false;
+  setTimeout(()=>{S.newId=null},2500);
+}
+
+let tt;function toast(t){const e=document.getElementById('toast');e.textContent=t;e.hidden=false;clearTimeout(tt);tt=setTimeout(()=>e.hidden=true,2800)}
+const byId=id=>C.find(c=>c.id===id);
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t){if(e.target===scrim)close();return}
+  if(t.id==='refresh')return refresh();
+  if('legend' in t.dataset){S.legend=!S.legend;return render()}
+  if(t.dataset.sort){S.sort=t.dataset.sort;S.moves={};S.fresh=false;return render()}
+  if(t.dataset.cv)return open(cvHtml(byId(t.dataset.cv)));
+  if(t.dataset.bk)return open(bkHtml(byId(t.dataset.bk)));
+  if(t.dataset.intro){S.intros[t.dataset.intro]=1;render();return toast(`Intro request sent to ${t.dataset.intro.split(' ')[0]}.`)}
+  if('close' in t.dataset)return close();
+  if(t.id==='logoBtn')return document.getElementById('logoFile').click();
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!scrim.hidden)close()});
+
+/* white-label logo: click the name to drop in the client logo (kept in this browser) */
+function showLogo(src){const i=document.getElementById('logoImg');i.src=src;i.hidden=false;document.getElementById('wordmark').hidden=true}
+const EMBEDDED_LOGO='';
+document.getElementById('logoFile').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{showLogo(r.result);try{localStorage.setItem('backed-client-logo',r.result)}catch(_){}};r.readAsDataURL(f);
+});
+try{const l=EMBEDDED_LOGO||localStorage.getItem('backed-client-logo');if(l)showLogo(l)}catch(_){if(EMBEDDED_LOGO)showLogo(EMBEDDED_LOGO)}
+
+render();
+</script>
+</body>
+</html>
