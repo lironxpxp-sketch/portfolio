@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="description" content="sip&amp;tell: wine workshops, tours and personal wine advice.">
+<title>sip&amp;tell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Assistant:wght@400;500;700&display=swap">
+<style>
+/* Layout: alternating black and cream bands from the brand book, one centered 1200px column, mobile-first */
+:root{
+  --black:#000000; --cream:#F8F4EC; --gold:#EFCB9A; --gold-ink:#8A6A38;
+  --card:#FFFDF8; --line:#E4DCCB; --muted:#4A4238; --muted-dark:#BDB6AA; --soft:#D9D2C5; --photo:#14110D;
+  --display:'Playfair Display', Georgia, 'Times New Roman', serif;
+  --text:Assistant, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+[hidden]{display:none!important}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+body{margin:0;background:var(--cream);color:var(--black);font-family:var(--text);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--black)}
+a{color:inherit}
+a:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(20px, env(safe-area-inset-left,0px));padding-right:max(20px, env(safe-area-inset-right,0px))}
+.dark{background:var(--black);color:var(--cream)}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;border-radius:999px;padding:0 26px;font-weight:700;font-size:16px;text-decoration:none;white-space:nowrap;transition:transform .15s ease, background .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:var(--black)}
+.btn-ghost-light{border:1.5px solid var(--cream);color:var(--cream)}
+.btn-dark{background:var(--black);color:var(--cream)}
+.btn-ghost-dark{border:1.5px solid var(--black);color:var(--black)}
+
+/* Logo: wordmark with a champagne flute standing on the ampersand */
+.logo{display:inline-block;padding-top:.8em;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:700;line-height:1;letter-spacing:-.5px;white-space:nowrap}
+.logo .amp{position:relative;display:inline-block}
+.logo svg{position:absolute;left:50%;bottom:.6em;width:.42em;height:1.16em;transform:translateX(-45%) rotate(14deg);transform-origin:bottom center;overflow:visible}
+
+/* Header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--black);color:var(--cream)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+.bar .logo{font-size:30px}
+.nav{display:flex;align-items:center;gap:26px}
+.nav-links{display:flex;gap:26px;font-weight:500}
+.nav-links a{text-decoration:none;color:var(--cream)}
+.nav-links a:hover{color:var(--gold)}
+.menu-btn{display:none;background:none;border:1.5px solid var(--cream);color:var(--cream);width:48px;height:48px;border-radius:50%;cursor:pointer;align-items:center;justify-content:center}
+@media (max-width: 1000px){
+  .nav-links{display:none}
+  .menu-btn{display:inline-flex}
+  .nav .btn{padding:0 18px;font-size:15px}
+  .nav{gap:10px}
+}
+.mobile-menu{border-top:1px solid #2A2620}
+.mobile-menu ul{list-style:none;margin:0;padding-block:8px 18px;display:flex;flex-direction:column}
+.mobile-menu a{display:block;padding:12px 0;font-family:var(--display);font-size:22px;text-decoration:none;color:var(--cream)}
+
+/* Hero */
+.hero{display:flex;flex-wrap:wrap;align-items:center;gap:48px;padding-block:44px 80px}
+.hero-copy{flex:999 1 460px;min-width:0;container-type:inline-size}
+.hero h1{font-weight:500;font-size:clamp(30px, 10.5cqi, 78px);line-height:1.06;letter-spacing:-1px;margin-top:16px}
+.hero h1 em{color:var(--gold)}
+.hero .lead{margin-top:22px;font-size:clamp(18px, 2.2vw, 21px);color:var(--soft);max-width:34em}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.hero-art{flex:1 1 300px;display:flex;justify-content:center}
+.photo{width:100%;max-width:420px;aspect-ratio:4/5;border-radius:220px 220px 24px 24px;border:1.5px dashed var(--gold);background:var(--photo);display:flex;align-items:center;justify-content:center;text-align:center;padding:32px;color:var(--gold)}
+.photo.has-img{padding:0;border:none;overflow:hidden;box-shadow:0 0 0 1.5px var(--gold), 0 0 0 9px var(--black), 0 0 0 10px rgba(239,203,154,.35)}
+.photo.has-img img{width:100%;height:100%;max-width:100%;object-fit:cover;object-position:50% 45%;display:block}
+
+/* Tagline strip */
+.strip{border-bottom:1px solid var(--line)}
+.strip .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 18px;padding-block:24px;font-family:var(--display);font-style:italic;font-size:clamp(19px, 2.4vw, 24px)}
+.strip a{text-decoration:none}
+.strip a:hover{color:var(--gold-ink)}
+.spark{width:13px;height:13px;flex:none}
+
+/* Sections */
+.section{padding-block:80px}
+.section h2{font-weight:500;font-size:clamp(32px, 4.5vw, 48px);line-height:1.15;margin-top:10px}
+.section .intro{margin-top:12px;font-size:19px;max-width:36em}
+
+/* Services */
+.cards{display:grid;grid-template-columns:repeat(auto-fit, minmax(270px, 1fr));gap:20px;margin-top:40px}
+.card{display:flex;flex-direction:column;gap:12px;text-decoration:none;color:var(--black);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px;transition:border-color .15s ease, transform .15s ease}
+.card:hover{border-color:var(--black);transform:translateY(-2px)}
+.card h3{font-weight:700;font-size:24px}
+.card p{color:var(--muted)}
+.card .more{margin-top:auto;font-weight:700;font-size:15px}
+.card svg{width:40px;height:40px}
+
+/* Timeline */
+.story{max-width:820px}
+.timeline{list-style:none;margin:48px 0 0;padding:0 0 0 30px;border-left:1.5px solid var(--gold);display:flex;flex-direction:column;gap:32px}
+.timeline li{position:relative}
+.timeline li::before{content:"";position:absolute;left:-38px;top:7px;width:13px;height:13px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--black)}
+.timeline .when{color:var(--gold);font-weight:700;font-size:15px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.timeline .what{font-family:var(--display);font-size:23px;line-height:1.3;margin-top:2px}
+.timeline .where{color:var(--muted-dark);margin-top:2px}
+.timeline li.now::before{box-shadow:0 0 0 4px var(--black), 0 0 0 7px var(--gold)}
+
+/* Contact */
+.contact{text-align:center}
+.contact .intro{margin-inline:auto}
+.contact .actions{justify-content:center}
+.details{margin-top:22px;color:var(--muted);user-select:all}
+
+/* Footer */
+footer{color:var(--soft)}
+.foot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;padding-block:40px 32px}
+.foot .logo{font-size:26px}
+.foot nav{display:flex;flex-wrap:wrap;gap:18px;font-size:15px}
+.foot nav a{color:var(--soft)}
+.legal{flex-basis:100%;border-top:1px solid #2A2620;padding-top:18px;font-size:14px}
+
+/* New Year pop-up */
+.ny{border:none;padding:0;background:transparent;color:var(--cream);width:min(92vw, 500px);max-height:94dvh;overflow:visible}
+.ny::backdrop{background:rgba(0,0,0,.62);backdrop-filter:blur(3px)}
+.ny[open] .ny-card{animation:ny-pop .45s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes ny-pop{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.ny[open] .ny-card{animation:none}}
+.ny-card{position:relative;overflow-y:auto;overflow-x:hidden;max-height:94dvh;scrollbar-width:none;overscroll-behavior:contain;background:var(--black);border:1.5px solid var(--gold);border-radius:26px;padding:30px 22px 20px;text-align:center}
+.ny-card::-webkit-scrollbar{display:none}
+.ny-year{position:absolute;left:50%;top:-10px;transform:translateX(-50%);font-family:var(--display);font-style:italic;font-size:120px;line-height:1;color:var(--gold);opacity:.1;pointer-events:none;letter-spacing:-4px}
+.ny-close{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;border:1px solid #3A342B;background:transparent;color:var(--cream);cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.ny-close:hover{border-color:var(--gold);color:var(--gold)}
+.ny-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:5px 14px;font-size:12px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase}
+.ny-art{display:block;margin:10px auto 0;width:84px;height:68px}
+.ny h2{font-weight:500;font-size:clamp(26px, 6.5vw, 36px);line-height:1.12;margin-top:4px}
+.ny h2 em{color:var(--gold)}
+.ny-text{margin:10px auto 0;max-width:26em;font-size:16px;line-height:1.5;color:var(--soft)}
+.ny-list{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;text-align:left}
+@media (max-width: 440px), (max-height: 760px){.ny-list .d{display:none!important}.ny-list li{align-items:center}}
+.ny-list li{display:flex;align-items:flex-start;gap:9px;background:#14110D;border:1px solid #2A2620;border-radius:12px;padding:10px;font-size:13.5px;line-height:1.35;color:var(--muted-dark)}
+.ny-list strong{display:block;color:var(--cream);font-family:var(--display);font-weight:500;font-size:15.5px;line-height:1.25}
+.ny-list .d{display:block;margin-top:2px}
+.ny-kicker{margin-top:4px;color:var(--gold);font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase}
+.ny-note{margin-top:8px;color:var(--muted-dark);font-size:12px}
+.ny-tabs{display:inline-flex;gap:4px;margin:12px auto 4px;padding:4px;border:1px solid #3A342B;border-radius:999px}
+.ny-tabs button{min-height:40px;padding:0 20px;border:none;border-radius:999px;background:transparent;color:var(--soft);font:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s ease,color .15s ease}
+.ny-tabs button:hover{color:var(--cream)}
+.ny-tabs button[aria-selected="true"]{background:var(--gold);color:var(--black)}
+.ny-list svg{width:24px;height:24px;flex:none;color:var(--gold)}
+.ny-meta{margin-top:14px;color:var(--muted-dark);font-size:14px}
+.ny .actions{justify-content:center;margin-top:16px}
+.ny-later{background:none;border:none;color:var(--soft);font:inherit;font-size:15px;text-decoration:underline;cursor:pointer;min-height:44px;padding:0 12px}
+.ny-sparkle{position:absolute;color:var(--gold);pointer-events:none}
+.ny-chip{position:fixed;z-index:30;right:max(16px, calc(env(safe-area-inset-right,0px) + 12px));bottom:max(16px, calc(env(safe-area-inset-bottom,0px) + 12px));display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;border-radius:999px;border:1.5px solid var(--gold);background:var(--black);color:var(--cream);font:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.ny-chip svg{width:16px;height:16px;color:var(--gold)}
+
+/* Phone & tablet: keep the page menu visible as a swipeable row under the logo */
+@media (max-width: 1000px){
+  .bar{flex-wrap:wrap;row-gap:0;gap:10px}
+  .bar > .logo{margin-right:auto}
+  .nav{display:contents}
+  .nav-links{display:flex!important;order:3;flex-basis:100%;min-width:0;overflow-x:auto;scrollbar-width:none;gap:20px;margin-top:10px;padding:10px 24px 0 0;border-top:1px solid #2A2620;font-size:15px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{white-space:nowrap;flex:none;padding-block:4px}
+  .nav-links a[aria-current]{color:var(--gold)}
+}
+
+/* ---- Homepage v2 ---- */
+.creds{list-style:none;margin:26px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--soft);font-size:15px}
+.creds li{display:flex;align-items:center;gap:8px}
+.creds svg{width:12px;height:12px}
+.photo-wrap{margin:0;position:relative;width:100%;max-width:420px}
+.now-badge{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:8px;white-space:nowrap;background:var(--cream);color:var(--black);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.now-badge .dot{width:8px;height:8px;border-radius:50%;background:#8A6A38;box-shadow:0 0 0 4px rgba(239,203,154,.6)}
+
+.proof{border-bottom:1px solid var(--line);background:var(--card)}
+.proof-row{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:12px;padding-block:28px}
+.proof-row div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0}
+.proof-row b{font-family:var(--display);font-weight:500;font-size:clamp(26px, 4vw, 40px);line-height:1.1}
+.proof-row span{font-size:14px;color:var(--muted);line-height:1.3}
+@media (max-width: 640px){.proof-row{grid-template-columns:repeat(2, minmax(0, 1fr));row-gap:22px}}
+
+.aud-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.aud-tabs button{min-height:46px;padding:0 20px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font:inherit;font-weight:700;font-size:15px;color:var(--black);cursor:pointer}
+.aud-tabs button:hover{border-color:var(--black)}
+.aud-tabs button[aria-selected="true"]{background:var(--black);color:var(--cream);border-color:var(--black)}
+.aud-line{margin-top:22px;font-family:var(--display);font-style:italic;font-size:clamp(20px, 2.6vw, 26px)}
+.aud-picks{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-top:18px}
+.aud-picks a{display:flex;flex-direction:column;gap:2px;padding:18px 20px;border-radius:18px;background:var(--card);border:1px solid var(--line);text-decoration:none;font-family:var(--display);font-size:22px;font-weight:700;line-height:1.2;transition:border-color .15s ease, transform .15s ease;min-width:0}
+.aud-picks a:hover{border-color:var(--black);transform:translateY(-2px)}
+.aud-picks small{font-family:var(--text);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-ink)}
+.aud-picks span{font-family:var(--text);font-size:15px;font-weight:400;color:var(--muted)}
+
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 32px}
+.sec-note{color:var(--soft);max-width:22em}
+.exp{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-top:36px}
+.exp-card{display:flex;flex-direction:column;gap:10px;padding:14px 14px 22px;border-radius:24px;background:#14110D;border:1px solid #2A2620;color:var(--cream);text-decoration:none;transition:border-color .15s ease, transform .15s ease;min-width:0}
+.exp-card:hover{border-color:var(--gold);transform:translateY(-3px)}
+.exp-art{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:16/9;border-radius:16px;background:radial-gradient(circle at 50% 120%, rgba(239,203,154,.28), transparent 60%), #0B0907;color:var(--gold)}
+.exp-art svg{width:72px;height:72px}
+.exp-art em{position:absolute;top:12px;left:12px;font-style:normal;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;border:1px solid rgba(239,203,154,.5);border-radius:999px;padding:4px 10px}
+.exp-card h3{font-weight:700;font-size:26px;padding-inline:8px;margin-top:6px}
+.exp-card p{color:var(--muted-dark);padding-inline:8px}
+.exp-foot{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:auto;padding:14px 8px 0;border-top:1px solid #2A2620;color:var(--muted-dark);font-size:14px}
+.exp-foot b{font-family:var(--display);font-size:20px;color:var(--gold)}
+.exp-foot .go{font-weight:700;color:var(--cream);font-size:15px}
+.free-title{margin-top:56px;font-weight:500;font-size:clamp(24px, 3vw, 30px)}
+.free{display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px;margin-top:18px}
+.free a{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:18px;border:1px solid #2A2620;color:var(--cream);text-decoration:none;font-size:15px;color:var(--muted-dark);min-width:0}
+.free a:hover{border-color:var(--gold)}
+.free svg{width:38px;height:38px;flex:none;color:var(--gold)}
+.free strong{display:block;font-family:var(--display);font-size:20px;color:var(--cream);line-height:1.2}
+
+.season{background:radial-gradient(ellipse at 85% 0%, rgba(239,203,154,.18), transparent 55%), var(--black)}
+.season-row{display:flex;flex-wrap:wrap;gap:32px 48px;align-items:center;padding-block:72px}
+.season-copy{flex:1 1 340px;min-width:0}
+.season-copy h2{font-weight:500;font-size:clamp(32px, 4.5vw, 46px);line-height:1.12;margin-top:10px}
+.season-copy h2 em{color:var(--gold)}
+.season-copy p{margin:12px 0 24px;color:var(--soft);max-width:28em}
+.season-cards{flex:1 1 340px;display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;min-width:0}
+.season-cards a{display:flex;flex-direction:column;gap:4px;padding:22px;border-radius:20px;border:1px solid var(--gold);text-decoration:none;color:var(--cream)}
+.season-cards a:hover{background:#14110D}
+.season-cards small{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+.season-cards strong{font-family:var(--display);font-size:24px}
+.season-cards span{color:var(--muted-dark);font-size:15px;line-height:1.45}
+
+.about{display:flex;flex-wrap:wrap;gap:40px 64px;align-items:flex-start}
+.about-copy{flex:1 1 340px;min-width:0}
+@media (min-width: 900px){.about-copy{position:sticky;top:120px}}
+.about-copy h2 em{color:var(--gold-ink)}
+.chips-row{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.chips-row li{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.about .timeline{flex:1 1 380px;min-width:0;margin-top:8px;gap:24px}
+.about .timeline li::before{box-shadow:0 0 0 4px var(--cream)}
+.about .timeline li.now::before{box-shadow:0 0 0 4px var(--cream), 0 0 0 7px var(--gold)}
+.about .timeline .when{color:var(--gold-ink)}
+.about .timeline .what{font-size:21px}
+.about .timeline .where{color:var(--muted)}
+
+.quotes{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;margin-top:36px}
+.quotes figure{margin:0;padding:26px;border-radius:22px;background:#14110D;border:1px solid #2A2620;display:flex;flex-direction:column;gap:18px}
+.quotes blockquote{margin:0;font-family:var(--display);font-style:italic;font-size:21px;line-height:1.4}
+.quotes figcaption{margin-top:auto;font-weight:700;font-size:15px;color:var(--gold)}
+.quotes figcaption span{color:var(--muted-dark);font-weight:400}
+
+.reach-home{display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start}
+.reach-home .reach-copy{flex:1 1 300px;min-width:0}
+.reach-home .reach-copy p{margin-top:12px;color:var(--soft);font-size:18px}
+.reach-home .details{color:var(--muted-dark);margin-top:18px}
+.reach-home .actions{margin-top:24px}
+form.quote{flex:999 1 420px;min-width:0;background:#14110D;border:1px solid #2A2620;border-radius:24px;padding:26px;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px;color:var(--cream)}
+@media (max-width: 560px){form.quote{grid-template-columns:1fr}}
+form.quote .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+form.quote .full{grid-column:1 / -1}
+form.quote label,form.quote legend{font-weight:700;font-size:15px}
+form.quote input[type=text],form.quote input[type=number],form.quote input[type=date]{font:inherit;font-size:16px;color:var(--black);background:#FFFFFF;border:1px solid #D6CCB8;border-radius:12px;padding:12px 14px;min-height:48px;width:100%}
+form.quote .btn{grid-column:1 / -1;justify-self:start;border:none;cursor:pointer;font:inherit;font-weight:700;min-width:140px}
+form.quote .sent{grid-column:1 / -1;font-size:15px;background:#2A2216;color:var(--cream);border-radius:12px;padding:12px 14px}
+.pick{border:none;margin:0;padding:0;display:flex;flex-direction:row!important;flex-wrap:wrap;gap:8px!important}
+.pick legend{padding:0;margin-bottom:8px;width:100%}
+.pick label{position:relative;cursor:pointer;font-weight:500}
+.pick input{position:absolute;opacity:0;width:1px;height:1px}
+.pick span{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #3A342B;font-size:15px}
+.pick input:checked + span{background:var(--gold);color:var(--black);border-color:var(--gold)}
+.pick input:focus-visible + span{outline:2px solid var(--gold);outline-offset:3px}
+.highlight{animation:glow 1.4s ease}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(239,203,154,0)}30%{box-shadow:0 0 0 6px rgba(239,203,154,.8)}100%{box-shadow:0 0 0 0 rgba(239,203,154,0)}}
+</style>
+<link rel="stylesheet" href="extras.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flute" viewBox="-6 -24 52 144">
+      <path d="M11.5 22H28.5C29 38 26 50 20 53C14 50 11 38 11.5 22Z" fill="#EFCB9A"/>
+      <path d="M10 4H30C31 30 28 52 20 56C12 52 9 30 10 4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M20 56V108M11 113Q20 107 29 113" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <g fill="currentColor"><circle cx="25" cy="-6" r="3"/><circle cx="31" cy="-16" r="2.2"/><circle cx="21" cy="-20" r="1.6"/></g>
+    </symbol>
+    <symbol id="spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="#B08A4E"/></symbol>
+  </defs>
+</svg>
+
+<div class="announce"><a href="workshops/#holiday">✦ Holiday workshops for teams are now booking. <span>Pick your date →</span></a></div>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top" aria-label="sip&amp;tell, back to top">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav class="nav" aria-label="Main">
+      <div class="nav-links">
+        <a href="workshops/">Workshops</a>
+        <a href="consulting/">Consulting</a>
+        <a href="tours/">Tours</a>
+        <a href="wine-picks/">Wine picks</a>
+        <a href="pairing/">Pairing</a>
+        <a href="blog/">Blog</a>
+      </div>
+      <a class="btn btn-gold" href="workshops/">Book a workshop</a>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </nav>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <ul class="wrap">
+      <li><a href="workshops/">Workshops</a></li>
+      <li><a href="consulting/">Consulting</a></li>
+      <li><a href="tours/">Tours</a></li>
+      <li><a href="wine-picks/">Wine picks</a></li>
+      <li><a href="pairing/">Pairing</a></li>
+      <li><a href="blog/">Blog</a></li>
+      <li><a href="#story">My story</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section id="top" class="dark">
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <p class="eyebrow" style="color:var(--gold)">Wine workshops · Tours · Personal advice</p>
+      <h1 style="white-space:nowrap">sip. tell. <em>repeat.</em></h1>
+      <p class="lead">Wine made easy and fun, by a winemaker who has worked in cellars on five continents.</p>
+      <div class="actions">
+        <a class="btn btn-gold" href="workshops/">Plan a tasting</a>
+        <a class="btn btn-ghost-light" href="wine-picks/">Find your bottle</a>
+      </div>
+      <ul class="creds" aria-label="Credentials">
+        <li><svg aria-hidden="true"><use href="#spark"/></svg>M.S. Viticulture &amp; Enology</li>
+        <li><svg aria-hidden="true"><use href="#spark"/></svg>MBA, wine business</li>
+        <li><svg aria-hidden="true"><use href="#spark"/></svg>Certified sommelier</li>
+      </ul>
+    </div>
+    <div class="hero-art">
+      <figure class="photo-wrap">
+        <div class="photo has-img"><img src="hero.jpg" alt="Working the vines in an autumn vineyard" width="900" height="1200"></div>
+        <figcaption class="now-badge"><span class="dot" aria-hidden="true"></span>Fresh from harvest in Denmark</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="proof" aria-label="Experience in numbers">
+  <div class="wrap proof-row">
+    <div><b>7</b><span>countries of wine work</span></div>
+    <div><b>5</b><span>continents</span></div>
+    <div><b>4</b><span>harvests abroad</span></div>
+    <div><b>Since 2019</b><span>studying &amp; making wine</span></div>
+  </div>
+</section>
+
+<!-- Audience picker -->
+<section id="planning" class="wrap section">
+  <p class="eyebrow" style="color:var(--gold-ink)">Start here</p>
+  <h2>What are you planning?</h2>
+  <div class="aud-tabs" role="tablist" aria-label="Choose what you're planning">
+    <button type="button" role="tab" id="t-team" aria-selected="true" aria-controls="p-team">A team event</button>
+    <button type="button" role="tab" id="t-party" aria-selected="false" aria-controls="p-party" tabindex="-1">A celebration</button>
+    <button type="button" role="tab" id="t-me" aria-selected="false" aria-controls="p-me" tabindex="-1">Something for me</button>
+  </div>
+
+  <div class="aud" id="p-team" role="tabpanel" aria-labelledby="t-team">
+    <p class="aud-line">A tasting your team will still talk about on Monday.</p>
+    <div class="aud-picks">
+      <a href="workshops/#journeys"><small>Workshop</small>Happy Pour<span>After-work wine &amp; bites</span></a>
+      <a href="tours/#styles"><small>Tour</small>Company Day<span>A day out in the vineyards</span></a>
+      <a href="consulting/#business"><small>Consulting</small>Corporate Gifting<span>Bottles clients remember</span></a>
+    </div>
+  </div>
+  <div class="aud" id="p-party" role="tabpanel" aria-labelledby="t-party" hidden>
+    <p class="aud-line">Birthdays, anniversaries and big dinners, poured to perfection.</p>
+    <div class="aud-picks">
+      <a href="workshops/#journeys"><small>Workshop</small>Wine Passport<span>Pick a country, taste the trip</span></a>
+      <a href="pairing/#services"><small>Pairing</small>Pairing Dinner<span>I pour, you host</span></a>
+      <a href="tours/#styles"><small>Tour</small>Group Day Out<span>Friends, wineries, one great day</span></a>
+    </div>
+  </div>
+  <div class="aud" id="p-me" role="tabpanel" aria-labelledby="t-me" hidden>
+    <p class="aud-line">The right bottle, a smarter cellar, a perfect day in the vineyards.</p>
+    <div class="aud-picks">
+      <a href="wine-picks/#picks"><small>Wine picks</small>Tonight's Bottle<span>One perfect pick, fast</span></a>
+      <a href="consulting/#private"><small>Consulting</small>Home Cellar<span>Build a cellar you'll love</span></a>
+      <a href="tours/#styles"><small>Tour</small>Private Tour<span>Just you and the winemakers</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- Experiences -->
+<section id="services" class="dark">
+  <div class="wrap section">
+    <div class="sec-head">
+      <div>
+        <p class="eyebrow" style="color:var(--gold)">Book an experience</p>
+        <h2>Pour yourself something <em style="color:var(--gold)">good</em></h2>
+      </div>
+      <p class="sec-note">Every experience is tailored to your group, your taste and your budget.</p>
+    </div>
+    <div class="exp">
+      <a class="exp-card" href="workshops/">
+        <span class="exp-art"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12c0 12-2 17-6 18c-4-1-6-6-6-18z"/><path d="M14 24v14M9 40h10"/><path d="M28 6h12c0 12-2 17-6 18c-4-1-6-6-6-18z"/><path d="M34 24v14M29 40h10"/></svg><em>7 workshops</em></span>
+        <h3>Workshops</h3>
+        <p>Guided tastings for teams, friends and celebrations, wherever you are.</p>
+        <span class="exp-foot"><span>From <b>₪[X]</b> / guest</span><span class="go">Explore →</span></span>
+      </a>
+      <a class="exp-card" href="tours/">
+        <span class="exp-art"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="20" cy="18" r="4"/><circle cx="28" cy="18" r="4"/><circle cx="24" cy="25" r="4"/><circle cx="16" cy="25" r="4"/><circle cx="32" cy="25" r="4"/><circle cx="20" cy="32" r="4"/><circle cx="28" cy="32" r="4"/><circle cx="24" cy="39" r="4"/><path d="M24 14V6M24 9c4-4 9-3 11 0"/></svg><em>3 regions</em></span>
+        <h3>Wine Tours</h3>
+        <p>Visit Israel's wineries with someone who has worked inside the cellar.</p>
+        <span class="exp-foot"><span>From <b>₪[X]</b> / person</span><span class="go">Explore →</span></span>
+      </a>
+      <a class="exp-card" href="consulting/">
+        <span class="exp-art"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 10h26v18H16l-7 6v-6H6z"/><path d="M36 16h6v18h-3v5l-6-5H22v-3"/><path d="M14 16h12M14 22h8"/></svg><em>Private &amp; business</em></span>
+        <h3>Wine Consulting</h3>
+        <p>Gifts, events, restaurant wine lists and your own home cellar.</p>
+        <span class="exp-foot"><span>From <b>₪[X]</b></span><span class="go">Explore →</span></span>
+      </a>
+    </div>
+
+    <h3 class="free-title">Free wine help, anytime</h3>
+    <div class="free">
+      <a href="wine-picks/#finder"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4h8v10c0 4 6 6 6 12v18H14V26c0-6 6-8 6-12z"/><path d="M14 30h20M14 38h20"/></svg><span><strong>Find your bottle</strong>Three taps, one good idea</span></a>
+      <a href="pairing/#cheat"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6v10c0 3 2 5 4 5v21M12 6v10M16 6v10c0 3-2 5-4 5"/><path d="M26 6h14c0 12-3 17-7 18c-4-1-7-6-7-18z"/><path d="M33 24v14M28 42h10"/></svg><span><strong>Pairing cheat sheet</strong>Tap a dish, get the wine</span></a>
+      <a href="blog/"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 8h22v32H8z"/><path d="M13 15h12M13 21h12M13 27h8"/><path d="M36 10l4 4-12 16-5 1 1-5z"/></svg><span><strong>The blog</strong>Harvest stories &amp; easy tips</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="wrap section">
+  <p class="eyebrow" style="color:var(--gold-ink)">How it works</p>
+  <h2>Three steps to a great glass</h2>
+  <ol class="steps">
+    <li><h3>Tell me the moment</h3><p>Who's coming, when, and what you're celebrating.</p></li>
+    <li><h3>Get your plan</h3><p>A wine menu and a clear price, made for you.</p></li>
+    <li><h3>Sip, tell, repeat</h3><p>I take care of the wine and the stories. You enjoy.</p></li>
+  </ol>
+</section>
+
+<!-- Holiday season -->
+<section class="dark season">
+  <div class="wrap season-row">
+    <div class="season-copy">
+      <p class="eyebrow" style="color:var(--gold)">This season</p>
+      <h2>Holiday workshops for <em>teams &amp; groups</em></h2>
+      <p>Year-end parties that feel special. Your office, a venue or a home, on your date.</p>
+      <a class="btn btn-gold" href="workshops/#holiday">Book your holiday date</a>
+    </div>
+    <div class="season-cards">
+      <a href="workshops/#holiday"><small>Christmas</small><strong>Santa's Cellar</strong><span>Wintery wines, festive pairings, gift-worthy bottles.</span></a>
+      <a href="workshops/#holiday"><small>New Year's</small><strong>Countdown Bubbles</strong><span>Sparkling wines worth the toast. Pop like a pro.</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="story" class="wrap section about">
+  <div class="about-copy">
+    <p class="eyebrow" style="color:var(--gold-ink)">My story</p>
+    <h2>From the vineyard <em>to your glass</em></h2>
+    <p class="intro" style="color:var(--muted)">Hi, I'm [Name]. I fell for wine in Tel Aviv, studied it, then followed the harvest around the world. Now I pour it all into tastings, tours and honest advice. No snobbery, just good stories and great glasses.</p>
+    <ul class="chips-row">
+      <li>M.S. Viticulture &amp; Enology</li>
+      <li>MBA, wine business</li>
+      <li>Certified sommelier</li>
+      <li>Hebrew &amp; English</li>
+    </ul>
+  </div>
+  <ol class="timeline">
+    <li><p class="when">2019 – 2020</p><p class="what">M.S. in Viticulture &amp; Enology</p></li>
+    <li><p class="when">2020 – 2021</p><p class="what">Sommelier, fine-dining restaurant</p><p class="where">Tel Aviv, Israel</p></li>
+    <li><p class="when">2021 – 2024</p><p class="what">Wine educator &amp; MBA</p><p class="where">Sonoma, California</p></li>
+    <li><p class="when">2024 – 2025</p><p class="what">Cellar worker</p><p class="where">Napa, California</p></li>
+    <li><p class="when">Feb – May 2025</p><p class="what">Harvest</p><p class="where">New Zealand</p></li>
+    <li><p class="when">May – Aug 2025</p><p class="what">Wine consultant, fine-dining restaurant</p><p class="where">Greece</p></li>
+    <li><p class="when">Aug – Nov 2025</p><p class="what">Harvest</p><p class="where">Austria</p></li>
+    <li><p class="when">Feb – May 2026</p><p class="what">Harvest</p><p class="where">Argentina</p></li>
+    <li class="now"><p class="when">Jun – Nov 2026</p><p class="what">Harvest as assistant winemaker</p><p class="where">Denmark</p></li>
+  </ol>
+</section>
+
+<!-- Kind words -->
+<section class="dark">
+  <div class="wrap section">
+    <p class="eyebrow" style="color:var(--gold)">Kind words</p>
+    <h2>Guests say it <em style="color:var(--gold)">best</em></h2>
+    <div class="quotes">
+      <figure><blockquote>“[A short, real quote from a workshop guest.]”</blockquote><figcaption>[Name] · <span>[Company], team workshop</span></figcaption></figure>
+      <figure><blockquote>“[A real quote from a restaurant or business client.]”</blockquote><figcaption>[Name] · <span>[Restaurant], wine list</span></figcaption></figure>
+      <figure><blockquote>“[A real quote from a private client or tour guest.]”</blockquote><figcaption>[Name] · <span>Private tour</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="wrap faq" aria-labelledby="faq-h">
+  <p class="eyebrow" style="color:var(--gold-ink)">Good to know</p>
+  <h2 id="faq-h">Questions, answered</h2>
+  <div class="faq-list">
+    <details><summary>Do I need to know anything about wine?</summary><p>Not at all. Every experience starts from zero and stays fun. Wine lovers will still learn something new.</p></details>
+    <details><summary>Where do you work?</summary><p>Workshops come to your office, a venue or a home in [area]. Tours visit wineries across Israel.</p></details>
+    <details><summary>Hebrew or English?</summary><p>Both. Every workshop, tour and consultation can be in Hebrew or English.</p></details>
+    <details><summary>Can the wines be kosher?</summary><p>Yes. Kosher wine menus are available on request.</p></details>
+    <details><summary>How do I book?</summary><p>Send a WhatsApp message or fill in the form below. You'll get a tailored plan and a clear price.</p></details>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="dark">
+  <div class="wrap section reach-home">
+    <div class="reach-copy">
+      <p class="eyebrow" style="color:var(--gold)">Let's raise a glass</p>
+      <h2>Tell me what you're planning</h2>
+      <p>A few details are enough. I'll come back with an idea and a price.</p>
+      <div class="actions">
+        <a class="btn btn-gold" href="#contact">Chat on WhatsApp</a>
+        <a class="btn btn-ghost-light" href="#contact">Send an email</a>
+      </div>
+      <p class="details">[phone] · [email] · [@instagram]</p>
+    </div>
+    <form class="quote" novalidate data-draft="Thanks! (Draft site: this form is not connected yet, so nothing was sent.)" data-missing="Please add your name and a phone number or email so I can get back to you.">
+      <fieldset class="field full pick">
+        <legend>I'm planning</legend>
+        <label><input type="radio" name="kind" value="Team event" checked><span>A team event</span></label>
+        <label><input type="radio" name="kind" value="Celebration"><span>A celebration</span></label>
+        <label><input type="radio" name="kind" value="Tour"><span>A wine tour</span></label>
+        <label><input type="radio" name="kind" value="Advice"><span>Wine advice</span></label>
+      </fieldset>
+      <div class="field">
+        <label for="h-name">Your name</label>
+        <input id="h-name" name="name" type="text" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="h-contact">Phone or email</label>
+        <input id="h-contact" name="contact" type="text" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="h-guests">Guests</label>
+        <input id="h-guests" name="guests" type="number" min="1" inputmode="numeric" placeholder="e.g. 20">
+      </div>
+      <div class="field">
+        <label for="h-date">Date</label>
+        <input id="h-date" name="date" type="date">
+      </div>
+      <button class="btn btn-gold" type="submit">Send</button>
+      <p class="sent" role="status" hidden></p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap foot">
+    <a class="logo" href="#top" aria-label="sip&amp;tell, back to top">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav aria-label="Footer">
+      <a href="workshops/">Workshops</a>
+      <a href="consulting/">Consulting</a>
+      <a href="tours/">Tours</a>
+      <a href="wine-picks/">Wine picks</a>
+      <a href="pairing/">Pairing</a>
+      <a href="blog/">Blog</a>
+      <a href="#story">My story</a>
+    </nav>
+    <p class="foot-contact"><span>[phone]</span><span>[email]</span><span>[@instagram]</span></p>
+    <p class="legal">Our services are for guests aged 18 and over. Please enjoy responsibly. © 2026 sip&amp;tell</p>
+  </div>
+</footer>
+
+<nav class="cta-bar" aria-label="Quick actions">
+  <a class="wa" href="#contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>WhatsApp</a>
+  <a class="go" href="#contact">Get a price</a>
+</nav>
+
+<button class="ny-chip" id="ny-chip" type="button" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></svg>
+  Holiday specials
+</button>
+
+<dialog class="ny" id="ny" aria-labelledby="ny-label">
+  <div class="ny-card">
+    <span class="ny-year" id="ny-year" aria-hidden="true" hidden>2027</span>
+    <svg class="ny-sparkle" style="top:70px;left:24px;width:16px;height:16px" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></svg>
+    <svg class="ny-sparkle" style="top:120px;right:30px;width:22px;height:22px" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></svg>
+    <svg class="ny-sparkle" style="top:36px;right:76px;width:10px;height:10px" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></svg>
+    <button class="ny-close" id="ny-close" type="button" aria-label="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+
+    <span class="ny-badge"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></svg><span id="ny-label">Holidays special</span></span>
+
+    <svg class="ny-art" viewBox="0 0 120 96" fill="none" aria-hidden="true">
+      <g stroke="#F8F4EC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <g transform="rotate(-14 44 60)"><path d="M36 22h16c1 22-2 32-8 34c-6-2-9-12-8-34z"/><path d="M44 56v26M37 86h14"/></g>
+        <g transform="rotate(14 76 60)"><path d="M68 22h16c1 22-2 32-8 34c-6-2-9-12-8-34z"/><path d="M76 56v26M69 86h14"/></g>
+        <path d="M60 14V4M50 16l-5-8M70 16l5-8" stroke="#EFCB9A"/>
+      </g>
+      <g fill="#EFCB9A"><path transform="rotate(-14 44 60)" d="M37.5 34h13c0 12-2 18-6.5 19.5c-4.5-1.5-6.8-7.5-6.5-19.5z"/><path transform="rotate(14 76 60)" d="M69.5 34h13c0 12-2 18-6.5 19.5c-4.5-1.5-6.8-7.5-6.5-19.5z"/><circle cx="22" cy="18" r="2.5"/><circle cx="100" cy="22" r="3"/><circle cx="14" cy="40" r="1.6"/><circle cx="108" cy="44" r="1.8"/></g>
+    </svg>
+
+    <div class="ny-tabs" role="tablist" aria-label="Choose a holiday">
+      <button type="button" role="tab" id="tab-xmas" aria-selected="true" aria-controls="ny-xmas">Christmas</button>
+      <button type="button" role="tab" id="tab-ny" aria-selected="false" aria-controls="ny-newyear" tabindex="-1">New Year's</button>
+    </div>
+
+    <div class="ny-panel" id="ny-xmas" role="tabpanel" aria-labelledby="tab-xmas">
+    <p class="ny-kicker">The Christmas Workshop</p>
+    <h2>Make the holiday table <em>unforgettable.</em></h2>
+    <p class="ny-text">Festive reds, sparkling bubbles and perfect pairings for your Christmas dinner. A cozy tasting for your company or group, at your office, a venue or a home.</p>
+    <ul class="ny-list">
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3h12c0 11-2 16-6 17c-4-1-6-6-6-17z"/><path d="M10.5 10h11c-.3 6-2 9-5.5 9.5c-3.5-.5-5.2-3.5-5.5-9.5z" fill="currentColor" stroke="none" opacity=".35"/><path d="M16 20v8M12 29h8"/></svg><span><strong>Festive reds &amp; whites</strong><span class="d">Wines that bring warmth to the winter table.</span></span></li>
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4v7c0 2 1.5 3.5 3 3.5V28M8 4v7M11 4v7c0 2-1.5 3.5-3 3.5"/><path d="M18 4h10c0 9-2 12.5-5 13.5c-3-1-5-4.5-5-13.5z"/><path d="M23 17.5V26M19.5 28h7"/></svg><span><strong>Pair the feast</strong><span class="d">Matches for roasts, cheeses and holiday desserts.</span></span></li>
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="12" width="22" height="6" rx="1"/><path d="M7 18v10h18V18M16 12v16"/><path d="M16 12c-1.5-4-4.5-6-6.5-4.5S10 12 16 12zM16 12c1.5-4 4.5-6 6.5-4.5S22 12 16 12z"/></svg><span><strong>Gift-worthy bottles</strong><span class="d">What to give, and how to choose it.</span></span></li>
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="4"/><path d="M4 27a7 7 0 0 1 14 0"/><circle cx="22" cy="12" r="3.2"/><path d="M19.5 20.5A6 6 0 0 1 28 26"/></svg><span><strong>Made for groups</strong><span class="d">Team holiday parties, client gifts and family dinners.</span></span></li>
+    </ul>
+    </div>
+
+    <div class="ny-panel" id="ny-newyear" role="tabpanel" aria-labelledby="tab-ny" hidden>
+    <p class="ny-kicker">The New Year's Workshop</p>
+    <h2>Be the one who <em>brings the bubbles.</em></h2>
+    <p class="ny-text">Ring in the new year with wines that make you the star of every celebration. A festive tasting for your company or group, at your office, a venue or a home.</p>
+
+    <ul class="ny-list">
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3h10c1 12-1 17-5 18c-4-1-6-6-5-18z"/><path d="M16 21v7M12 29h8"/><circle cx="15" cy="10" r=".8" fill="currentColor"/><circle cx="17.5" cy="14" r=".8" fill="currentColor"/></svg><span><strong>Taste the bubbles</strong><span class="d">Sparkling wines from around the world, side by side.</span></span></li>
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4v7c0 2 1.5 3.5 3 3.5V28M8 4v7M11 4v7c0 2-1.5 3.5-3 3.5"/><path d="M18 4h10c0 9-2 12.5-5 13.5c-3-1-5-4.5-5-13.5z"/><path d="M23 17.5V26M19.5 28h7"/></svg><span><strong>Pair the party</strong><span class="d">Easy matches for holiday bites and festive dinners.</span></span></li>
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2h6v7c0 3 4 4 4 8v12H9V17c0-4 4-5 4-8z"/><path d="M9 21h14"/><path d="M26 4l1 2.5L29.5 7.5 27 8.5 26 11l-1-2.5L22.5 7.5 25 6.5z" fill="currentColor" stroke="none"/></svg><span><strong>Pop like a pro</strong><span class="d">How to choose, chill, open and pour with style.</span></span></li>
+      <li><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="4"/><path d="M4 27a7 7 0 0 1 14 0"/><circle cx="22" cy="12" r="3.2"/><path d="M19.5 20.5A6 6 0 0 1 28 26"/></svg><span><strong>Made for groups</strong><span class="d">Year-end team events, client toasts and private parties.</span></span></li>
+    </ul>
+    </div>
+
+    <p class="ny-meta">Available on your date, all holiday season · Groups of [X]+ · From [Price] per guest</p>
+
+    <div class="actions">
+      <a class="btn btn-gold" href="workshops/#holiday" id="ny-book">Book for your group</a>
+      <button class="ny-later" id="ny-later" type="button">Maybe later</button>
+    </div>
+    <p class="ny-note">For guests aged 18 and over. Please celebrate responsibly.</p>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  var dlg = document.getElementById('ny');
+  var chip = document.getElementById('ny-chip');
+  function openNY(){
+    chip.hidden = true;
+    try { if (!dlg.open) dlg.showModal(); } catch (e) { dlg.setAttribute('open', ''); }
+  }
+  function closeNY(){
+    if (dlg.open) dlg.close(); else dlg.removeAttribute('open');
+  }
+  dlg.addEventListener('close', function(){ chip.hidden = false; });
+  document.getElementById('ny-close').addEventListener('click', closeNY);
+  document.getElementById('ny-later').addEventListener('click', closeNY);
+  document.getElementById('ny-book').addEventListener('click', closeNY);
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) closeNY(); });
+  chip.addEventListener('click', openNY);
+
+  // Christmas / New Year's tabs
+  var tabs = [].slice.call(dlg.querySelectorAll('[role="tab"]'));
+  var year = document.getElementById('ny-year');
+  function selectTab(tab){
+    tabs.forEach(function(t){
+      var on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    year.hidden = tab.id !== 'tab-ny';
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ selectTab(t); });
+    t.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+        var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        selectTab(next); next.focus(); e.preventDefault();
+      }
+    });
+  });
+
+  var autoClose = null;
+  function cancelAutoClose(){ if (autoClose) { clearTimeout(autoClose); autoClose = null; } }
+  ['pointerdown', 'keydown', 'mouseenter'].forEach(function(ev){
+    dlg.querySelector('.ny-card').addEventListener(ev, cancelAutoClose);
+  });
+  // Show the holiday pop-up once per visit: after 12 seconds or a third of the way down the page
+  var seen = false;
+  try { seen = sessionStorage.getItem('st-holiday') === '1'; } catch (e) {}
+  function trigger(){
+    if (seen) return;
+    seen = true;
+    try { sessionStorage.setItem('st-holiday', '1'); } catch (e) {}
+    window.removeEventListener('scroll', onScroll);
+    openNY();
+    autoClose = setTimeout(function(){ autoClose = null; closeNY(); }, 7000);
+  }
+  function onScroll(){ if (window.scrollY > document.documentElement.scrollHeight * 0.33) trigger(); }
+  if (seen) { chip.hidden = false; }
+  else { window.addEventListener('scroll', onScroll, {passive:true}); setTimeout(trigger, 12000); }
+})();
+
+(function(){
+  // "What are you planning?" tabs
+  var tabs = [].slice.call(document.querySelectorAll('.aud-tabs [role="tab"]'));
+  function pick(tab){
+    tabs.forEach(function(t){
+      var on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener('click', function(){ pick(t); });
+    t.addEventListener('keydown', function(e){
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      pick(n); n.focus(); e.preventDefault();
+    });
+  });
+})();
+</script>
+<script src="site.js"></script>
+<script src="extras.js"></script>
+</body>
+</html>

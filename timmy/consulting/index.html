@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>sip&amp;tell Wine Consulting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Assistant:wght@400;500;700&display=swap">
+<style>
+/* Layout: same system as the Workshops page. Cream for private clients, a black band for business clients */
+:root{
+  --black:#000000; --cream:#F8F4EC; --gold:#EFCB9A; --gold-ink:#8A6A38; --gold-soft:#F3E3CA;
+  --card:#FFFDF8; --line:#E4DCCB; --muted:#4A4238; --muted-dark:#BDB6AA; --soft:#D9D2C5; --ink2:#14110D; --line-dark:#2A2620;
+  --display:'Playfair Display', Georgia, 'Times New Roman', serif;
+  --text:Assistant, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--cream);color:var(--black);font-family:var(--text);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--black)}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold-ink);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(20px, env(safe-area-inset-left,0px));padding-right:max(20px, env(safe-area-inset-right,0px))}
+.dark{background:var(--black);color:var(--cream)}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:999px;padding:0 22px;font:inherit;font-weight:700;font-size:15px;text-decoration:none;white-space:nowrap;cursor:pointer;border:none;transition:transform .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:var(--black)}
+.btn-dark{background:var(--black);color:var(--cream)}
+.btn-line{background:transparent;border:1.5px solid currentColor}
+
+/* Logo */
+.logo{display:inline-block;padding-top:.8em;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:700;line-height:1;letter-spacing:-.5px;white-space:nowrap;font-size:30px}
+.logo .amp{position:relative;display:inline-block}
+.logo svg{position:absolute;left:50%;bottom:.6em;width:.42em;height:1.16em;transform:translateX(-45%) rotate(14deg);transform-origin:bottom center;overflow:visible}
+
+/* Header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--black);color:var(--cream)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+.nav{display:flex;align-items:center;gap:26px}
+.nav-links{display:flex;gap:26px;font-weight:500}
+.nav-links a{text-decoration:none;color:var(--cream)}
+.nav-links a:hover,.nav-links a[aria-current]{color:var(--gold)}
+.menu-btn{display:none;background:none;border:1.5px solid var(--cream);color:var(--cream);width:48px;height:48px;border-radius:50%;cursor:pointer;align-items:center;justify-content:center}
+@media (max-width: 1000px){.nav-links{display:none}.menu-btn{display:inline-flex}.nav .btn{padding:0 16px}.nav{gap:10px}}
+.mobile-menu{border-top:1px solid var(--line-dark)}
+.mobile-menu ul{list-style:none;margin:0;padding-block:8px 18px;display:flex;flex-direction:column}
+.mobile-menu a{display:block;padding:12px 0;font-family:var(--display);font-size:22px;text-decoration:none;color:var(--cream)}
+
+/* Intro */
+.intro{padding-block:40px 56px}
+.intro h1{font-weight:500;font-size:clamp(40px, 7vw, 72px);line-height:1.05;letter-spacing:-1px;margin-top:12px}
+.intro h1 em{color:var(--gold)}
+.intro .lead{margin-top:14px;font-size:clamp(17px, 2.2vw, 20px);color:var(--soft);max-width:32em}
+.jump{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:28px;font-family:var(--display);font-style:italic;font-size:19px}
+.jump a{color:var(--gold);text-decoration:none;border-bottom:1px solid transparent}
+.jump a:hover{border-color:var(--gold)}
+
+/* Steps */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;padding-block:44px 0}
+.steps li{display:flex;gap:14px;align-items:flex-start}
+.steps .n{flex:none;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--gold-ink);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;color:var(--gold-ink)}
+.steps strong{display:block;font-family:var(--display);font-size:19px;font-weight:700;line-height:1.3}
+.steps span.t{color:var(--muted);font-size:15px}
+
+/* Service groups */
+.group{padding-block:56px 8px}
+.group-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 24px}
+.group-head h2{font-weight:500;font-size:clamp(30px, 4vw, 42px)}
+.group-head p{color:var(--muted);font-size:17px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;margin-top:28px}
+.plan{display:flex;flex-direction:column;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px;min-width:0}
+.icon{width:58px;height:58px;border-radius:50%;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;flex:none}
+.icon svg{width:32px;height:32px}
+.plan h3{font-weight:700;font-size:26px;line-height:1.15}
+.plan .line{font-family:var(--display);font-style:italic;font-size:18px;color:var(--muted);margin-top:-6px}
+.inside{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.inside li{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4}
+.inside li::before{content:"";flex:none;width:10px;height:10px;margin-top:6px;background:var(--gold-ink);clip-path:path("M5 0C5.4 3.3 6.7 4.6 10 5C6.7 5.4 5.4 6.7 5 10C4.6 6.7 3.3 5.4 0 5C3.3 4.6 4.6 3.3 5 0Z")}
+.plan .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:6px}
+.plan .btns .btn{flex:1 1 auto}
+
+/* Business band */
+.business{margin-top:64px;padding-block:64px}
+.business .group-head p{color:var(--soft)}
+.business .plan{background:var(--ink2);border-color:var(--line-dark);color:var(--cream)}
+.business .icon{background:#2A2216}
+.business .icon svg{color:var(--gold)}
+.business .plan .line{color:var(--muted-dark)}
+.business .inside li::before{background:var(--gold)}
+.proof{margin-top:28px;display:flex;align-items:center;gap:12px;color:var(--soft);font-size:16px}
+.proof svg{width:20px;height:20px;color:var(--gold);flex:none}
+
+/* Contact + quote */
+.reach{padding-block:72px;display:flex;flex-wrap:wrap;gap:40px}
+.reach-copy{flex:1 1 300px;min-width:0}
+.reach-copy h2{font-weight:500;font-size:clamp(32px, 4.5vw, 46px);line-height:1.12}
+.reach-copy p{margin-top:12px;color:var(--muted);font-size:18px;max-width:26em}
+.reach-copy .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.reach-copy .details{margin-top:16px;font-size:16px;user-select:all}
+form{flex:999 1 420px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:26px;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px}
+@media (max-width: 560px){form{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1 / -1}
+label{font-weight:700;font-size:15px}
+input,select,textarea{font:inherit;font-size:16px;color:var(--black);background:#FFFFFF;border:1px solid #D6CCB8;border-radius:12px;padding:12px 14px;min-height:48px;width:100%}
+textarea{resize:vertical;min-height:96px}
+form .btn{grid-column:1 / -1;justify-self:start;min-height:50px;padding:0 30px;font-size:16px}
+.sent{grid-column:1 / -1;font-size:15px;color:var(--muted);background:var(--gold-soft);border-radius:12px;padding:12px 14px}
+.highlight{animation:glow 1.4s ease}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(239,203,154,0)}30%{box-shadow:0 0 0 6px rgba(239,203,154,.8)}100%{box-shadow:0 0 0 0 rgba(239,203,154,0)}}
+
+/* Footer */
+footer{color:var(--soft)}
+.foot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;padding-block:40px 32px}
+.foot .logo{font-size:26px}
+.foot nav{display:flex;flex-wrap:wrap;gap:18px;font-size:15px}
+.foot nav a{color:var(--soft)}
+.legal{flex-basis:100%;border-top:1px solid var(--line-dark);padding-top:18px;font-size:14px;margin:0}
+
+/* Phone & tablet: keep the page menu visible as a swipeable row under the logo */
+@media (max-width: 1000px){
+  .bar{flex-wrap:wrap;row-gap:0;gap:10px}
+  .bar > .logo{margin-right:auto}
+  .nav{display:contents}
+  .nav-links{display:flex!important;order:3;flex-basis:100%;min-width:0;overflow-x:auto;scrollbar-width:none;gap:20px;margin-top:10px;padding:10px 24px 0 0;border-top:1px solid #2A2620;font-size:15px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{white-space:nowrap;flex:none;padding-block:4px}
+  .nav-links a[aria-current]{color:var(--gold)}
+}
+</style>
+<link rel="stylesheet" href="../extras.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flute" viewBox="-6 -24 52 144">
+      <path d="M11.5 22H28.5C29 38 26 50 20 53C14 50 11 38 11.5 22Z" fill="#EFCB9A"/>
+      <path d="M10 4H30C31 30 28 52 20 56C12 52 9 30 10 4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M20 56V108M11 113Q20 107 29 113" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <g fill="currentColor"><circle cx="25" cy="-6" r="3"/><circle cx="31" cy="-16" r="2.2"/><circle cx="21" cy="-20" r="1.6"/></g>
+    </symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="announce"><a href="../workshops/#holiday">✦ Holiday workshops for teams are now booking. <span>Pick your date →</span></a></div>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav class="nav" aria-label="Main">
+      <div class="nav-links">
+        <a href="../workshops/">Workshops</a>
+        <a href="../consulting/" aria-current="page">Consulting</a>
+        <a href="../tours/">Tours</a>
+        <a href="../wine-picks/">Wine picks</a>
+        <a href="../pairing/">Pairing</a>
+        <a href="../blog/">Blog</a>
+      </div>
+      <a class="btn btn-gold" href="#quote">Get a price</a>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </nav>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <ul class="wrap">
+      <li><a href="../">Home</a></li>
+      <li><a href="../workshops/">Workshops</a></li>
+      <li><a href="../consulting/" aria-current="page">Consulting</a></li>
+      <li><a href="../tours/">Tours</a></li>
+      <li><a href="../wine-picks/">Wine picks</a></li>
+      <li><a href="../pairing/">Pairing</a></li>
+      <li><a href="../blog/">Blog</a></li>
+      <li><a href="../#story">My story</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section class="dark">
+  <div class="wrap intro">
+    <p class="eyebrow" style="color:var(--gold)">Wine consulting</p>
+    <h1>The right bottle, <em>every time.</em></h1>
+    <p class="lead">Personal wine advice for the moments that matter, from one perfect gift to a full restaurant wine list.</p>
+    <nav class="jump" aria-label="Consulting types">
+      <a href="#private">For you</a>
+      <a href="#business">For business</a>
+    </nav>
+  </div>
+</section>
+
+<section class="wrap" aria-label="How it works">
+  <ol class="steps">
+    <li><span class="n">1</span><span><strong>Tell me the moment</strong><span class="t">Who, what, when and your budget.</span></span></li>
+    <li><span class="n">2</span><span><strong>Get your picks</strong><span class="t">A short, clear selection made for you.</span></span></li>
+    <li><span class="n">3</span><span><strong>Pour with confidence</strong><span class="t">Know what you're serving, and why.</span></span></li>
+  </ol>
+</section>
+
+<!-- For you -->
+<section id="private" class="wrap group">
+  <div class="group-head">
+    <h2>For you</h2>
+    <p>Gifts, dinners and a cellar of your own.</p>
+  </div>
+  <div class="plans">
+    <article class="plan">
+      <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="13" width="24" height="6" rx="1"/><path d="M6 19v10h20V19M16 13v16"/><path d="M16 13c-1.5-4.5-5-6.5-7.2-4.8S10 13 16 13zM16 13c1.5-4.5 5-6.5 7.2-4.8S22 13 16 13z"/></svg></span>
+      <h3>Gift Picks</h3>
+      <p class="line">The bottle they'll remember.</p>
+      <ul class="inside">
+        <li>Birthdays, thank-yous and big moments</li>
+        <li>Any budget</li>
+        <li>A short note on why it's special</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b></p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-plan="Gift Picks">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+
+    <article class="plan">
+      <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="18" r="8"/><circle cx="11" cy="18" r="4.5"/><path d="M21 4h8c.3 7-1.5 10-4 10.5c-2.5-.5-4.3-3.5-4-10.5z"/><path d="M25 14.5V25M22 26h6"/></svg></span>
+      <h3>Dinner &amp; Event Pairing</h3>
+      <p class="line">Every course, perfectly poured.</p>
+      <ul class="inside">
+        <li>Wines matched to your menu</li>
+        <li>How much to buy and how to serve</li>
+        <li>Dinners, weddings and celebrations</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b></p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-plan="Dinner &amp; Event Pairing">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+
+    <article class="plan">
+      <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="10" cy="22" rx="6.5" ry="6"/><ellipse cx="22" cy="22" rx="6.5" ry="6"/><ellipse cx="16" cy="11" rx="6.5" ry="6"/><path d="M4.2 19.5h11.6M4.2 24.5h11.6M16.2 19.5h11.6M16.2 24.5h11.6M10.2 8.5h11.6M10.2 13.5h11.6"/></svg></span>
+      <h3>Home Cellar</h3>
+      <p class="line">Build a collection you'll love.</p>
+      <ul class="inside">
+        <li>What to buy and what to keep</li>
+        <li>When to open each bottle</li>
+        <li>A cellar that grows with your taste</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b></p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-plan="Home Cellar">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+
+    <article class="plan">
+      <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h22l-2 17H7z"/><path d="M11 11V8a5 5 0 0 1 10 0v3"/><path d="M14.5 15h3v2c0 1 2 1.5 2 3.5V26h-7v-5.5c0-2 2-2.5 2-3.5z"/></svg></span>
+      <h3>Shop with a Pro</h3>
+      <p class="line">Never get lost in the wine aisle again.</p>
+      <ul class="inside">
+        <li>A guided shopping session</li>
+        <li>Great value at every price</li>
+        <li>Learn to choose on your own</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b></p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-plan="Shop with a Pro">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- For business -->
+<section id="business" class="dark business">
+  <div class="wrap">
+    <div class="group-head">
+      <h2>For <em style="color:var(--gold)">business</em></h2>
+      <p>Restaurants, bars and companies.</p>
+    </div>
+    <div class="plans">
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h15v26H5z"/><path d="M9 9h7M9 14h7M9 19h4"/><path d="M22 6h7c.3 7-1.3 10-3.5 10.5C23.3 16 21.7 13 22 6z"/><path d="M25.5 16.5V25M23 26h5"/></svg></span>
+        <h3>Restaurant Wine List</h3>
+        <p class="line">A list that fits your menu and sells.</p>
+        <ul class="inside">
+          <li>Build or refresh your wine list</li>
+          <li>Pairings for every dish</li>
+          <li>Team training to sell it with confidence</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b></p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-plan="Restaurant Wine List">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="26" height="17" rx="2"/><path d="M11 11V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"/><path d="M3 18h26"/><path d="M27 2l.7 1.8 1.8.7-1.8.7L27 7l-.7-1.8-1.8-.7 1.8-.7z" fill="currentColor" stroke="none"/></svg></span>
+        <h3>Corporate Gifting</h3>
+        <p class="line">Gifts your clients will actually open.</p>
+        <ul class="inside">
+          <li>Holiday gifts for clients and teams</li>
+          <li>Selections for every budget</li>
+          <li>From one box to hundreds</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b></p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-plan="Corporate Gifting">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+    </div>
+    <p class="proof"><svg aria-hidden="true"><use href="#i-spark"/></svg>Experience as a sommelier and wine consultant in fine-dining restaurants in Tel Aviv and Greece.</p>
+  </div>
+</section>
+
+<section class="wrap faq" aria-labelledby="faq-h">
+  <p class="eyebrow" style="color:var(--gold-ink)">Good to know</p>
+  <h2 id="faq-h">Questions, answered</h2>
+  <div class="faq-list">
+    <details><summary>How does it work?</summary><p>A short WhatsApp chat or call. Tell me the moment and the budget, and you get clear picks with where to buy them.</p></details>
+    <details><summary>Do you sell wine?</summary><p>No. I'm independent, so I recommend what's right for you from any shop or winery.</p></details>
+    <details><summary>What's the budget?</summary><p>Any budget works. Great wine isn't about the price tag.</p></details>
+    <details><summary>How fast will I get an answer?</summary><p>Usually within [24 hours]. Same-day help is possible for urgent gifts.</p></details>
+  </div>
+</section>
+
+<!-- Contact + price request -->
+<section id="contact" class="wrap reach">
+  <div class="reach-copy">
+    <p class="eyebrow" style="color:var(--gold-ink)">Let's talk</p>
+    <h2>What are we pouring for?</h2>
+    <p>Share a few details and I'll come back with a price and first ideas.</p>
+    <div class="btns">
+      <a class="btn btn-dark" href="#contact">Chat on WhatsApp</a>
+      <a class="btn btn-line" href="#contact">Send an email</a>
+    </div>
+    <p class="details">[phone] · [email]</p>
+  </div>
+
+  <form id="quote" novalidate>
+    <div class="field full">
+      <label for="q-plan">Service</label>
+      <select id="q-plan" name="plan">
+        <option value="">Not sure yet, help me choose</option>
+        <option>Gift Picks</option>
+        <option>Dinner &amp; Event Pairing</option>
+        <option>Home Cellar</option>
+        <option>Shop with a Pro</option>
+        <option>Restaurant Wine List</option>
+        <option>Corporate Gifting</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="q-name">Your name</label>
+      <input id="q-name" name="name" type="text" autocomplete="name" required>
+    </div>
+    <div class="field">
+      <label for="q-phone">Phone or email</label>
+      <input id="q-phone" name="contact" type="text" autocomplete="email" required>
+    </div>
+    <div class="field">
+      <label for="q-budget">Budget (optional)</label>
+      <input id="q-budget" name="budget" type="text" placeholder="e.g. ₪300 per bottle">
+    </div>
+    <div class="field">
+      <label for="q-date">When do you need it?</label>
+      <input id="q-date" name="date" type="date">
+    </div>
+    <div class="field full">
+      <label for="q-msg">Tell me about the moment</label>
+      <textarea id="q-msg" name="message" placeholder="A gift for my boss, a dinner for 12, a new wine list…"></textarea>
+    </div>
+    <button class="btn btn-dark" type="submit">Request a price</button>
+    <p class="sent" id="q-sent" role="status" hidden></p>
+  </form>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap foot">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav aria-label="Footer">
+      <a href="../">Home</a>
+      <a href="../workshops/">Workshops</a>
+      <a href="../consulting/">Consulting</a>
+      <a href="../tours/">Tours</a>
+      <a href="../wine-picks/">Wine picks</a>
+      <a href="../pairing/">Pairing</a>
+      <a href="../blog/">Blog</a>
+      <a href="../#story">My story</a>
+    </nav>
+    <p class="foot-contact"><span>[phone]</span><span>[email]</span><span>[@instagram]</span></p>
+    <p class="legal">Our services are for guests aged 18 and over. Please enjoy responsibly. © 2026 sip&amp;tell</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn = document.getElementById('menu-btn');
+  var menu = document.getElementById('mobile-menu');
+  function setOpen(open){
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+  btn.addEventListener('click', function(){ setOpen(menu.hidden); });
+  menu.addEventListener('click', function(e){ if (e.target.closest('a')) setOpen(false); });
+  window.addEventListener('resize', function(){ if (window.innerWidth > 1000) setOpen(false); });
+
+  var form = document.getElementById('quote');
+  var select = document.getElementById('q-plan');
+  document.querySelectorAll('[data-plan]').forEach(function(b){
+    b.addEventListener('click', function(){
+      select.value = b.getAttribute('data-plan');
+      form.scrollIntoView({behavior: 'smooth', block: 'center'});
+      form.classList.remove('highlight'); void form.offsetWidth; form.classList.add('highlight');
+      setTimeout(function(){ document.getElementById('q-name').focus({preventScroll: true}); }, 500);
+    });
+  });
+
+  var sent = document.getElementById('q-sent');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('q-name');
+    var contact = document.getElementById('q-phone');
+    if (!name.value.trim() || !contact.value.trim()){
+      sent.hidden = false;
+      sent.textContent = 'Please add your name and a phone number or email so I can get back to you.';
+      (name.value.trim() ? contact : name).focus();
+      return;
+    }
+    sent.hidden = false;
+    sent.textContent = 'Thanks, ' + name.value.trim() + '! (Draft site: this form is not connected yet, so nothing was sent.)';
+  });
+})();
+</script>
+<nav class="cta-bar" aria-label="Quick actions">
+  <a class="wa" href="#contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>WhatsApp</a>
+  <a class="go" href="#contact">Get a price</a>
+</nav>
+<script src="../extras.js"></script>
+</body>
+</html>

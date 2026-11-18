@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>sip&amp;tell Blog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Assistant:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../site.css">
+<style>
+.posts{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px;margin-top:24px}
+.post{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:22px;overflow:hidden;min-width:0}
+.post .art{aspect-ratio:16/10;max-width:100%;background:var(--ink2);color:var(--gold);display:flex;align-items:center;justify-content:center;position:relative}
+.post .art svg{width:64px;height:64px}
+.post .art .soon{position:absolute;top:14px;left:14px;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--gold);color:var(--black);border-radius:999px;padding:4px 10px}
+.post .body{padding:22px;display:flex;flex-direction:column;gap:8px;flex:1}
+.post .cat{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-ink)}
+.post h3{font-size:23px;font-weight:700;line-height:1.2}
+.post p{color:var(--muted);font-size:16px;line-height:1.5}
+.post .meta{margin-top:auto;padding-top:8px;font-size:14px;color:var(--muted)}
+.post.featured{grid-column:1 / -1;flex-direction:row;flex-wrap:wrap}
+.post.featured .art{flex:1 1 320px;aspect-ratio:auto;min-height:220px}
+.post.featured .body{flex:1 1 320px;padding:30px;justify-content:center}
+.post.featured h3{font-size:clamp(26px, 3.4vw, 34px);font-weight:500}
+.empty{margin-top:24px;color:var(--muted)}
+.letter{display:flex;flex-wrap:wrap;gap:24px 40px;align-items:center}
+.letter-copy{flex:1 1 300px;min-width:0}
+.letter-copy h2{font-weight:500;font-size:clamp(30px, 4vw, 42px);line-height:1.12}
+.letter-copy h2 em{color:var(--gold)}
+.letter-copy p{margin-top:10px;color:var(--soft);max-width:30em}
+form.quote.signup{background:var(--ink2);border-color:var(--line-dark);color:var(--cream)}
+form.quote.signup .sent{background:#2A2216;color:var(--cream)}
+</style>
+<link rel="stylesheet" href="../extras.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flute" viewBox="-6 -24 52 144">
+      <path d="M11.5 22H28.5C29 38 26 50 20 53C14 50 11 38 11.5 22Z" fill="#EFCB9A"/>
+      <path d="M10 4H30C31 30 28 52 20 56C12 52 9 30 10 4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M20 56V108M11 113Q20 107 29 113" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <g fill="currentColor"><circle cx="25" cy="-6" r="3"/><circle cx="31" cy="-16" r="2.2"/><circle cx="21" cy="-20" r="1.6"/></g>
+    </symbol>
+    <symbol id="b-grapes" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="18" cy="12" r="3"/><circle cx="24" cy="12" r="3"/><circle cx="15" cy="17" r="3"/><circle cx="21" cy="17" r="3"/><circle cx="18" cy="22" r="3"/><path d="M18 9V4M18 6c3-2 6-1 7 1"/></g></symbol>
+    <symbol id="b-cork" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h20"/><path d="M16 6v6"/><path d="M16 12c3 1 3 2.5 0 3.5s-3 2.5 0 3.5 3 2.5 0 3.5-3 2.5 0 3.5"/></g></symbol>
+    <symbol id="b-plate" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="15" cy="17" r="9"/><circle cx="15" cy="17" r="5"/><path d="M27 6v8M27 14v13M3 6v6c0 1.5 1 2.5 2 2.5V27"/></g></symbol>
+    <symbol id="b-map" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 29s-8-8.5-8-15a8 8 0 0 1 16 0c0 6.5-8 15-8 15z"/><path d="M13 11h6c.2 3.5-1 5-3 5.5-2-.5-3.2-2-3-5.5zM16 16.5V20"/></g></symbol>
+    <symbol id="b-barrel" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M9 4h14c3 4 3 20 0 24H9c-3-4-3-20 0-24z"/><path d="M7 10h18M7 22h18M12 4c-1.5 6-1.5 18 0 24M20 4c1.5 6 1.5 18 0 24"/></g></symbol>
+    <symbol id="b-bubbles" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 10h10c.3 9-1.5 13-5 14-3.5-1-5.3-5-5-14z"/><path d="M16 24v5M12 29h8"/><circle cx="16" cy="5" r="1.4"/><circle cx="20" cy="3" r="1"/><circle cx="13" cy="2.5" r=".8"/></g></symbol>
+  </defs>
+</svg>
+
+<div class="announce"><a href="../workshops/#holiday">✦ Holiday workshops for teams are now booking. <span>Pick your date →</span></a></div>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav class="nav" aria-label="Main">
+      <div class="nav-links">
+        <a href="../workshops/">Workshops</a>
+        <a href="../consulting/">Consulting</a>
+        <a href="../tours/">Tours</a>
+        <a href="../wine-picks/">Wine picks</a>
+        <a href="../pairing/">Pairing</a>
+        <a href="../blog/" aria-current="page">Blog</a>
+      </div>
+      <a class="btn btn-gold" href="#letter">Subscribe</a>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </nav>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <ul class="wrap">
+      <li><a href="../">Home</a></li>
+      <li><a href="../workshops/">Workshops</a></li>
+      <li><a href="../consulting/">Consulting</a></li>
+      <li><a href="../tours/">Tours</a></li>
+      <li><a href="../wine-picks/">Wine picks</a></li>
+      <li><a href="../pairing/">Pairing</a></li>
+      <li><a href="../blog/" aria-current="page">Blog</a></li>
+      <li><a href="../#contact">Contact</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section class="dark">
+  <div class="wrap intro">
+    <p class="eyebrow" style="color:var(--gold)">The blog</p>
+    <h1>Stories from <em>the cellar.</em></h1>
+    <p class="lead">Harvest diaries from around the world, easy tips and pairings for real life.</p>
+  </div>
+</section>
+
+<section class="wrap group" style="padding-bottom:72px">
+  <div class="choices" role="group" aria-label="Filter posts" id="filter">
+    <button type="button" class="choice" data-cat="all" aria-pressed="true">All</button>
+    <button type="button" class="choice" data-cat="harvest" aria-pressed="false">Harvest stories</button>
+    <button type="button" class="choice" data-cat="tips" aria-pressed="false">Tips</button>
+    <button type="button" class="choice" data-cat="pairing" aria-pressed="false">Pairing</button>
+    <button type="button" class="choice" data-cat="israel" aria-pressed="false">Israeli wine</button>
+  </div>
+
+  <div class="posts" id="posts">
+    <article class="post featured" data-cat="harvest">
+      <div class="art"><span class="soon">Coming soon</span><svg aria-hidden="true"><use href="#b-grapes"/></svg></div>
+      <div class="body">
+        <p class="cat">Harvest stories</p>
+        <h3>Notes from a Danish harvest</h3>
+        <p>Cold mornings, brave grapes and the new wine world up north.</p>
+        <p class="meta">5 min read</p>
+      </div>
+    </article>
+    <article class="post" data-cat="harvest">
+      <div class="art"><span class="soon">Coming soon</span><svg aria-hidden="true"><use href="#b-barrel"/></svg></div>
+      <div class="body">
+        <p class="cat">Harvest stories</p>
+        <h3>What I learned picking grapes in New Zealand</h3>
+        <p>Sauvignon Blanc, long days and one big lesson.</p>
+        <p class="meta">4 min read</p>
+      </div>
+    </article>
+    <article class="post" data-cat="pairing">
+      <div class="art"><span class="soon">Coming soon</span><svg aria-hidden="true"><use href="#b-plate"/></svg></div>
+      <div class="body">
+        <p class="cat">Pairing</p>
+        <h3>Shakshuka and rosé: why it works</h3>
+        <p>The Friday-brunch match you didn't know you needed.</p>
+        <p class="meta">3 min read</p>
+      </div>
+    </article>
+    <article class="post" data-cat="tips">
+      <div class="art"><span class="soon">Coming soon</span><svg aria-hidden="true"><use href="#b-bubbles"/></svg></div>
+      <div class="body">
+        <p class="cat">Tips</p>
+        <h3>How to open sparkling wine without the drama</h3>
+        <p>A quiet sigh, not a loud pop. Here's how.</p>
+        <p class="meta">2 min read</p>
+      </div>
+    </article>
+    <article class="post" data-cat="israel">
+      <div class="art"><span class="soon">Coming soon</span><svg aria-hidden="true"><use href="#b-map"/></svg></div>
+      <div class="body">
+        <p class="cat">Israeli wine</p>
+        <h3>Israel's desert wines: a quick guide</h3>
+        <p>How vines grow in the Negev, and which to try first.</p>
+        <p class="meta">4 min read</p>
+      </div>
+    </article>
+    <article class="post" data-cat="tips">
+      <div class="art"><span class="soon">Coming soon</span><svg aria-hidden="true"><use href="#b-cork"/></svg></div>
+      <div class="body">
+        <p class="cat">Tips</p>
+        <h3>5 wine myths to forget</h3>
+        <p>Screw caps, legs, and other things people get wrong.</p>
+        <p class="meta">3 min read</p>
+      </div>
+    </article>
+  </div>
+  <p class="empty" id="empty" hidden>New posts in this topic are on the way.</p>
+</section>
+
+<!-- Newsletter -->
+<section id="letter" class="dark" style="padding-block:64px">
+  <div class="wrap letter">
+    <div class="letter-copy">
+      <p class="eyebrow" style="color:var(--gold)">The newsletter</p>
+      <h2>One good bottle, <em>once a month.</em></h2>
+      <p>New posts, monthly picks and first dibs on workshops. No spam.</p>
+    </div>
+    <form class="quote signup" novalidate data-draft="You're on the list! (Draft site: signup is not connected yet, so nothing was saved.)" data-missing="Please add your email.">
+      <div class="field full">
+        <label for="s-email">Your email</label>
+        <input id="s-email" name="email" type="email" autocomplete="email" required>
+      </div>
+      <button class="btn btn-gold" type="submit">Subscribe</button>
+      <p class="sent" role="status" hidden></p>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer class="dark" style="border-top:1px solid var(--line-dark)">
+  <div class="wrap foot">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav aria-label="Footer">
+      <a href="../">Home</a>
+      <a href="../workshops/">Workshops</a>
+      <a href="../consulting/">Consulting</a>
+      <a href="../tours/">Tours</a>
+      <a href="../wine-picks/">Wine picks</a>
+      <a href="../pairing/">Pairing</a>
+      <a href="../blog/">Blog</a>
+      <a href="../#story">My story</a>
+    </nav>
+    <p class="foot-contact"><span>[phone]</span><span>[email]</span><span>[@instagram]</span></p>
+    <p class="legal">Our services are for guests aged 18 and over. Please enjoy responsibly. © 2026 sip&amp;tell</p>
+  </div>
+</footer>
+
+<script src="../site.js"></script>
+<script>
+(function(){
+  var chips = document.querySelectorAll('#filter .choice');
+  var posts = document.querySelectorAll('#posts .post');
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      var cat = c.getAttribute('data-cat'), shown = 0;
+      chips.forEach(function(o){ o.setAttribute('aria-pressed', String(o === c)); });
+      posts.forEach(function(p){
+        var on = cat === 'all' || p.getAttribute('data-cat') === cat;
+        p.hidden = !on; if (on) shown++;
+      });
+      document.getElementById('empty').hidden = shown > 0;
+    });
+  });
+})();
+</script>
+<nav class="cta-bar" aria-label="Quick actions">
+  <a class="wa" href="../#contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>WhatsApp</a>
+  <a class="go" href="#letter">Subscribe</a>
+</nav>
+<script src="../extras.js"></script>
+</body>
+</html>

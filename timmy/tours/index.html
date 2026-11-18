@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>sip&amp;tell Wine Tours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Assistant:wght@400;500;700&display=swap">
+<style>
+/* Layout: same system as Workshops and Consulting. Cream for regions, a black band for tour styles */
+:root{
+  --black:#000000; --cream:#F8F4EC; --gold:#EFCB9A; --gold-ink:#8A6A38; --gold-soft:#F3E3CA;
+  --card:#FFFDF8; --line:#E4DCCB; --muted:#4A4238; --muted-dark:#BDB6AA; --soft:#D9D2C5; --ink2:#14110D; --line-dark:#2A2620;
+  --display:'Playfair Display', Georgia, 'Times New Roman', serif;
+  --text:Assistant, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--cream);color:var(--black);font-family:var(--text);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--black)}
+img{max-width:100%}
+[hidden]{display:none!important}
+a{color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold-ink);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+p{margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(20px, env(safe-area-inset-left,0px));padding-right:max(20px, env(safe-area-inset-right,0px))}
+.dark{background:var(--black);color:var(--cream)}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;border-radius:999px;padding:0 22px;font:inherit;font-weight:700;font-size:15px;text-decoration:none;white-space:nowrap;cursor:pointer;border:none;transition:transform .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:var(--black)}
+.btn-dark{background:var(--black);color:var(--cream)}
+.btn-line{background:transparent;border:1.5px solid currentColor}
+
+/* Logo */
+.logo{display:inline-block;padding-top:.8em;color:var(--cream);text-decoration:none;font-family:var(--display);font-weight:700;line-height:1;letter-spacing:-.5px;white-space:nowrap;font-size:30px}
+.logo .amp{position:relative;display:inline-block}
+.logo svg{position:absolute;left:50%;bottom:.6em;width:.42em;height:1.16em;transform:translateX(-45%) rotate(14deg);transform-origin:bottom center;overflow:visible}
+
+/* Header */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--black);color:var(--cream)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
+.nav{display:flex;align-items:center;gap:24px}
+.nav-links{display:flex;gap:24px;font-weight:500}
+.nav-links a{text-decoration:none;color:var(--cream)}
+.nav-links a:hover,.nav-links a[aria-current]{color:var(--gold)}
+.menu-btn{display:none;background:none;border:1.5px solid var(--cream);color:var(--cream);width:48px;height:48px;border-radius:50%;cursor:pointer;align-items:center;justify-content:center}
+@media (max-width: 1000px){.nav-links{display:none}.menu-btn{display:inline-flex}.nav .btn{padding:0 16px}.nav{gap:10px}}
+.mobile-menu{border-top:1px solid var(--line-dark)}
+.mobile-menu ul{list-style:none;margin:0;padding-block:8px 18px;display:flex;flex-direction:column}
+.mobile-menu a{display:block;padding:12px 0;font-family:var(--display);font-size:22px;text-decoration:none;color:var(--cream)}
+
+/* Intro */
+.intro{padding-block:40px 56px}
+.intro h1{font-weight:500;font-size:clamp(40px, 7vw, 72px);line-height:1.05;letter-spacing:-1px;margin-top:12px}
+.intro h1 em{color:var(--gold)}
+.intro .lead{margin-top:14px;font-size:clamp(17px, 2.2vw, 20px);color:var(--soft);max-width:32em}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.facts span{display:inline-flex;align-items:center;gap:8px;border:1px solid #3A342B;border-radius:999px;padding:8px 14px;font-size:15px;color:var(--soft)}
+.facts svg{width:18px;height:18px;color:var(--gold);flex:none}
+.jump{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:28px;font-family:var(--display);font-style:italic;font-size:19px}
+.jump a{color:var(--gold);text-decoration:none;border-bottom:1px solid transparent}
+.jump a:hover{border-color:var(--gold)}
+
+/* Groups and cards */
+.group{padding-block:64px 8px}
+.group-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 24px}
+.group-head h2{font-weight:500;font-size:clamp(30px, 4vw, 42px)}
+.group-head p{color:var(--muted);font-size:17px}
+.plans{display:grid;grid-template-columns:repeat(auto-fit, minmax(270px, 1fr));gap:20px;margin-top:28px}
+.plan{display:flex;flex-direction:column;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px;min-width:0}
+.plan-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.icon{width:58px;height:58px;border-radius:50%;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;flex:none}
+.icon svg{width:32px;height:32px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--gold-ink);border:1px solid currentColor;border-radius:999px;padding:4px 11px;white-space:nowrap}
+.tag svg{width:14px;height:14px}
+.plan h3{font-weight:700;font-size:26px;line-height:1.15}
+.plan .line{font-family:var(--display);font-style:italic;font-size:18px;color:var(--muted);margin-top:-6px}
+.inside{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.inside li{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4}
+.inside li::before{content:"";flex:none;width:10px;height:10px;margin-top:6px;background:var(--gold-ink);clip-path:path("M5 0C5.4 3.3 6.7 4.6 10 5C6.7 5.4 5.4 6.7 5 10C4.6 6.7 3.3 5.4 0 5C3.3 4.6 4.6 3.3 5 0Z")}
+.plan .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:6px}
+.plan .btns .btn{flex:1 1 auto}
+
+/* Styles band */
+.styles{margin-top:64px;padding-block:64px}
+.styles .group-head p{color:var(--soft)}
+.styles .plan{background:var(--ink2);border-color:var(--line-dark);color:var(--cream)}
+.styles .icon{background:#2A2216}
+.styles .icon svg{color:var(--gold)}
+.styles .plan .line{color:var(--muted-dark)}
+.styles .inside li::before{background:var(--gold)}
+
+/* Custom route strip */
+.custom{margin-top:56px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 28px;border:1px solid var(--line-dark);border-radius:22px;padding:24px 26px}
+.custom h3{font-weight:500;font-size:clamp(22px, 3vw, 28px)}
+.custom h3 em{color:var(--gold)}
+.custom p{color:var(--soft);margin-top:4px}
+
+/* Contact + quote */
+.reach{padding-block:72px;display:flex;flex-wrap:wrap;gap:40px}
+.reach-copy{flex:1 1 300px;min-width:0}
+.reach-copy h2{font-weight:500;font-size:clamp(32px, 4.5vw, 46px);line-height:1.12}
+.reach-copy p{margin-top:12px;color:var(--muted);font-size:18px;max-width:26em}
+.reach-copy .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.reach-copy .details{margin-top:16px;font-size:16px;user-select:all}
+form{flex:999 1 420px;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:26px;display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px}
+@media (max-width: 560px){form{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.full{grid-column:1 / -1}
+label{font-weight:700;font-size:15px}
+input,select,textarea{font:inherit;font-size:16px;color:var(--black);background:#FFFFFF;border:1px solid #D6CCB8;border-radius:12px;padding:12px 14px;min-height:48px;width:100%}
+textarea{resize:vertical;min-height:96px}
+form .btn{grid-column:1 / -1;justify-self:start;min-height:50px;padding:0 30px;font-size:16px}
+.sent{grid-column:1 / -1;font-size:15px;color:var(--muted);background:var(--gold-soft);border-radius:12px;padding:12px 14px}
+.highlight{animation:glow 1.4s ease}
+@keyframes glow{0%{box-shadow:0 0 0 0 rgba(239,203,154,0)}30%{box-shadow:0 0 0 6px rgba(239,203,154,.8)}100%{box-shadow:0 0 0 0 rgba(239,203,154,0)}}
+
+/* Footer */
+footer{color:var(--soft)}
+.foot{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;padding-block:40px 32px}
+.foot .logo{font-size:26px}
+.foot nav{display:flex;flex-wrap:wrap;gap:18px;font-size:15px}
+.foot nav a{color:var(--soft)}
+.legal{flex-basis:100%;border-top:1px solid var(--line-dark);padding-top:18px;font-size:14px;margin:0}
+
+/* Phone & tablet: keep the page menu visible as a swipeable row under the logo */
+@media (max-width: 1000px){
+  .bar{flex-wrap:wrap;row-gap:0;gap:10px}
+  .bar > .logo{margin-right:auto}
+  .nav{display:contents}
+  .nav-links{display:flex!important;order:3;flex-basis:100%;min-width:0;overflow-x:auto;scrollbar-width:none;gap:20px;margin-top:10px;padding:10px 24px 0 0;border-top:1px solid #2A2620;font-size:15px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{white-space:nowrap;flex:none;padding-block:4px}
+  .nav-links a[aria-current]{color:var(--gold)}
+}
+</style>
+<link rel="stylesheet" href="../extras.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flute" viewBox="-6 -24 52 144">
+      <path d="M11.5 22H28.5C29 38 26 50 20 53C14 50 11 38 11.5 22Z" fill="#EFCB9A"/>
+      <path d="M10 4H30C31 30 28 52 20 56C12 52 9 30 10 4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M20 56V108M11 113Q20 107 29 113" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <g fill="currentColor"><circle cx="25" cy="-6" r="3"/><circle cx="31" cy="-16" r="2.2"/><circle cx="21" cy="-20" r="1.6"/></g>
+    </symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16h14M6 16V12l2-5h8l2 5v4M4 12h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="17.5" r="1.8" fill="currentColor"/><circle cx="16" cy="17.5" r="1.8" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="announce"><a href="../workshops/#holiday">✦ Holiday workshops for teams are now booking. <span>Pick your date →</span></a></div>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav class="nav" aria-label="Main">
+      <div class="nav-links">
+        <a href="../workshops/">Workshops</a>
+        <a href="../consulting/">Consulting</a>
+        <a href="../tours/" aria-current="page">Tours</a>
+        <a href="../wine-picks/">Wine picks</a>
+        <a href="../pairing/">Pairing</a>
+        <a href="../blog/">Blog</a>
+      </div>
+      <a class="btn btn-gold" href="#quote">Get a price</a>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </nav>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <ul class="wrap">
+      <li><a href="../">Home</a></li>
+      <li><a href="../workshops/">Workshops</a></li>
+      <li><a href="../consulting/">Consulting</a></li>
+      <li><a href="../tours/" aria-current="page">Tours</a></li>
+      <li><a href="../wine-picks/">Wine picks</a></li>
+      <li><a href="../pairing/">Pairing</a></li>
+      <li><a href="../blog/">Blog</a></li>
+      <li><a href="../#story">My story</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section class="dark">
+  <div class="wrap intro">
+    <p class="eyebrow" style="color:var(--gold)">Wine tours</p>
+    <h1>Meet the wine <em>where it's made.</em></h1>
+    <p class="lead">Day trips to Israel's wineries, guided by someone who has worked in cellars around the world.</p>
+    <div class="facts">
+      <span><svg aria-hidden="true"><use href="#i-spark"/></svg>Famous names and boutique gems</span>
+      <span><svg aria-hidden="true"><use href="#i-spark"/></svg>Vineyards, cellars and tastings</span>
+      <span><svg aria-hidden="true"><use href="#i-spark"/></svg>Private, group or company</span>
+    </div>
+    <nav class="jump" aria-label="Tour sections">
+      <a href="#regions">Pick a region</a>
+      <a href="#styles">Pick your style</a>
+    </nav>
+  </div>
+</section>
+
+<!-- Regions -->
+<section id="regions" class="wrap group">
+  <div class="group-head">
+    <h2>Pick a region</h2>
+    <p>Three landscapes, three very different glasses.</p>
+  </div>
+  <div class="plans">
+    <article class="plan">
+      <div class="plan-top">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 26c4-6 8-9 14-9s10 3 14 9"/><path d="M5 22h22M8 18h16M12 14h8"/><circle cx="23" cy="7" r="3"/></svg></span>
+        <span class="tag"><svg aria-hidden="true"><use href="#i-car"/></svg>~1 hr from Tel Aviv</span>
+      </div>
+      <h3>Judean Hills</h3>
+      <p class="line">Ancient terraces, close to home.</p>
+      <ul class="inside">
+        <li>Hillside vineyards with a long history</li>
+        <li>Well-known wineries and family boutiques</li>
+        <li>The easiest day trip from the city</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b> per person</p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-region="Judean Hills">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+
+    <article class="plan">
+      <div class="plan-top">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 25l8-12 6 8 4-5 10 9z"/><path d="M8 16l2-3 2 3"/><circle cx="11" cy="28" r="1" fill="currentColor"/><circle cx="16" cy="28" r="1" fill="currentColor"/><circle cx="21" cy="28" r="1" fill="currentColor"/><path d="M24 6l1 2.5 2.5 1-2.5 1L24 13l-1-2.5-2.5-1 2.5-1z" fill="currentColor" stroke="none"/></svg></span>
+        <span class="tag"><svg aria-hidden="true"><use href="#i-car"/></svg>~2–3 hrs from Tel Aviv</span>
+      </div>
+      <h3>Galilee &amp; Golan</h3>
+      <p class="line">Cool heights, volcanic soils, big views.</p>
+      <ul class="inside">
+        <li>Some of Israel's most celebrated vineyards</li>
+        <li>Crisp whites and elegant reds</li>
+        <li>Great as a full day or a weekend</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b> per person</p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-region="Galilee &amp; Golan">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+
+    <article class="plan">
+      <div class="plan-top">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="9" r="4"/><path d="M16 2v1.5M16 14.5V16M9 9h1.5M21.5 9H23M11 4l1 1M20 13l1 1M21 4l-1 1M12 13l-1 1"/><path d="M2 26c5-4 9-4 14-1s9 3 14-1"/><path d="M2 30c5-3 9-3 14 0s9 3 14 0"/></svg></span>
+        <span class="tag"><svg aria-hidden="true"><use href="#i-car"/></svg>~2 hrs from Tel Aviv</span>
+      </div>
+      <h3>Negev Desert</h3>
+      <p class="line">Vines in the desert. Yes, really.</p>
+      <ul class="inside">
+        <li>Wineries that grow where no one expects</li>
+        <li>Desert views and starry evenings</li>
+        <li>A day trip that feels like a getaway</li>
+      </ul>
+      <p class="from">From <b>₪[X]</b> per person</p>
+      <div class="btns">
+        <button class="btn btn-dark" type="button" data-region="Negev Desert">Get a price</button>
+        <a class="btn btn-line" href="#contact">Contact</a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- Styles -->
+<section id="styles" class="dark styles">
+  <div class="wrap">
+    <div class="group-head">
+      <h2>Pick your <em style="color:var(--gold)">style</em></h2>
+      <p>Same great wine, your kind of day.</p>
+    </div>
+    <div class="plans">
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g transform="rotate(-12 11 18)"><path d="M6 4h10c.4 10-2 14.5-5 15c-3-.5-5.4-5-5-15z"/><path d="M11 19v8M7.5 28h7"/></g><g transform="rotate(12 21 18)"><path d="M16 4h10c.4 10-2 14.5-5 15c-3-.5-5.4-5-5-15z"/><path d="M21 19v8M17.5 28h7"/></g></svg></span>
+        <h3>Private Tour</h3>
+        <p class="line">Just you, your people and the wine.</p>
+        <ul class="inside">
+          <li>Couples, friends or family</li>
+          <li>Wineries picked for your taste</li>
+          <li>Your pace, your stops</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b> per person</p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-style="Private Tour">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="10" r="3.2"/><circle cx="16" cy="8" r="3.4"/><circle cx="23" cy="10" r="3.2"/><path d="M3 24a6 6 0 0 1 12 0M10 22a6 6 0 0 1 12 0M17 24a6 6 0 0 1 12 0"/></svg></span>
+        <h3>Group Day Out</h3>
+        <p class="line">A celebration with a view.</p>
+        <ul class="inside">
+          <li>Birthdays, bachelorettes and clubs</li>
+          <li>Tastings with plenty of stories</li>
+          <li>Easy to plan, fun to remember</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b> per person</p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-style="Group Day Out">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="26" height="17" rx="2"/><path d="M11 11V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"/><path d="M3 18h26"/><path d="M27 2l.7 1.8 1.8.7-1.8.7L27 7l-.7-1.8-1.8-.7 1.8-.7z" fill="currentColor" stroke="none"/></svg></span>
+        <h3>Company Day</h3>
+        <p class="line">The team day everyone actually wants.</p>
+        <ul class="inside">
+          <li>Team building among the vines</li>
+          <li>Add a workshop at the winery</li>
+          <li>Built around your group and schedule</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b> per person</p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-style="Company Day">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="custom">
+      <div>
+        <h3>Have a winery in mind? <em>I'll build the route.</em></h3>
+        <p>Custom tours on request, anywhere in Israel.</p>
+      </div>
+      <button class="btn btn-gold" type="button" data-style="Custom route">Plan my route</button>
+    </div>
+  </div>
+</section>
+
+<section class="wrap faq" aria-labelledby="faq-h">
+  <p class="eyebrow" style="color:var(--gold-ink)">Good to know</p>
+  <h2 id="faq-h">Questions, answered</h2>
+  <div class="faq-list">
+    <details><summary>How long is a tour?</summary><p>A full day, about [8] hours, with two or three wineries and lunch.</p></details>
+    <details><summary>Is transport included?</summary><p>[Yes, door-to-door from Tel Aviv / You drive and I meet you there].</p></details>
+    <details><summary>Are winery tastings included?</summary><p>[Tastings are included in the price / paid at each winery].</p></details>
+    <details><summary>Can kids join?</summary><p>Families are welcome. Tastings are for guests aged 18 and over.</p></details>
+  </div>
+</section>
+
+<!-- Contact + price request -->
+<section id="contact" class="wrap reach">
+  <div class="reach-copy">
+    <p class="eyebrow" style="color:var(--gold-ink)">Let's plan</p>
+    <h2>Where are we heading?</h2>
+    <p>Tell me who's coming and what you love to drink. I'll come back with a route and a price.</p>
+    <div class="btns">
+      <a class="btn btn-dark" href="#contact">Chat on WhatsApp</a>
+      <a class="btn btn-line" href="#contact">Send an email</a>
+    </div>
+    <p class="details">[phone] · [email]</p>
+  </div>
+
+  <form id="quote" novalidate>
+    <div class="field">
+      <label for="q-region">Region</label>
+      <select id="q-region" name="region">
+        <option value="">Help me choose</option>
+        <option>Judean Hills</option>
+        <option>Galilee &amp; Golan</option>
+        <option>Negev Desert</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="q-style">Tour style</label>
+      <select id="q-style" name="style">
+        <option value="">Not sure yet</option>
+        <option>Private Tour</option>
+        <option>Group Day Out</option>
+        <option>Company Day</option>
+        <option>Custom route</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="q-name">Your name</label>
+      <input id="q-name" name="name" type="text" autocomplete="name" required>
+    </div>
+    <div class="field">
+      <label for="q-phone">Phone or email</label>
+      <input id="q-phone" name="contact" type="text" autocomplete="email" required>
+    </div>
+    <div class="field">
+      <label for="q-size">How many people?</label>
+      <input id="q-size" name="size" type="number" min="1" inputmode="numeric" placeholder="e.g. 8">
+    </div>
+    <div class="field">
+      <label for="q-date">Preferred date</label>
+      <input id="q-date" name="date" type="date">
+    </div>
+    <div class="field full">
+      <label for="q-msg">Anything else?</label>
+      <textarea id="q-msg" name="message" placeholder="Favorite wines, wineries you'd love to visit, the occasion…"></textarea>
+    </div>
+    <button class="btn btn-dark" type="submit">Request a price</button>
+    <p class="sent" id="q-sent" role="status" hidden></p>
+  </form>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap foot">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav aria-label="Footer">
+      <a href="../">Home</a>
+      <a href="../workshops/">Workshops</a>
+      <a href="../consulting/">Consulting</a>
+      <a href="../tours/">Tours</a>
+      <a href="../wine-picks/">Wine picks</a>
+      <a href="../pairing/">Pairing</a>
+      <a href="../blog/">Blog</a>
+      <a href="../#story">My story</a>
+    </nav>
+    <p class="foot-contact"><span>[phone]</span><span>[email]</span><span>[@instagram]</span></p>
+    <p class="legal">Our services are for guests aged 18 and over. Please enjoy responsibly. © 2026 sip&amp;tell</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn = document.getElementById('menu-btn');
+  var menu = document.getElementById('mobile-menu');
+  function setOpen(open){
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  }
+  btn.addEventListener('click', function(){ setOpen(menu.hidden); });
+  menu.addEventListener('click', function(e){ if (e.target.closest('a')) setOpen(false); });
+  window.addEventListener('resize', function(){ if (window.innerWidth > 1000) setOpen(false); });
+
+  // "Get a price" fills in the region or the style, then jumps to the form
+  var form = document.getElementById('quote');
+  function goToForm(){
+    form.scrollIntoView({behavior: 'smooth', block: 'center'});
+    form.classList.remove('highlight'); void form.offsetWidth; form.classList.add('highlight');
+    setTimeout(function(){ document.getElementById('q-name').focus({preventScroll: true}); }, 500);
+  }
+  document.querySelectorAll('[data-region]').forEach(function(b){
+    b.addEventListener('click', function(){ document.getElementById('q-region').value = b.getAttribute('data-region'); goToForm(); });
+  });
+  document.querySelectorAll('[data-style]').forEach(function(b){
+    b.addEventListener('click', function(){ document.getElementById('q-style').value = b.getAttribute('data-style'); goToForm(); });
+  });
+
+  var sent = document.getElementById('q-sent');
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('q-name');
+    var contact = document.getElementById('q-phone');
+    if (!name.value.trim() || !contact.value.trim()){
+      sent.hidden = false;
+      sent.textContent = 'Please add your name and a phone number or email so I can get back to you.';
+      (name.value.trim() ? contact : name).focus();
+      return;
+    }
+    sent.hidden = false;
+    sent.textContent = 'Thanks, ' + name.value.trim() + '! (Draft site: this form is not connected yet, so nothing was sent.)';
+  });
+})();
+</script>
+<nav class="cta-bar" aria-label="Quick actions">
+  <a class="wa" href="#contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>WhatsApp</a>
+  <a class="go" href="#contact">Get a price</a>
+</nav>
+<script src="../extras.js"></script>
+</body>
+</html>

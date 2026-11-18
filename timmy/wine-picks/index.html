@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>sip&amp;tell Wine Picks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Assistant:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../site.css">
+<style>
+/* Bottle finder: three rows of choices on the left, a live result card on the right */
+.finder{display:flex;flex-wrap:wrap;gap:28px;margin-top:28px;align-items:stretch}
+.finder-q{flex:999 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px}
+.finder-q h3{font-family:var(--text);font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold-ink);margin-bottom:10px}
+.result{flex:1 1 320px;min-width:0;background:var(--black);color:var(--cream);border-radius:24px;padding:28px;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+.result .eyebrow{color:var(--gold)}
+.result h3{font-weight:500;font-size:clamp(28px, 3.4vw, 36px);line-height:1.1}
+.result .ex{color:var(--soft)}
+.result ul{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.result li{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4;color:var(--soft)}
+.result li svg{width:18px;height:18px;flex:none;margin-top:2px;color:var(--gold)}
+.result .btn{align-self:flex-start;margin-top:auto}
+.result .glass{position:absolute;right:-10px;top:-6px;width:120px;height:120px;color:var(--gold);opacity:.14;pointer-events:none}
+.pop{animation:pop .35s ease}
+@keyframes pop{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+</style>
+<link rel="stylesheet" href="../extras.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flute" viewBox="-6 -24 52 144">
+      <path d="M11.5 22H28.5C29 38 26 50 20 53C14 50 11 38 11.5 22Z" fill="#EFCB9A"/>
+      <path d="M10 4H30C31 30 28 52 20 56C12 52 9 30 10 4Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M20 56V108M11 113Q20 107 29 113" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <g fill="currentColor"><circle cx="25" cy="-6" r="3"/><circle cx="31" cy="-16" r="2.2"/><circle cx="21" cy="-20" r="1.6"/></g>
+    </symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="announce"><a href="../workshops/#holiday">✦ Holiday workshops for teams are now booking. <span>Pick your date →</span></a></div>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav class="nav" aria-label="Main">
+      <div class="nav-links">
+        <a href="../workshops/">Workshops</a>
+        <a href="../consulting/">Consulting</a>
+        <a href="../tours/">Tours</a>
+        <a href="../wine-picks/" aria-current="page">Wine picks</a>
+        <a href="../pairing/">Pairing</a>
+        <a href="../blog/">Blog</a>
+      </div>
+      <a class="btn btn-gold" href="#finder">Find my bottle</a>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </nav>
+  </div>
+  <div class="mobile-menu" id="mobile-menu" hidden>
+    <ul class="wrap">
+      <li><a href="../">Home</a></li>
+      <li><a href="../workshops/">Workshops</a></li>
+      <li><a href="../consulting/">Consulting</a></li>
+      <li><a href="../tours/">Tours</a></li>
+      <li><a href="../wine-picks/" aria-current="page">Wine picks</a></li>
+      <li><a href="../pairing/">Pairing</a></li>
+      <li><a href="../blog/">Blog</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+<section class="dark">
+  <div class="wrap intro">
+    <p class="eyebrow" style="color:var(--gold)">Wine recommendations</p>
+    <h1>Stop guessing. <em>Start sipping.</em></h1>
+    <p class="lead">The right bottle for tonight, the party or the gift, picked by a pro and matched to your budget.</p>
+    <nav class="jump" aria-label="Page sections">
+      <a href="#finder">Find your bottle</a>
+      <a href="#picks">Get personal picks</a>
+    </nav>
+  </div>
+</section>
+
+<!-- Bottle finder -->
+<section id="finder" class="wrap group">
+  <div class="group-head">
+    <h2>Find your bottle</h2>
+    <p>Three taps, one good idea.</p>
+  </div>
+  <div class="finder">
+    <div class="finder-q">
+      <div>
+        <h3 id="q1">What's the moment?</h3>
+        <div class="choices" role="group" aria-labelledby="q1" data-q="occasion">
+          <button type="button" class="choice" data-v="dinner" aria-pressed="true">Dinner</button>
+          <button type="button" class="choice" data-v="date" aria-pressed="false">Date night</button>
+          <button type="button" class="choice" data-v="party" aria-pressed="false">Party</button>
+          <button type="button" class="choice" data-v="gift" aria-pressed="false">Gift</button>
+        </div>
+      </div>
+      <div>
+        <h3 id="q2">What do you feel like?</h3>
+        <div class="choices" role="group" aria-labelledby="q2" data-q="style">
+          <button type="button" class="choice" data-v="red" aria-pressed="true">Red</button>
+          <button type="button" class="choice" data-v="white" aria-pressed="false">White</button>
+          <button type="button" class="choice" data-v="rose" aria-pressed="false">Rosé</button>
+          <button type="button" class="choice" data-v="bubbles" aria-pressed="false">Bubbles</button>
+          <button type="button" class="choice" data-v="surprise" aria-pressed="false"><svg aria-hidden="true"><use href="#i-spark"/></svg>Surprise me</button>
+        </div>
+      </div>
+      <div>
+        <h3 id="q3">Your budget per bottle</h3>
+        <div class="choices" role="group" aria-labelledby="q3" data-q="budget">
+          <button type="button" class="choice" data-v="low" aria-pressed="false">Under ₪80</button>
+          <button type="button" class="choice" data-v="mid" aria-pressed="true">₪80–150</button>
+          <button type="button" class="choice" data-v="high" aria-pressed="false">₪150+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="result" id="result" aria-live="polite">
+      <svg class="glass" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M9 3h14c.5 11-2.5 16-7 17c-4.5-1-7.5-6-7-17z"/><path d="M16 20v8M11 29h10"/></svg>
+      <p class="eyebrow">Your pour</p>
+      <h3 id="r-title">A smooth, juicy red</h3>
+      <p class="ex" id="r-ex">Think Grenache, Pinot Noir or a young Israeli blend.</p>
+      <ul>
+        <li><svg aria-hidden="true"><use href="#i-spark"/></svg><span id="r-occ">For dinner: match the weight of the wine to the main dish.</span></li>
+        <li><svg aria-hidden="true"><use href="#i-spark"/></svg><span id="r-serve">Serve slightly cool, around 16°C.</span></li>
+        <li><svg aria-hidden="true"><use href="#i-spark"/></svg><span id="r-budget">₪80–150 is the sweet spot for quality and fun.</span></li>
+      </ul>
+      <button class="btn btn-gold" type="button" data-fill="q-plan|Tonight's Bottle">Get my exact bottle</button>
+    </div>
+  </div>
+</section>
+
+<!-- Personal picks -->
+<section id="picks" class="dark band">
+  <div class="wrap">
+    <div class="group-head">
+      <h2>Personal <em style="color:var(--gold)">picks</em></h2>
+      <p>Real bottles, chosen for you.</p>
+    </div>
+    <div class="plans">
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3h5v6c0 2.5 4 3.5 4 7.5V29h-13V16.5c0-4 4-5 4-7.5z"/><path d="M9.5 20h13"/><path d="M25 5c2.5 1 3.5 3 3.5 5.5M27 3c3 1.5 4 4 4 7" /></svg></span>
+        <h3>Tonight's Bottle</h3>
+        <p class="line">Tell me the moment. Get one perfect pick.</p>
+        <ul class="inside">
+          <li>A fast answer on WhatsApp</li>
+          <li>Fits your dinner and your budget</li>
+          <li>Where to buy it</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b></p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-fill="q-plan|Tonight's Bottle">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="24" height="22" rx="2"/><path d="M4 12h24M10 3v6M22 3v6"/><path d="M16 15.5l1.2 2.8 2.8 1.2-2.8 1.2L16 23.5l-1.2-2.8-2.8-1.2 2.8-1.2z" fill="currentColor" stroke="none"/></svg></span>
+        <h3>Monthly Picks</h3>
+        <p class="line">The bottles worth buying this month.</p>
+        <ul class="inside">
+          <li>A short list, every month</li>
+          <li>Something for every budget</li>
+          <li>One-line tasting notes</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b> a month</p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-fill="q-plan|Monthly Picks">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+
+      <article class="plan">
+        <span class="icon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h14l4 4v22H7z"/><path d="M21 3v4h4"/><path d="M11 13l1.5 1.5L15 12M11 19l1.5 1.5L15 18M11 25l1.5 1.5L15 24M18 13.5h4M18 19.5h4M18 25.5h4"/></svg></span>
+        <h3>Party List</h3>
+        <p class="line">What to buy, and how much.</p>
+        <ul class="inside">
+          <li>Wines for your crowd and your menu</li>
+          <li>Exact quantities</li>
+          <li>Serving tips for the big day</li>
+        </ul>
+        <p class="from">From <b>₪[X]</b></p>
+        <div class="btns">
+          <button class="btn btn-gold" type="button" data-fill="q-plan|Party List">Get a price</button>
+          <a class="btn btn-line" href="#contact">Contact</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="wrap faq" aria-labelledby="faq-h">
+  <p class="eyebrow" style="color:var(--gold-ink)">Good to know</p>
+  <h2 id="faq-h">Questions, answered</h2>
+  <div class="faq-list">
+    <details><summary>Do you sell the wine?</summary><p>No. You get the name of the bottle and where to buy it, at a shop near you or online.</p></details>
+    <details><summary>How fast do I get my pick?</summary><p>Usually the same day on WhatsApp.</p></details>
+    <details><summary>Can I get kosher picks?</summary><p>Of course. Just say so when you ask.</p></details>
+  </div>
+</section>
+
+<!-- Contact + request -->
+<section id="contact" class="wrap reach">
+  <div class="reach-copy">
+    <p class="eyebrow" style="color:var(--gold-ink)">Let's talk</p>
+    <h2>What are we drinking?</h2>
+    <p>Tell me the moment and the budget. I'll do the rest.</p>
+    <div class="btns">
+      <a class="btn btn-dark" href="#contact">Chat on WhatsApp</a>
+      <a class="btn btn-line" href="#contact">Send an email</a>
+    </div>
+    <p class="details">[phone] · [email]</p>
+  </div>
+  <form class="quote" novalidate data-draft="Thanks! (Draft site: this form is not connected yet, so nothing was sent.)" data-missing="Please add your name and a phone number or email so I can get back to you.">
+    <div class="field full">
+      <label for="q-plan">Service</label>
+      <select id="q-plan" name="plan">
+        <option value="">Not sure yet</option>
+        <option>Tonight's Bottle</option>
+        <option>Monthly Picks</option>
+        <option>Party List</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="q-name">Your name</label>
+      <input id="q-name" name="name" type="text" autocomplete="name" required>
+    </div>
+    <div class="field">
+      <label for="q-contact">Phone or email</label>
+      <input id="q-contact" name="contact" type="text" autocomplete="email" required>
+    </div>
+    <div class="field full">
+      <label for="q-msg">The moment</label>
+      <textarea id="q-msg" name="message" placeholder="Steak dinner for 6, around ₪120 a bottle…"></textarea>
+    </div>
+    <button class="btn btn-dark" type="submit">Send request</button>
+    <p class="sent" role="status" hidden></p>
+  </form>
+</section>
+</main>
+
+<footer class="dark">
+  <div class="wrap foot">
+    <a class="logo" href="../" aria-label="sip&amp;tell home">sip<span class="amp">&amp;<svg aria-hidden="true"><use href="#flute"/></svg></span>tell</a>
+    <nav aria-label="Footer">
+      <a href="../">Home</a>
+      <a href="../workshops/">Workshops</a>
+      <a href="../consulting/">Consulting</a>
+      <a href="../tours/">Tours</a>
+      <a href="../wine-picks/">Wine picks</a>
+      <a href="../pairing/">Pairing</a>
+      <a href="../blog/">Blog</a>
+      <a href="../#story">My story</a>
+    </nav>
+    <p class="foot-contact"><span>[phone]</span><span>[email]</span><span>[@instagram]</span></p>
+    <p class="legal">Our services are for guests aged 18 and over. Please enjoy responsibly. © 2026 sip&amp;tell</p>
+  </div>
+</footer>
+
+<script src="../site.js"></script>
+<script>
+(function(){
+  var STYLE = {
+    red:      { t: 'A smooth, juicy red',          ex: 'Think Grenache, Pinot Noir or a young Israeli blend.',      s: 'Serve slightly cool, around 16°C.' },
+    white:    { t: 'A crisp, fresh white',         ex: 'Think Sauvignon Blanc, Riesling or an unoaked Chardonnay.', s: 'Serve cold, around 8–10°C.' },
+    rose:     { t: 'A dry, pale rosé',             ex: 'Think Provence style, or a local rosé from the Galilee.',   s: 'Serve well chilled, around 8°C.' },
+    bubbles:  { t: 'A dry sparkling wine',         ex: 'Think cava, crémant, or Champagne for the big moments.',    s: 'Serve very cold, around 6–8°C.' },
+    surprise: { t: 'Something you’ve never tried', ex: 'A grape or a region you haven’t met yet. Let me pick it.', s: 'Trust me on this one.' }
+  };
+  var OCC = {
+    dinner: 'For dinner: match the weight of the wine to the main dish.',
+    date:   'For a date: one great bottle beats two good ones.',
+    party:  'For a party: plan about half a bottle per guest.',
+    gift:   'For a gift: choose a bottle with a story you can tell.'
+  };
+  var BUD = {
+    low:  'Under ₪80 there are real gems. Ask me for this week’s best value.',
+    mid:  '₪80–150 is the sweet spot for quality and fun.',
+    high: '₪150+ opens the door to special, age-worthy bottles.'
+  };
+  var state = { occasion: 'dinner', style: 'red', budget: 'mid' };
+  var result = document.getElementById('result');
+  function render(){
+    var st = STYLE[state.style];
+    document.getElementById('r-title').textContent = st.t;
+    document.getElementById('r-ex').textContent = st.ex;
+    document.getElementById('r-serve').textContent = st.s;
+    document.getElementById('r-occ').textContent = OCC[state.occasion];
+    document.getElementById('r-budget').textContent = BUD[state.budget];
+    result.classList.remove('pop'); void result.offsetWidth; result.classList.add('pop');
+  }
+  document.querySelectorAll('[data-q]').forEach(function(group){
+    var key = group.getAttribute('data-q');
+    group.querySelectorAll('.choice').forEach(function(c){
+      c.addEventListener('click', function(){
+        group.querySelectorAll('.choice').forEach(function(o){ o.setAttribute('aria-pressed', String(o === c)); });
+        state[key] = c.getAttribute('data-v');
+        render();
+      });
+    });
+  });
+})();
+</script>
+<nav class="cta-bar" aria-label="Quick actions">
+  <a class="wa" href="#contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></svg>WhatsApp</a>
+  <a class="go" href="#contact">Get a price</a>
+</nav>
+<script src="../extras.js"></script>
+</body>
+</html>
